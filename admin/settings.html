@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Store Settings — Mansi Jewellery & Cosmetics</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .admin-auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+    }
+    .admin-auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .settings-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .settings-section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN AUTH OVERLAY -->
+  <div id="admin-auth" class="admin-auth-overlay">
+    <div class="admin-auth-card">
+      <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
+      <h2 style="margin-bottom: 8px;">Admin Login</h2>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Enter password to access the panel</p>
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Password</label>
+        <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
+      </div>
+      <button class="btn-full" onclick="verifyAdminPassword()" style="margin-top: 12px;">Login as Admin</button>
+      <p id="admin-auth-err" style="color: var(--error); font-size: 0.85rem; margin-top: 12px; display: none;">❌ Incorrect password!</p>
+    </div>
+  </div>
+
+  <div id="admin-content" style="display: none;">
+    <!-- AD 1 — SABSE UPAR -->
+    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+        <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+      </a>
+    </div>
+
+    <div class="admin-layout">
+      <!-- SIDEBAR -->
+      <aside class="admin-sidebar">
+        <div class="brand">⚙️ Admin Panel</div>
+        <div class="brand-sub">Mansi Jewellery</div>
+        <nav>
+          <a href="index.html" class="admin-nav-item">📊 Dashboard</a>
+          <a href="products.html" class="admin-nav-item">🛍️ Products</a>
+          <a href="orders.html" class="admin-nav-item">📦 Orders</a>
+          <a href="settings.html" class="admin-nav-item active">⚙️ Settings</a>
+          <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
+          <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color:var(--error); margin-top: 20px;">🚪 Logout</a>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="admin-main" style="max-width: 800px;">
+        <div class="admin-header">
+          <div>
+            <h1>⚙️ Store Settings</h1>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">Configure look, feel, and business rules</p>
+          </div>
+        </div>
+
+        <!-- AD 2 — BICH MEIN -->
+        <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
+          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+            <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+          </a>
+        </div>
+
+        <!-- SECTION 1: THEME -->
+        <div class="settings-section">
+          <h2>🎨 Change Theme</h2>
+          <div class="theme-grid" id="theme-switcher-grid">
+            <!-- Dynamic Theme Chips -->
+          </div>
+        </div>
+
+        <!-- SECTION 2: STORE INFO -->
+        <div class="settings-section">
+          <h2>🏢 Store Information</h2>
+          <form id="store-info-form" onsubmit="saveStoreInfo(event)">
+            <div class="form-group">
+              <label class="form-label">Store Name</label>
+              <input type="text" id="s-name" class="form-input" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Store Tagline</label>
+              <input type="text" id="s-tagline" class="form-input" required/>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">WhatsApp Number (with country code, e.g. 919876543210)</label>
+                <input type="text" id="s-whatsapp" class="form-input" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Store Phone Number</label>
+                <input type="text" id="s-phone" class="form-input" required/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="s-email" class="form-input" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Store Physical Address</label>
+              <input type="text" id="s-address" class="form-input" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Offer Banner Text</label>
+              <input type="text" id="s-banner" class="form-input" required/>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Razorpay Key ID</label>
+                <input type="text" id="s-razorpay" class="form-input" placeholder="rzp_test_xxxxxx"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Admin Password</label>
+                <input type="text" id="s-password" class="form-input" required/>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top: 10px; padding: 12px 24px;">Save Store Information</button>
+          </form>
+        </div>
+
+        <!-- SECTION 3: DELIVERY CHARGES -->
+        <div class="settings-section">
+          <h2>📦 Delivery Charges (prepaid vs COD)</h2>
+          <form id="delivery-settings-form" onsubmit="saveDeliverySettings(event)">
+            <table class="admin-table" style="margin-bottom: 16px;">
+              <thead>
+                <tr>
+                  <th>Zone Name</th>
+                  <th>Prepaid Charge (₹)</th>
+                  <th>COD Charge (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Same City (Raipur)</strong></td>
+                  <td><input type="number" id="del-city-pre" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                  <td><input type="number" id="del-city-cod" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                </tr>
+                <tr>
+                  <td><strong>Same State (Chhattisgarh)</strong></td>
+                  <td><input type="number" id="del-state-pre" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                  <td><input type="number" id="del-state-cod" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                </tr>
+                <tr>
+                  <td><strong>Nearby States</strong></td>
+                  <td><input type="number" id="del-near-pre" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                  <td><input type="number" id="del-near-cod" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                </tr>
+                <tr>
+                  <td><strong>Rest of India</strong></td>
+                  <td><input type="number" id="del-india-pre" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                  <td><input type="number" id="del-india-cod" class="form-input" style="padding:6px 12px;" min="0" required/></td>
+                </tr>
+              </tbody>
+            </table>
+            <button type="submit" class="btn-primary" style="padding: 12px 24px;">Save Delivery Rates</button>
+          </form>
+        </div>
+
+        <!-- SECTION 4: GOOGLE SHEET SYNC -->
+        <div class="settings-section">
+          <h2>📊 Google Sheets CSV Configuration</h2>
+          <div class="form-group">
+            <label class="form-label">Published CSV Link</label>
+            <input type="url" id="s-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"/>
+          </div>
+          <button onclick="saveSheetUrl()" class="btn-primary" style="padding: 12px 24px;">Save CSV Link</button>
+        </div>
+
+        <!-- SECTION 5: FIREBASE CENTRAL DATABASE -->
+        <div class="settings-section">
+          <h2>🔥 Firebase Central Database Configuration</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Set up a free Firebase project to centralize all user registrations, passwords, and orders. Leave API Key blank to disable Firebase.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">API Key</label>
+              <input type="text" id="fb-apikey" class="form-input" placeholder="AIzaSy..."/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Auth Domain</label>
+              <input type="text" id="fb-authdomain" class="form-input" placeholder="project-id.firebaseapp.com"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Project ID</label>
+              <input type="text" id="fb-projectid" class="form-input" placeholder="project-id"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Storage Bucket</label>
+              <input type="text" id="fb-storagebucket" class="form-input" placeholder="project-id.appspot.com"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Messaging Sender ID</label>
+              <input type="text" id="fb-sendersid" class="form-input" placeholder="84729104..."/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">App ID</label>
+              <input type="text" id="fb-appid" class="form-input" placeholder="1:847291..."/>
+            </div>
+          </div>
+          <button onclick="saveFirebaseConfig()" class="btn-primary" style="padding: 12px 24px; margin-top: 10px;">Save Firebase Connection</button>
+        </div>
+
+        <!-- SECTION 5: WHATSAPP AUTO NOTIFICATION -->
+        <div class="settings-section">
+          <h2>💬 WhatsApp Notification</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Get instant WhatsApp alerts on your phone whenever an order is placed on your website. 
+            <br/><strong>Setup:</strong> Chat with <a href="https://wa.me/34623786449?text=I+allow+callmebot+to+send+me+messages" target="_blank" style="color:var(--primary);font-weight:600;">CallMeBot on WhatsApp</a>, send the message, and copy the API Key they send you.
+          </p>
+          <div class="form-group">
+            <label class="form-label">WhatsApp Notification Code</label>
+            <input type="text" id="s-callmebot" class="form-input" placeholder="Enter code here (e.g. 123456)"/>
+          </div>
+          <button onclick="saveCallMeBotKey()" class="btn-primary" style="padding: 12px 24px;">Save WhatsApp Notification</button>
+        </div>
+
+        <!-- SECTION 5: UPI PAYMENTS -->
+        <div class="settings-section">
+          <h2>💳 UPI Payment Configuration</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+            Set up direct UPI payments. If configured, customers can pay using Google Pay, PhonePe, or Paytm. 
+            On mobile, it will directly open the selected UPI app. On desktop, it will display a scan-to-pay QR Code!
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Google Pay UPI ID</label>
+              <input type="text" id="s-upi-gpay" class="form-input" placeholder="e.g. name@okaxis"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">PhonePe UPI ID</label>
+              <input type="text" id="s-upi-phonepe" class="form-input" placeholder="e.g. name@ybl"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Paytm UPI ID</label>
+              <input type="text" id="s-upi-paytm" class="form-input" placeholder="e.g. name@paytm"/>
+            </div>
+          </div>
+          <button onclick="saveUpiConfig()" class="btn-primary" style="padding: 12px 24px; margin-top: 10px;">Save UPI Settings</button>
+        </div>
+
+        <!-- SECTION 5: DANGER ZONE -->
+        <div class="settings-section" style="border-color: var(--error); background: #fff5f5; color: #881337;">
+          <h2 style="color: var(--error); border-bottom-color: #fecdd3;">⚠️ Danger Zone</h2>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Perform destructive database operations. Use with care.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="clearOrders()" class="btn-outline" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700;">Clear All Orders</button>
+            <button onclick="clearProducts()" class="btn-outline" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700;">Reset Products list</button>
+            <button onclick="factoryReset()" class="btn-full" style="background: var(--error); padding: 10px 16px; font-size: 0.85rem; width: auto; font-weight: 700;">Factory Reset Website</button>
+          </div>
+        </div>
+
+        <!-- AD 3 — SABSE LAST MEIN -->
+        <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+            <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+          </a>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    loadTheme();
+
+    function checkAdminAuth() {
+      if (localStorage.getItem("adminAuth") === "true") {
+        document.getElementById("admin-auth").style.display = "none";
+        document.getElementById("admin-content").style.display = "block";
+        initSettings();
+      }
+    }
+
+    function verifyAdminPassword() {
+      const typed = document.getElementById("admin-pass-input").value;
+      const err = document.getElementById("admin-auth-err");
+      if (typed === STORE.adminPassword) {
+        localStorage.setItem("adminAuth", "true");
+        document.getElementById("admin-auth").style.display = "none";
+        document.getElementById("admin-content").style.display = "block";
+        err.style.display = "none";
+        initSettings();
+      } else {
+        err.style.display = "block";
+      }
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("adminAuth");
+      location.reload();
+    }
+
+    // Settings Page logic
+    function initSettings() {
+      // 1. Render Themes Switcher
+      const themeGrid = document.getElementById("theme-switcher-grid");
+      const currentTheme = localStorage.getItem("theme") || "default";
+
+      themeGrid.innerHTML = THEMES.map(t => `
+        <div class="theme-chip ${t.id === currentTheme ? 'active' : ''}" onclick="changeTheme('${t.id}')">
+          <div class="icon">${t.icon}</div>
+          <div>${t.name}</div>
+        </div>
+      `).join("");
+
+      // 2. Pre-fill Store Information
+      document.getElementById("s-name").value = STORE.name || "";
+      document.getElementById("s-tagline").value = STORE.tagline || "";
+      document.getElementById("s-whatsapp").value = STORE.whatsapp || "";
+      document.getElementById("s-phone").value = STORE.phone || "";
+      document.getElementById("s-email").value = STORE.email || "";
+      document.getElementById("s-address").value = STORE.address || "";
+      document.getElementById("s-banner").value = STORE.offerBanner || "";
+      document.getElementById("s-razorpay").value = STORE.razorpayKey || "";
+      document.getElementById("s-password").value = STORE.adminPassword || "";
+
+      // 3. Pre-fill Delivery Charges
+      document.getElementById("del-city-pre").value = DELIVERY.sameCity.prepaid;
+      document.getElementById("del-city-cod").value = DELIVERY.sameCity.cod;
+      document.getElementById("del-state-pre").value = DELIVERY.sameState.prepaid;
+      document.getElementById("del-state-cod").value = DELIVERY.sameState.cod;
+      document.getElementById("del-near-pre").value = DELIVERY.nearbyStates.prepaid;
+      document.getElementById("del-near-cod").value = DELIVERY.nearbyStates.cod;
+      document.getElementById("del-india-pre").value = DELIVERY.restOfIndia.prepaid;
+      document.getElementById("del-india-cod").value = DELIVERY.restOfIndia.cod;
+
+      // 4. Pre-fill Sheet Sync
+      document.getElementById("s-sheet-url").value = STORE.googleSheetCSV || "";
+
+      // 5. Pre-fill Firebase Config
+      const fb = STORE.firebaseConfig || {};
+      document.getElementById("fb-apikey").value = fb.apiKey || "";
+      document.getElementById("fb-authdomain").value = fb.authDomain || "";
+      document.getElementById("fb-projectid").value = fb.projectId || "";
+      document.getElementById("fb-storagebucket").value = fb.storageBucket || "";
+      document.getElementById("fb-sendersid").value = fb.messagingSenderId || "";
+      document.getElementById("fb-appid").value = fb.appId || "";
+
+      // 6. Pre-fill CallMeBot API Key
+      document.getElementById("s-callmebot").value = STORE.callMeBotApiKey || "";
+
+      // 7. Pre-fill UPI Configurations
+      document.getElementById("s-upi-gpay").value = STORE.gpayUpi || "";
+      document.getElementById("s-upi-phonepe").value = STORE.phonepeUpi || "";
+      document.getElementById("s-upi-paytm").value = STORE.paytmUpi || "";
+    }
+
+    function saveCallMeBotKey() {
+      const key = document.getElementById("s-callmebot").value.trim();
+      STORE.callMeBotApiKey = key;
+      localStorage.setItem("storeSettings", JSON.stringify(STORE));
+      Cart.showToast("WhatsApp notification settings saved!");
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    function saveUpiConfig() {
+      STORE.gpayUpi = document.getElementById("s-upi-gpay").value.trim();
+      STORE.phonepeUpi = document.getElementById("s-upi-phonepe").value.trim();
+      STORE.paytmUpi = document.getElementById("s-upi-paytm").value.trim();
+      localStorage.setItem("storeSettings", JSON.stringify(STORE));
+      Cart.showToast("UPI Configuration saved!");
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    function saveFirebaseConfig() {
+      const apiKey = document.getElementById("fb-apikey").value.trim();
+      const authDomain = document.getElementById("fb-authdomain").value.trim();
+      const projectId = document.getElementById("fb-projectid").value.trim();
+      const storageBucket = document.getElementById("fb-storagebucket").value.trim();
+      const messagingSenderId = document.getElementById("fb-sendersid").value.trim();
+      const appId = document.getElementById("fb-appid").value.trim();
+
+      if (!apiKey) {
+        STORE.firebaseConfig = null;
+      } else {
+        STORE.firebaseConfig = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
+      }
+
+      localStorage.setItem("storeSettings", JSON.stringify(STORE));
+      Cart.showToast("Firebase configuration saved! Please reload the page.");
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    function changeTheme(themeId) {
+      applyTheme(themeId);
+      // refresh UI highlights
+      initSettings();
+      Cart.showToast(`Theme changed to ${THEMES.find(t=>t.id===themeId).name}!`);
+    }
+
+    function saveStoreInfo(e) {
+      e.preventDefault();
+      const updatedStore = {
+        name: document.getElementById("s-name").value.trim(),
+        tagline: document.getElementById("s-tagline").value.trim(),
+        whatsapp: document.getElementById("s-whatsapp").value.trim(),
+        phone: document.getElementById("s-phone").value.trim(),
+        email: document.getElementById("s-email").value.trim(),
+        address: document.getElementById("s-address").value.trim(),
+        offerBanner: document.getElementById("s-banner").value.trim(),
+        razorpayKey: document.getElementById("s-razorpay").value.trim(),
+        googleSheetCSV: STORE.googleSheetCSV || "", // keep existing
+        adminPassword: document.getElementById("s-password").value.trim(),
+      };
+
+      localStorage.setItem("storeSettings", JSON.stringify(updatedStore));
+      Cart.showToast("Store settings saved! Refresh to see full updates.");
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    function saveDeliverySettings(e) {
+      e.preventDefault();
+      const updatedDelivery = {
+        sameCity: {
+          prepaid: parseInt(document.getElementById("del-city-pre").value),
+          cod: parseInt(document.getElementById("del-city-cod").value)
+        },
+        sameState: {
+          prepaid: parseInt(document.getElementById("del-state-pre").value),
+          cod: parseInt(document.getElementById("del-state-cod").value)
+        },
+        nearbyStates: {
+          prepaid: parseInt(document.getElementById("del-near-pre").value),
+          cod: parseInt(document.getElementById("del-near-cod").value)
+        },
+        restOfIndia: {
+          prepaid: parseInt(document.getElementById("del-india-pre").value),
+          cod: parseInt(document.getElementById("del-india-cod").value)
+        }
+      };
+
+      localStorage.setItem("deliverySettings", JSON.stringify(updatedDelivery));
+      Cart.showToast("Delivery rates saved successfully!");
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    function saveSheetUrl() {
+      const url = document.getElementById("s-sheet-url").value.trim();
+      STORE.googleSheetCSV = url;
+      localStorage.setItem("storeSettings", JSON.stringify(STORE));
+      Cart.showToast("Google Sheets CSV URL saved!");
+    }
+
+    // Destructive methods
+    function clearOrders() {
+      if (confirm("⚠️ Are you sure you want to clear ALL orders? This cannot be undone!")) {
+        localStorage.removeItem("orders");
+        Cart.showToast("All orders cleared.");
+      }
+    }
+
+    function clearProducts() {
+      if (confirm("⚠️ This will remove all your products and reset to defaults. Continue?")) {
+        localStorage.removeItem("products");
+        DB.seedSampleProducts(); // reload samples
+        Cart.showToast("Products catalog reset.");
+      }
+    }
+
+    function factoryReset() {
+      if (confirm("🚨 FACTORY RESET: This will wipe all orders, products, customized themes, and account database. Are you absolutely sure?")) {
+        localStorage.clear();
+        alert("Website reset completed. Reloading now.");
+        location.reload();
+      }
+    }
+
+    // Run auth check
+    checkAdminAuth();
+  </script>
+</body>
+</html>

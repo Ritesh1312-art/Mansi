@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Products — Mansi Jewellery & Cosmetics</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .admin-auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+    }
+    .admin-auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN AUTH OVERLAY -->
+  <div id="admin-auth" class="admin-auth-overlay">
+    <div class="admin-auth-card">
+      <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
+      <h2 style="margin-bottom: 8px;">Admin Login</h2>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Enter password to access the panel</p>
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Password</label>
+        <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
+      </div>
+      <button class="btn-full" onclick="verifyAdminPassword()" style="margin-top: 12px;">Login as Admin</button>
+      <p id="admin-auth-err" style="color: var(--error); font-size: 0.85rem; margin-top: 12px; display: none;">❌ Incorrect password!</p>
+    </div>
+  </div>
+
+  <div id="admin-content" style="display: none;">
+    <!-- AD 1 — SABSE UPAR -->
+    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+        <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+      </a>
+    </div>
+
+    <div class="admin-layout">
+      <!-- SIDEBAR -->
+      <aside class="admin-sidebar">
+        <div class="brand">⚙️ Admin Panel</div>
+        <div class="brand-sub">Mansi Jewellery</div>
+        <nav>
+          <a href="index.html" class="admin-nav-item">📊 Dashboard</a>
+          <a href="products.html" class="admin-nav-item active">🛍️ Products</a>
+          <a href="orders.html" class="admin-nav-item">📦 Orders</a>
+          <a href="settings.html" class="admin-nav-item">⚙️ Settings</a>
+          <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
+          <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color:var(--error); margin-top: 20px;">🚪 Logout</a>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="admin-main">
+        <div class="admin-header" style="flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h1>🛍️ Manage Products</h1>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">Add, edit, or delete items in your catalog</p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="openAddModal()" class="btn-primary" style="padding: 10px 18px; font-size: 0.88rem;">➕ Add Product</button>
+            <button onclick="openImportModal()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">📥 Import Sheet</button>
+            <button onclick="SheetSync.exportToCSV()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">📤 Export CSV</button>
+          </div>
+        </div>
+
+        <!-- AD 2 — BICH MEIN -->
+        <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
+          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+            <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+          </a>
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-bar-container" style="margin-bottom: 20px;">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="product-search" placeholder="Search by name or category..." oninput="renderProductsTable()"/>
+        </div>
+
+        <!-- PRODUCTS TABLE -->
+        <div style="background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>MRP</th>
+                <th>Stock</th>
+                <th>Sales</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-list">
+              <!-- Dynamic -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- AD 3 — SABSE LAST MEIN -->
+        <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+            <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+          </a>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT MODAL -->
+  <div class="modal-overlay" id="product-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add New Product</h3>
+        <button class="modal-close" onclick="closeProductModal()">×</button>
+      </div>
+      <form id="product-form" onsubmit="saveProduct(event)">
+        <input type="hidden" id="p-id" />
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input type="text" id="p-name" class="form-input" required placeholder="e.g. Designer Gold Necklace"/>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select id="p-category" class="form-input" required>
+              <!-- Dynamic -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock Qty *</label>
+            <input type="number" id="p-stock" class="form-input" required value="10" min="0"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Selling Price (₹) *</label>
+            <input type="number" id="p-price" class="form-input" required min="0"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">MRP (₹) *</label>
+            <input type="number" id="p-mrp" class="form-input" required min="0"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product Image *</label>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="file" id="p-image-file" class="form-input" accept="image/*" onchange="handleImageUpload(this)"/>
+            <input type="url" id="p-image" class="form-input" placeholder="Or paste image URL..."/>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <img id="p-image-preview" style="display:none; width: 60px; height: 60px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover;" />
+              <span id="p-image-status" style="font-size: 0.78rem; color: var(--text-muted);"></span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="p-desc" class="form-input" rows="4" placeholder="Briefly describe your product..."></textarea>
+        </div>
+        <button type="submit" class="btn-full" style="margin-top: 10px;" id="btn-save-submit">Save Product</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- IMPORT MODAL -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📥 Import from Google Sheet</h3>
+        <button class="modal-close" onclick="closeImportModal()">×</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Google Sheet CSV URL *</label>
+        <input type="url" id="sheet-csv-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv" />
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+          <strong>Steps to share Google Sheet as CSV:</strong><br/>
+          1. Open your sheet & click <strong>File</strong> > <strong>Share</strong> > <strong>Publish to web</strong>.<br/>
+          2. Select <strong>Entire Document</strong> and format as <strong>Comma-separated values (.csv)</strong>.<br/>
+          3. Click Publish, copy the link, and paste it here.
+        </p>
+      </div>
+      <button class="btn-full" onclick="importFromSheet()">Import Now</button>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    loadTheme();
+
+    function checkAdminAuth() {
+      if (localStorage.getItem("adminAuth") === "true") {
+        document.getElementById("admin-auth").style.display = "none";
+        document.getElementById("admin-content").style.display = "block";
+        initProductsPage();
+      }
+    }
+
+    function verifyAdminPassword() {
+      const typed = document.getElementById("admin-pass-input").value;
+      const err = document.getElementById("admin-auth-err");
+      if (typed === STORE.adminPassword) {
+        localStorage.setItem("adminAuth", "true");
+        document.getElementById("admin-auth").style.display = "none";
+        document.getElementById("admin-content").style.display = "block";
+        err.style.display = "none";
+        initProductsPage();
+      } else {
+        err.style.display = "block";
+      }
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("adminAuth");
+      location.reload();
+    }
+
+    function initProductsPage() {
+      // Load categories select list
+      const select = document.getElementById("p-category");
+      select.innerHTML = CATEGORIES.filter(c => c.id !== "all").map(c => `
+        <option value="${c.id}">${c.name}</option>
+      `).join("");
+
+      // Render Table
+      renderProductsTable();
+    }
+
+    function renderProductsTable() {
+      const query = document.getElementById("product-search").value.toLowerCase().trim();
+      const products = DB.getProducts();
+      const list = document.getElementById("admin-products-list");
+
+      const filtered = products.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.category.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px;">No matching products found.</td></tr>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(p => `
+        <tr>
+          <td><img src="${p.image || 'https://via.placeholder.com/80?text=No+Image'}" class="table-img" alt="${p.name}" /></td>
+          <td><strong>${p.name}</strong></td>
+          <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--primary-light);color:var(--primary-dark);border-radius:4px;font-weight:700;">${p.category.toUpperCase()}</span></td>
+          <td style="font-weight:700;">₹${p.price}</td>
+          <td style="color:var(--text-light);text-decoration:line-through;font-size:0.8rem;">₹${p.mrp}</td>
+          <td>${p.stock}</td>
+          <td><strong>${p.sales || 0}</strong></td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button onclick="openEditModal('${p.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--primary);color:var(--primary);">✏️ Edit</button>
+              <button onclick="deleteProduct('${p.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    let uploadedImageBase64 = "";
+
+    function handleImageUpload(input) {
+      const file = input.files[0];
+      const status = document.getElementById("p-image-status");
+      const preview = document.getElementById("p-image-preview");
+
+      if (!file) return;
+
+      status.textContent = "Compressing image...";
+      status.style.color = "var(--primary)";
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const max_size = 500; // max size limit
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > max_size) {
+              height *= max_size / width;
+              width = max_size;
+            }
+          } else {
+            if (height > max_size) {
+              width *= max_size / height;
+              height = max_size;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.75);
+
+          preview.src = uploadedImageBase64;
+          preview.style.display = "block";
+          status.textContent = "Image ready! ✅";
+          status.style.color = "var(--success)";
+          document.getElementById("p-image").value = ""; // clear URL
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Modal Control
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "Add New Product";
+      document.getElementById("p-id").value = "";
+      document.getElementById("product-form").reset();
+      uploadedImageBase64 = "";
+      document.getElementById("p-image-preview").style.display = "none";
+      document.getElementById("p-image-status").textContent = "";
+      document.getElementById("p-image-file").value = "";
+      document.getElementById("product-modal").classList.add("open");
+    }
+
+    function openEditModal(id) {
+      const p = DB.getProductById(id);
+      if (!p) return;
+      document.getElementById("modal-title").textContent = "Edit Product";
+      document.getElementById("p-id").value = p.id;
+      document.getElementById("p-name").value = p.name;
+      document.getElementById("p-category").value = p.category;
+      document.getElementById("p-stock").value = p.stock || 10;
+      document.getElementById("p-price").value = p.price;
+      document.getElementById("p-mrp").value = p.mrp || p.price;
+      document.getElementById("p-image").value = p.image && !p.image.startsWith("data:") ? p.image : "";
+      
+      const preview = document.getElementById("p-image-preview");
+      if (p.image) {
+        preview.src = p.image;
+        preview.style.display = "block";
+        uploadedImageBase64 = p.image.startsWith("data:") ? p.image : "";
+      } else {
+        preview.style.display = "none";
+        uploadedImageBase64 = "";
+      }
+      document.getElementById("p-image-status").textContent = "";
+      document.getElementById("p-image-file").value = "";
+      document.getElementById("p-desc").value = p.description || "";
+      document.getElementById("product-modal").classList.add("open");
+    }
+
+    function closeProductModal() {
+      document.getElementById("product-modal").classList.remove("open");
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById("p-id").value;
+      const data = {
+        name: document.getElementById("p-name").value,
+        category: document.getElementById("p-category").value,
+        stock: parseInt(document.getElementById("p-stock").value),
+        price: parseFloat(document.getElementById("p-price").value),
+        mrp: parseFloat(document.getElementById("p-mrp").value),
+        image: document.getElementById("p-image").value.trim() || uploadedImageBase64,
+        description: document.getElementById("p-desc").value
+      };
+
+      if (id) {
+        DB.updateProduct(id, data);
+        Cart.showToast("Product updated successfully!");
+      } else {
+        DB.addProduct(data);
+        Cart.showToast("Product added successfully!");
+      }
+
+      closeProductModal();
+      renderProductsTable();
+    }
+
+    function deleteProduct(id) {
+      if (confirm("⚠️ Are you sure you want to delete this product?")) {
+        DB.deleteProduct(id);
+        Cart.showToast("Product deleted successfully.");
+        renderProductsTable();
+      }
+    }
+
+    // Sheet Import Modals
+    function openImportModal() {
+      document.getElementById("sheet-csv-url").value = STORE.googleSheetCSV || "";
+      document.getElementById("import-modal").classList.add("open");
+    }
+
+    function closeImportModal() {
+      document.getElementById("import-modal").classList.remove("open");
+    }
+
+    async function importFromSheet() {
+      const url = document.getElementById("sheet-csv-url").value.trim();
+      if (!url) {
+        alert("Please enter a valid URL!"); return;
+      }
+      Cart.showToast("Importing products...");
+      const result = await SheetSync.importFromSheet(url);
+      if (result.success) {
+        Cart.showToast(`Imported ${result.count} products successfully!`);
+        // save URL in configuration
+        STORE.googleSheetCSV = url;
+        closeImportModal();
+        renderProductsTable();
+      } else {
+        alert("❌ Import failed: " + result.error);
+      }
+    }
+
+    // Run auth check
+    checkAdminAuth();
+  </script>
+</body>
+</html>

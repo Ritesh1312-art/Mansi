@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Mansi Jewellery &amp; Cosmetics</title>
+  <meta name="description" content="Login to your Mansi Jewellery &amp; Cosmetics account to track orders, save addresses and shop faster." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .auth-page-wrap {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .auth-page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px 48px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border-radius: 24px;
+      padding: 40px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      animation: slideUp 0.4s ease;
+    }
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+    .auth-logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 1.5rem;
+    }
+    .auth-logo-text { font-size: 1.1rem; font-weight: 800; color: var(--text); }
+    .auth-logo-text span { color: var(--primary); }
+    .auth-card h2 {
+      font-size: 1.7rem; font-weight: 800;
+      margin-bottom: 6px; text-align: center;
+    }
+    .auth-card > p {
+      color: var(--text-muted); font-size: 0.9rem;
+      margin-bottom: 28px; text-align: center;
+    }
+    .forgot-link {
+      display: block; text-align: right;
+      font-size: 0.82rem; color: var(--primary);
+      font-weight: 600; margin-top: -8px;
+      margin-bottom: 16px; cursor: pointer;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+    .minimal-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg-nav);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 9px; display: grid; place-items: center; font-size: 1.1rem;
+    }
+    .nav-logo-text { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .nav-logo-text span { color: var(--primary); }
+    .error-msg {
+      background: #FEE2E2; color: #991B1B;
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 0.85rem; font-weight: 600;
+      margin-bottom: 16px; display: none;
+      border: 1px solid #FECACA;
+    }
+  </style>
+</head>
+<body>
+  <!-- AD1-TOP -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- MINIMAL NAVBAR -->
+  <nav class="minimal-nav">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">💍</div>
+      <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+    </a>
+    <a href="signup.html" class="nav-btn primary-btn nav-link" style="padding:8px 18px;border-radius:10px;font-size:0.85rem;font-weight:600;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;">Sign Up</a>
+  </nav>
+
+  <div class="auth-page-wrap">
+    <!-- AD2-MIDDLE -->
+    <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
+      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+        <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+      </a>
+    </div>
+
+    <div class="auth-page">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <div class="auth-logo-icon">💍</div>
+          <div class="auth-logo-text"><span>Mansi</span> Jewellery &amp; Cosmetics</div>
+        </div>
+        <h2>Welcome Back! 👋</h2>
+        <p>Sign in to continue shopping</p>
+
+        <div class="error-msg" id="error-msg"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input class="form-input" type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="password-wrapper">
+            <input class="form-input" type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
+            <button class="toggle-pass" type="button" onclick="togglePassword('password', this)" aria-label="Toggle password visibility">👁️</button>
+          </div>
+        </div>
+
+        <a class="forgot-link" onclick="handleForgotPassword()">Forgot password?</a>
+
+        <button class="btn-full" id="login-btn" onclick="handleLogin()">Login →</button>
+
+        <div class="form-divider"><span>OR</span></div>
+
+        <div class="auth-switch">
+          Don't have an account? <a href="signup.html">Sign Up</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- AD3-BOTTOM -->
+    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+        <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+      </a>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    loadTheme();
+
+    // Redirect if already logged in
+    if (DB.getSession()) {
+      window.location.href = 'index.html';
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('error-msg').style.display = 'none';
+    }
+
+    async function handleLogin() {
+      hideError();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('login-btn');
+
+      if (!email || !password) {
+        showError('Please fill in all fields.');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('Please enter a valid email address.');
+        return;
+      }
+
+      btn.textContent = 'Signing in…';
+      btn.disabled = true;
+
+      try {
+        const result = await DB.loginUser(email, password);
+        if (result.error) {
+          showError(result.error);
+          btn.textContent = 'Login →';
+          btn.disabled = false;
+        } else {
+          DB.setSession(result.user);
+          window.location.href = 'index.html';
+        }
+      } catch (e) {
+        showError(e.message || 'Login failed.');
+        btn.textContent = 'Login →';
+        btn.disabled = false;
+      }
+    }
+
+    async function handleForgotPassword() {
+      hideError();
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        showError('Please enter your email address first to receive the reset link.');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('Please enter a valid email address.');
+        return;
+      }
+
+      const btn = document.getElementById('login-btn');
+      const oldText = btn.textContent;
+      btn.textContent = 'Sending email...';
+      btn.disabled = true;
+
+      try {
+        const res = await DB.sendPasswordReset(email);
+        if (res.success) {
+          alert('📧 Password reset link has been successfully sent to: ' + email + '!\n\nPlease check your inbox/spam folder.');
+        } else {
+          alert('📩 (Demo Mode) Password reset link simulated for: ' + email + '.\n\nNote: ' + res.error);
+        }
+      } catch (e) {
+        showError(e.message || 'Failed to send reset email.');
+      } finally {
+        btn.textContent = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  </script>
+</body>
+</html>

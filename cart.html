@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Cart — Mansi Jewellery &amp; Cosmetics</title>
+  <meta name="description" content="View your shopping cart at Mansi Jewellery &amp; Cosmetics. Review items, update quantities and proceed to checkout." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .page-title-bar {
+      max-width: 1100px; margin: 28px auto 0; padding: 0 24px;
+    }
+    .page-title-bar h1 {
+      font-size: 1.6rem; font-weight: 800;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .cart-item-qty-ctrl {
+      display: flex; align-items: center; gap: 0;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      overflow: hidden; width: fit-content;
+    }
+    .cart-qty-btn {
+      width: 32px; height: 32px; background: var(--bg-input);
+      border: none; font-size: 1rem; font-weight: 700;
+      color: var(--text); cursor: pointer; transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .cart-qty-btn:hover { background: var(--primary); color: #fff; }
+    .cart-qty-val {
+      width: 36px; text-align: center; font-weight: 700;
+      font-size: 0.9rem; color: var(--text);
+    }
+    .cart-item-info { flex: 1; }
+    .continue-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--primary); font-weight: 600; font-size: 0.9rem;
+      margin-top: 16px; transition: gap 0.2s;
+    }
+    .continue-link:hover { gap: 10px; }
+    .delivery-note {
+      background: var(--primary-light); border-radius: 10px;
+      padding: 10px 14px; font-size: 0.82rem;
+      color: var(--primary-dark); font-weight: 600; margin: 12px 0;
+    }
+    .cart-section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; border-bottom: 1px solid var(--border);
+      font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- AD1-TOP -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- OFFER MARQUEE -->
+  <div class="offer-banner">
+    <div class="offer-banner-inner">
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>💍 New Jewellery Collection Arrived!</span>
+      <span>📦 COD Available All Over India</span>
+      <span>⭐ Trusted by 500+ Customers in Raipur</span>
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">💍</div>
+      <div>
+        <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+      </div>
+    </a>
+    <div class="nav-center">
+      <div class="nav-search">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search products..." />
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="index.html" class="nav-link">Shop</a>
+      <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
+      <a href="cart.html" class="cart-btn">
+        🛒 Cart
+        <span class="cart-count"></span>
+      </a>
+    </div>
+    <button class="hamburger" onclick="this.closest('nav').nextElementSibling.style.display = this.closest('nav').nextElementSibling.style.display === 'flex' ? 'none' : 'flex'">☰</button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;gap:12px;flex-direction:column;">
+    <a href="index.html" style="font-weight:600;color:var(--text);">🏠 Home</a>
+    <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+    <a href="orders.html" style="font-weight:600;color:var(--text);">📦 My Orders</a>
+  </div>
+
+  <!-- PAGE TITLE -->
+  <div class="page-title-bar">
+    <h1>🛒 My Cart</h1>
+  </div>
+
+  <!-- AD2-MIDDLE -->
+  <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- CART PAGE -->
+  <div class="cart-page" id="cart-container"></div>
+
+  <!-- AD3-BOTTOM -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
+        <p>Premium quality jewellery, cosmetics &amp; more. Trusted by 500+ customers in Raipur and all over India. COD available.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="cart.html">My Cart</a>
+        <a href="orders.html">My Orders</a>
+        <a href="login.html">Login</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <a href="https://wa.me/919876543210" target="_blank">📱 WhatsApp Us</a>
+        <a href="mailto:mansi@example.com">📧 Email Us</a>
+        <a href="#">📍 Ward No 47, Raipur, CG</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Mansi Jewellery &amp; Cosmetics</span>
+      <span>Made with ❤️ in Raipur</span>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    loadTheme();
+    initNavbar();
+
+    function formatCurrency(n) {
+      return '₹' + n.toLocaleString('en-IN');
+    }
+
+    function renderCart() {
+      const items = Cart.get();
+      const container = document.getElementById('cart-container');
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-cart">
+            <div class="empty-icon">🛒</div>
+            <h3>Your cart is empty!</h3>
+            <p>Looks like you haven't added anything yet. Explore our beautiful collection.</p>
+            <a href="index.html" class="btn-primary" style="margin-top:24px;display:inline-flex;align-items:center;gap:8px;">
+              🛍️ Shop Now
+            </a>
+          </div>`;
+        return;
+      }
+
+      const subtotal = Cart.total();
+
+      const itemsHTML = items.map(item => `
+        <div class="cart-item" id="item-${item.productId}">
+          <img class="cart-item-img" src="${item.image || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200'}"
+               alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200'" />
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">${formatCurrency(item.price)}</div>
+            <div class="cart-item-qty-ctrl" style="margin-top:8px;">
+              <button class="cart-qty-btn" onclick="changeQty('${item.productId}', ${item.qty - 1})">−</button>
+              <span class="cart-qty-val">${item.qty}</span>
+              <button class="cart-qty-btn" onclick="changeQty('${item.productId}', ${item.qty + 1})">+</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+            <div style="font-weight:800;color:var(--primary);font-size:1.05rem;">${formatCurrency(item.price * item.qty)}</div>
+            <button class="cart-item-remove" onclick="removeItem('${item.productId}')" title="Remove item">🗑️</button>
+          </div>
+        </div>`).join('');
+
+      container.innerHTML = `
+        <div class="cart-grid">
+          <div>
+            <div class="cart-items">
+              <div class="cart-section-header">
+                <span>${items.length} Item${items.length > 1 ? 's' : ''} in Cart</span>
+                <a href="index.html" style="color:var(--primary);font-weight:600;font-size:0.82rem;">+ Add More</a>
+              </div>
+              ${itemsHTML}
+            </div>
+            <a href="index.html" class="continue-link">← Continue Shopping</a>
+          </div>
+
+          <div>
+            <div class="cart-summary">
+              <h3>Order Summary</h3>
+              <div class="summary-row">
+                <span>Subtotal (${items.length} items)</span>
+                <span>${formatCurrency(subtotal)}</span>
+              </div>
+              <div class="delivery-note">
+                🚚 Delivery charges calculated at checkout based on your pincode &amp; payment method.
+              </div>
+              <div class="summary-row total">
+                <span>Subtotal</span>
+                <span id="cart-total-val">${formatCurrency(subtotal)}</span>
+              </div>
+              <a href="checkout.html" class="btn-full" style="display:block;text-align:center;text-decoration:none;margin-top:16px;">
+                Proceed to Checkout →
+              </a>
+              <div style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--text-muted);">
+                🔒 Secure Checkout &nbsp;|&nbsp; COD Available
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function changeQty(productId, newQty) {
+      if (newQty <= 0) {
+        removeItem(productId);
+        return;
+      }
+      Cart.updateQty(productId, newQty);
+      renderCart();
+    }
+
+    function removeItem(productId) {
+      Cart.remove(productId);
+      Cart.showToast('Item removed from cart');
+      renderCart();
+    }
+
+    renderCart();
+  </script>
+</body>
+</html>

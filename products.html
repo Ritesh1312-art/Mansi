@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Products — Mansi Jewellery &amp; Cosmetics</title>
+  <meta name="description" content="Browse all products — jewellery, cosmetics, tea sets, paintings, gift items and more. Shop at best prices with fast delivery and COD available." />
+  <meta name="keywords" content="jewellery, cosmetics, tea sets, paintings, gifts, Raipur, online shopping, mansi" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+  <style>
+    /* ---- Products Page Specific Styles ---- */
+    .products-page-hero {
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg) 100%);
+      padding: 32px 24px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .products-page-hero h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .products-page-hero h1 span { color: var(--primary); }
+    .products-page-hero p { color: var(--text-muted); font-size: 0.95rem; }
+
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .sort-select {
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border 0.2s;
+      min-width: 180px;
+    }
+    .sort-select:focus { outline: none; border-color: var(--primary); }
+
+    .products-count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .cat-filters {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+      margin-bottom: 24px;
+    }
+    .cat-filters::-webkit-scrollbar { display: none; }
+
+    .no-products {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .no-products .no-icon { font-size: 3.5rem; margin-bottom: 16px; }
+    .no-products h3 { font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+    .no-products p { font-size: 0.9rem; }
+
+    .page-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Active category chip */
+    .cat-filter-chip.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Search clear button */
+    .search-clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    .search-clear-btn:hover { color: var(--accent); }
+
+    .active-filter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .active-filter-tag button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--primary-dark);
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
+    @media (max-width: 600px) {
+      .filters-bar { flex-direction: column; align-items: stretch; }
+      .sort-select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================================================
+       AD BANNER 1 — TOP
+       ================================================ -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851"
+           alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
+    </a>
+  </div>
+
+  <!-- OFFER MARQUEE BANNER -->
+  <div class="offer-banner">
+    <div class="offer-banner-inner">
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>💍 New Jewellery Collection Arrived!</span>
+      <span>📦 COD Available All Over India</span>
+      <span>⭐ Trusted by 500+ Customers in Raipur</span>
+      <span>💄 Huge Cosmetics Sale — Up to 50% OFF!</span>
+      <span>🎁 Gift Sets Starting ₹99!</span>
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">💍</div>
+      <div>
+        <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+      </div>
+    </a>
+
+    <div class="nav-center">
+      <div class="nav-search">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="nav-search-input" placeholder="Search products..." onkeydown="if(event.key==='Enter') applySearch(this.value)" />
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <a href="index.html" class="nav-link">🏠 Home</a>
+      <a href="products.html" class="nav-link" style="color:var(--primary);font-weight:700;">Products</a>
+      <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
+      <a href="cart.html" class="cart-btn">
+        🛒 Cart
+        <span class="cart-count" id="cart-badge">0</span>
+      </a>
+    </div>
+    <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;gap:12px;flex-direction:column;">
+    <a href="index.html" style="font-weight:600;color:var(--text);">🏠 Home</a>
+    <a href="products.html" style="font-weight:600;color:var(--primary);">🛍️ Products</a>
+    <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+    <a href="login.html" style="font-weight:600;color:var(--text);">👤 Login</a>
+    <a href="signup.html" style="font-weight:600;color:var(--text);">✨ Sign Up</a>
+  </div>
+
+  <!-- PAGE HERO -->
+  <div class="products-page-hero">
+    <h1>All <span>Products</span></h1>
+    <p>Discover our full collection of jewellery, cosmetics, tea sets, paintings &amp; more</p>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-section">
+
+    <!-- CATEGORY FILTER CHIPS -->
+    <div class="cat-filters" id="cat-filters" role="group" aria-label="Category filter"></div>
+
+    <!-- ACTIVE FILTER TAG (shown when filtering) -->
+    <div id="active-filter-area"></div>
+
+    <!-- AD BANNER 2 — MIDDLE (between category and grid) -->
+    <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:0 0 20px;overflow:hidden;border-radius:12px;">
+      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+        <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851"
+             alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
+      </a>
+    </div>
+
+    <!-- SEARCH BAR + SORT ROW -->
+    <div class="search-bar-container" style="margin-bottom:16px;">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text-light);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Search by name, category..." />
+      <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="Clear search" style="display:none;">✕</button>
+    </div>
+
+    <div class="filters-bar">
+      <span class="products-count" id="products-count"></span>
+      <select class="sort-select" id="sort-select" onchange="renderProducts()">
+        <option value="newest">📅 Newest First</option>
+        <option value="price-asc">💰 Price: Low to High</option>
+        <option value="price-desc">💰 Price: High to Low</option>
+        <option value="discount">🏷️ Best Discount</option>
+      </select>
+    </div>
+
+    <!-- PRODUCTS GRID -->
+    <div class="products-grid" id="products-grid"></div>
+
+  </div>
+
+  <!-- AD BANNER 3 — BEFORE FOOTER -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851"
+           alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 Mansi Jewellery &amp; Cosmetics</div>
+        <p>Your trusted local market for jewellery, cosmetics, tea sets, and more. Serving Raipur and all of India.</p>
+        <div style="margin-top:16px;display:flex;gap:10px;">
+          <a href="https://wa.me/919876543210" target="_blank"
+             style="background:#25D366;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            💬 WhatsApp Us
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">🏠 Home</a>
+        <a href="products.html">🛍️ Products</a>
+        <a href="cart.html">🛒 Cart</a>
+        <a href="orders.html">📦 My Orders</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="#">📍 Ward No 47, Near Gurudwara, Raipur, CG</a>
+        <a href="tel:+919876543210">📞 +91 98765 43210</a>
+        <a href="mailto:mansi@example.com">✉️ mansi@example.com</a>
+        <a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Mansi Jewellery &amp; Cosmetics. All rights reserved.</span>
+      <span>Made with ❤️ for Raipur</span>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // ============================================================
+    // PRODUCTS PAGE — State
+    // ============================================================
+    let currentCategory = 'all';
+    let currentSearch   = '';
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    loadTheme();
+    initNavbar();
+    readURLParams();
+    renderCategoryChips();
+    bindSearchInput();
+    renderProducts();
+
+    // ============================================================
+    // READ URL PARAMS (?cat=jewellery&search=gold)
+    // ============================================================
+    function readURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      const cat    = params.get('cat');
+      const search = params.get('search');
+      if (cat && CATEGORIES.some(c => c.id === cat)) currentCategory = cat;
+      if (search) {
+        currentSearch = search.trim();
+        const inp = document.getElementById('search-input');
+        if (inp) inp.value = currentSearch;
+      }
+    }
+
+    // ============================================================
+    // CATEGORY CHIPS
+    // ============================================================
+    function renderCategoryChips() {
+      const container = document.getElementById('cat-filters');
+      container.innerHTML = CATEGORIES.map(c => `
+        <button
+          class="cat-chip cat-filter-chip ${c.id === currentCategory ? 'active' : ''}"
+          id="cat-chip-${c.id}"
+          onclick="selectCategory('${c.id}')"
+          aria-pressed="${c.id === currentCategory}"
+        >
+          ${c.icon} ${c.name}
+        </button>`).join('');
+    }
+
+    function selectCategory(catId) {
+      currentCategory = catId;
+      // Update chip active states
+      document.querySelectorAll('.cat-filter-chip').forEach(btn => {
+        const id = btn.id.replace('cat-chip-', '');
+        btn.classList.toggle('active', id === catId);
+        btn.setAttribute('aria-pressed', id === catId);
+      });
+      // Update URL without reload
+      const params = new URLSearchParams(window.location.search);
+      if (catId === 'all') params.delete('cat'); else params.set('cat', catId);
+      history.replaceState(null, '', '?' + params.toString());
+      renderProducts();
+    }
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+    function bindSearchInput() {
+      const inp = document.getElementById('search-input');
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (!inp) return;
+      inp.addEventListener('input', () => {
+        currentSearch = inp.value.trim();
+        clearBtn.style.display = currentSearch ? 'block' : 'none';
+        renderProducts();
+        // Update URL param
+        const params = new URLSearchParams(window.location.search);
+        if (currentSearch) params.set('search', currentSearch); else params.delete('search');
+        history.replaceState(null, '', '?' + params.toString());
+      });
+      // Show clear if pre-filled
+      clearBtn.style.display = currentSearch ? 'block' : 'none';
+    }
+
+    function applySearch(val) {
+      currentSearch = val.trim();
+      const inp = document.getElementById('search-input');
+      if (inp) inp.value = currentSearch;
+      document.getElementById('search-clear-btn').style.display = currentSearch ? 'block' : 'none';
+      renderProducts();
+    }
+
+    function clearSearch() {
+      currentSearch = '';
+      const inp = document.getElementById('search-input');
+      if (inp) inp.value = '';
+      document.getElementById('search-clear-btn').style.display = 'none';
+      const params = new URLSearchParams(window.location.search);
+      params.delete('search');
+      history.replaceState(null, '', '?' + params.toString());
+      renderProducts();
+    }
+
+    // ============================================================
+    // SORT
+    // ============================================================
+    function getSortedProducts(products) {
+      const sort = document.getElementById('sort-select').value;
+      const arr  = [...products];
+      if (sort === 'price-asc')  return arr.sort((a, b) => a.price - b.price);
+      if (sort === 'price-desc') return arr.sort((a, b) => b.price - a.price);
+      if (sort === 'discount')   return arr.sort((a, b) => {
+        const da = b.mrp > b.price ? (1 - b.price / b.mrp) : 0;
+        const db = a.mrp > a.price ? (1 - a.price / a.mrp) : 0;
+        return da - db;
+      });
+      // newest: keep original order (most recently added first via DB)
+      return arr;
+    }
+
+    // ============================================================
+    // PRODUCT CARD HTML
+    // ============================================================
+    function productCard(p) {
+      const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
+      const img  = p.image || 'https://via.placeholder.com/300x300?text=No+Image';
+      return `
+        <div class="product-card" onclick="location.href='product-detail.html?id=${p.id}'">
+          <div class="product-card-img">
+            <img src="${img}" alt="${p.name}" loading="lazy" />
+            ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
+            <button class="product-wishlist" onclick="event.stopPropagation();toggleWishlist(this)">🤍</button>
+          </div>
+          <div class="product-card-body">
+            <div class="product-card-name">${p.name}</div>
+            <div class="product-card-rating">
+              <span class="stars">${'★'.repeat(Math.round(p.rating || 4))}${'☆'.repeat(5 - Math.round(p.rating || 4))}</span>
+              <span class="rating-count">(${p.reviews || 0})</span>
+            </div>
+            <div class="product-card-price">
+              <span class="price-current">₹${p.price}</span>
+              ${p.mrp > p.price ? `<span class="price-mrp">₹${p.mrp}</span><span class="price-off">Save ₹${p.mrp - p.price}</span>` : ''}
+            </div>
+            <button class="btn-add-cart" onclick="event.stopPropagation();Cart.add('${p.id}')">
+              🛒 Add to Cart
+            </button>
+          </div>
+        </div>`;
+    }
+
+    // ============================================================
+    // RENDER PRODUCTS
+    // ============================================================
+    function renderProducts() {
+      let products = DB.getProducts();
+
+      // Filter by category
+      if (currentCategory !== 'all') {
+        products = products.filter(p => p.category === currentCategory);
+      }
+
+      // Filter by search
+      if (currentSearch) {
+        const q = currentSearch.toLowerCase();
+        products = products.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q) ||
+          (p.category || '').toLowerCase().includes(q)
+        );
+      }
+
+      // Sort
+      products = getSortedProducts(products);
+
+      // Render active filter tag
+      const filterArea = document.getElementById('active-filter-area');
+      const tags = [];
+      if (currentCategory !== 'all') {
+        const cat = CATEGORIES.find(c => c.id === currentCategory);
+        if (cat) tags.push(`<span class="active-filter-tag">${cat.icon} ${cat.name} <button onclick="selectCategory('all')" title="Clear">✕</button></span>`);
+      }
+      if (currentSearch) {
+        tags.push(`<span class="active-filter-tag">🔍 "${currentSearch}" <button onclick="clearSearch()" title="Clear">✕</button></span>`);
+      }
+      filterArea.innerHTML = tags.join(' ');
+
+      // Render grid
+      const grid  = document.getElementById('products-grid');
+      const count = document.getElementById('products-count');
+      count.textContent = `${products.length} product${products.length !== 1 ? 's' : ''} found`;
+
+      if (products.length === 0) {
+        grid.innerHTML = `
+          <div class="no-products">
+            <div class="no-icon">🔍</div>
+            <h3>No products found</h3>
+            <p>${currentSearch ? `No results for "<strong>${currentSearch}</strong>". Try a different keyword.` : 'No products in this category yet.'}</p>
+            <br/>
+            <button class="btn-primary" onclick="selectCategory('all');clearSearch()">🛍️ View All Products</button>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = products.map(productCard).join('');
+    }
+
+    // ============================================================
+    // WISHLIST TOGGLE
+    // ============================================================
+    function toggleWishlist(btn) {
+      btn.textContent = btn.textContent === '🤍' ? '❤️' : '🤍';
+    }
+
+    // ============================================================
+    // MOBILE MENU
+    // ============================================================
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    // Also bind nav search input keydown for Enter
+    (function() {
+      const navInp = document.getElementById('nav-search-input');
+      if (navInp) {
+        navInp.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') applySearch(this.value);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

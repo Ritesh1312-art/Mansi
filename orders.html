@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders — Mansi Jewellery &amp; Cosmetics</title>
+  <meta name="description" content="Track all your orders from Mansi Jewellery &amp; Cosmetics. View order status, details and track via WhatsApp." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .page-title-section {
+      max-width: 800px; margin: 32px auto 0; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-title-section h1 { font-size: 1.6rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .orders-count { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .status-pending   { background: #FEF3C7; color: #92400E; }
+    .status-confirmed { background: #DBEAFE; color: #1E40AF; }
+    .status-shipped   { background: #EDE9FE; color: #5B21B6; }
+    .status-delivered { background: #D1FAE5; color: #065F46; }
+    .status-cancelled { background: #FEE2E2; color: #991B1B; }
+    .order-wa-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #25D366; color: #fff;
+      padding: 8px 16px; border-radius: 10px;
+      font-size: 0.82rem; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.2s;
+      text-decoration: none;
+    }
+    .order-wa-btn:hover { background: #1ebe5d; transform: translateY(-1px); }
+    .order-items-preview {
+      display: flex; flex-direction: column; gap: 6px;
+      border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;
+    }
+    .order-preview-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.85rem;
+    }
+    .order-preview-name { color: var(--text); font-weight: 500; }
+    .order-preview-price { color: var(--primary); font-weight: 700; }
+    .empty-orders {
+      text-align: center; padding: 80px 24px; color: var(--text-muted);
+    }
+    .empty-orders .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+    .empty-orders h3 { font-size: 1.3rem; margin-bottom: 8px; color: var(--text); }
+    .address-mini {
+      font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .order-meta {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px;
+    }
+    .order-meta-item { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  </style>
+</head>
+<body>
+  <!-- AD1-TOP -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- OFFER MARQUEE -->
+  <div class="offer-banner">
+    <div class="offer-banner-inner">
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>💍 New Jewellery Collection Arrived!</span>
+      <span>📦 COD Available All Over India</span>
+      <span>⭐ Trusted by 500+ Customers in Raipur</span>
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">💍</div>
+      <div>
+        <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+      </div>
+    </a>
+    <div class="nav-center">
+      <div class="nav-search">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search products..." />
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="index.html" class="nav-link">Shop</a>
+      <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
+      <a href="cart.html" class="cart-btn">
+        🛒 Cart
+        <span class="cart-count"></span>
+      </a>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('mobile-menu').style.display = document.getElementById('mobile-menu').style.display === 'flex' ? 'none' : 'flex'">☰</button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;gap:12px;flex-direction:column;">
+    <a href="index.html" style="font-weight:600;color:var(--text);">🏠 Home</a>
+    <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+    <a href="orders.html" style="font-weight:600;color:var(--text);">📦 My Orders</a>
+  </div>
+
+  <!-- PAGE TITLE -->
+  <div class="page-title-section">
+    <h1>📦 My Orders</h1>
+    <span class="orders-count" id="orders-count"></span>
+  </div>
+
+  <!-- AD2-MIDDLE -->
+  <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- ORDERS LIST -->
+  <div class="orders-page" id="orders-container"></div>
+
+  <!-- AD3-BOTTOM -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
+        <p>Premium quality jewellery, cosmetics &amp; more. Trusted by 500+ customers in Raipur and all over India. COD available.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="cart.html">My Cart</a>
+        <a href="orders.html">My Orders</a>
+        <a href="login.html">Login</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <a href="https://wa.me/919876543210" target="_blank">📱 WhatsApp Us</a>
+        <a href="mailto:mansi@example.com">📧 Email Us</a>
+        <a href="#">📍 Ward No 47, Raipur, CG</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Mansi Jewellery &amp; Cosmetics</span>
+      <span>Made with ❤️ in Raipur</span>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    loadTheme();
+    initNavbar();
+
+    const session = DB.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+    }
+
+    function formatCurrency(n) {
+      return '₹' + Number(n).toLocaleString('en-IN');
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        pending:   { cls: 'status-pending',   icon: '⏳', label: 'Pending' },
+        confirmed: { cls: 'status-confirmed',  icon: '✅', label: 'Confirmed' },
+        shipped:   { cls: 'status-shipped',    icon: '🚚', label: 'Shipped' },
+        delivered: { cls: 'status-delivered',  icon: '✔️', label: 'Delivered' },
+        cancelled: { cls: 'status-cancelled',  icon: '❌', label: 'Cancelled' },
+      };
+      const s = map[status] || map['pending'];
+      return `<span class="status-badge ${s.cls}">${s.icon} ${s.label}</span>`;
+    }
+
+    function buildWhatsAppLink(order) {
+      const items = order.items.map(i => `• ${i.name} × ${i.qty} — ${formatCurrency(i.price * i.qty)}`).join('\n');
+      const msg = `Hi Mansi Store! 👋\n\nI want to track my order:\n\n*Order ID:* ${order.id}\n*Date:* ${formatDate(order.createdAt)}\n*Status:* ${order.status}\n\n*Items:*\n${items}\n\n*Total:* ${formatCurrency(order.grandTotal)}\n\nPlease update me on the delivery status. Thank you! 🙏`;
+      return `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(msg)}`;
+    }
+
+    function renderOrders() {
+      const orders = DB.getOrdersByUser(session.id);
+      const container = document.getElementById('orders-container');
+      const countEl = document.getElementById('orders-count');
+
+      if (orders.length === 0) {
+        countEl.textContent = '';
+        container.innerHTML = `
+          <div class="empty-orders">
+            <div class="empty-icon">📦</div>
+            <h3>No orders yet!</h3>
+            <p>You haven't placed any orders. Explore our collection and shop now!</p>
+            <a href="index.html" class="btn-primary" style="margin-top:24px;display:inline-flex;align-items:center;gap:8px;">
+              🛍️ Start Shopping
+            </a>
+          </div>`;
+        return;
+      }
+
+      countEl.textContent = `${orders.length} order${orders.length > 1 ? 's' : ''} placed`;
+
+      container.innerHTML = orders.map(order => {
+        const itemsHTML = order.items.map(item => `
+          <div class="order-preview-row">
+            <span class="order-preview-name">${item.name} <span style="color:var(--text-muted);">× ${item.qty}</span></span>
+            <span class="order-preview-price">${formatCurrency(item.price * item.qty)}</span>
+          </div>`).join('');
+
+        const addr = order.address
+          ? `${order.address.house}, ${order.address.street}, ${order.address.city} — ${order.address.pincode}`
+          : '';
+
+        return `
+          <div class="order-card">
+            <div class="order-card-header">
+              <div>
+                <div class="order-id">🧾 ${order.id}</div>
+                <div class="order-meta">
+                  <span class="order-meta-item">📅 ${formatDate(order.createdAt)}</span>
+                  <span class="order-meta-item">💳 ${order.paymentMode === 'cod' ? 'Cash on Delivery' : 'Online (Prepaid)'}</span>
+                  ${addr ? `<span class="order-meta-item">📍 ${order.address.city}</span>` : ''}
+                </div>
+              </div>
+              ${getStatusBadge(order.status)}
+            </div>
+
+            <div class="order-items-preview">
+              ${itemsHTML}
+            </div>
+
+            <div class="order-total-row">
+              <span>Grand Total</span>
+              <span>${formatCurrency(order.grandTotal)}</span>
+            </div>
+
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <a href="${buildWhatsAppLink(order)}" target="_blank" class="order-wa-btn">
+                📱 Track on WhatsApp
+              </a>
+              ${order.status === 'delivered' ? '<span style="font-size:0.82rem;color:var(--success);font-weight:600;">✅ Order Delivered!</span>' : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    renderOrders();
+  </script>
+</body>
+</html>

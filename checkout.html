@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout — Mansi Jewellery & Cosmetics</title>
+  <meta name="description" content="Complete your order with secure payment options. COD and online payment available."/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+</head>
+<body>
+
+<!-- AD 1 — SABSE UPAR -->
+<div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
+  <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+    <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+  </a>
+</div>
+
+<!-- OFFER MARQUEE -->
+<div class="offer-banner">
+  <div class="offer-banner-inner">
+    <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+    <span>📦 COD Available All Over India</span>
+    <span>🔒 Secure Payment via Razorpay</span>
+    <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">💍</div>
+    <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+  </a>
+  <div class="nav-right">
+    <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
+    <a href="cart.html" class="cart-btn">🛒 Cart <span class="cart-count" id="cart-badge">0</span></a>
+  </div>
+</nav>
+
+<!-- CHECKOUT PAGE -->
+<div class="checkout-page" style="max-width:1100px;margin:32px auto;padding:0 24px;">
+  <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:24px;">🧾 Checkout</h1>
+
+  <div class="checkout-grid" style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start;">
+
+    <!-- LEFT — FORM -->
+    <div>
+      <!-- Section 1: Delivery Address -->
+      <div class="checkout-section">
+        <h3>📍 Delivery Address</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" id="c-name" class="form-input" placeholder="Your full name"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" id="c-phone" class="form-input" placeholder="10-digit mobile number"/>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">House / Flat No & Building</label>
+            <input type="text" id="c-house" class="form-input" placeholder="e.g. Flat 201, Sunrise Apartment"/>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">Street / Area *</label>
+            <input type="text" id="c-street" class="form-input" placeholder="Street name, locality"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">City *</label>
+            <input type="text" id="c-city" class="form-input" placeholder="Your city"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">State *</label>
+            <select id="c-state" class="form-input">
+              <option value="">-- Select State --</option>
+              <option value="Chhattisgarh" selected>Chhattisgarh</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Delhi">Delhi</option>
+              <option value="West Bengal">West Bengal</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Andhra Pradesh">Andhra Pradesh</option>
+              <option value="Odisha">Odisha</option>
+              <option value="Jharkhand">Jharkhand</option>
+              <option value="Bihar">Bihar</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">Pincode *</label>
+            <div style="display:flex;gap:10px;">
+              <input type="text" id="c-pin" class="form-input" placeholder="6-digit pincode" maxlength="6" oninput="checkPincode(this.value)"/>
+            </div>
+            <div id="delivery-info" style="display:none;margin-top:10px;padding:12px;border-radius:10px;background:var(--primary-light);border:1px solid var(--primary);font-size:0.88rem;">
+              <strong>📦 Delivery:</strong> <span id="d-zone"></span> &nbsp;|&nbsp;
+              <strong>⏱️ Time:</strong> <span id="d-days"></span>
+            </div>
+            <div id="pin-error" style="display:none;color:var(--error);font-size:0.82rem;margin-top:6px;">❌ Invalid pincode. Please enter a valid 6-digit pincode.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AD 2 — BICH MEIN -->
+      <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
+        <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+          <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+        </a>
+      </div>
+
+      <!-- Section 2: Payment -->
+      <div class="checkout-section">
+        <h3>💳 Payment Method</h3>
+        <div class="payment-options">
+          <label class="payment-option" id="opt-online" onclick="selectPayment('online')">
+            <input type="radio" name="payment" value="online" checked/>
+            <div>
+              <div class="payment-label">💳 Pay Online (Razorpay)</div>
+              <div class="payment-sublabel">UPI, Card, Net Banking, Wallets — Fast & Secure</div>
+              <div style="margin-top:6px;font-size:0.82rem;color:var(--success);font-weight:600;" id="online-charge-label">Delivery: calculating...</div>
+            </div>
+          </label>
+          <label class="payment-option" id="opt-upi" onclick="selectPayment('upi')" style="display:none;">
+            <input type="radio" name="payment" value="upi"/>
+            <div>
+              <div class="payment-label">📲 Pay Direct UPI (0% Fee)</div>
+              <div class="payment-sublabel">Pay instantly using Google Pay, PhonePe, or Paytm</div>
+              <div style="margin-top:6px;font-size:0.82rem;color:var(--success);font-weight:600;" id="upi-charge-label">Delivery: calculating...</div>
+            </div>
+          </label>
+          <label class="payment-option" id="opt-cod" onclick="selectPayment('cod')">
+            <input type="radio" name="payment" value="cod"/>
+            <div>
+              <div class="payment-label">💵 Cash on Delivery (COD)</div>
+              <div class="payment-sublabel">Pay when your order arrives at your door</div>
+              <div style="margin-top:6px;font-size:0.82rem;color:var(--text-muted);font-weight:600;" id="cod-charge-label">Delivery: calculating... (+₹45 COD fee)</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Place Order Button -->
+      <button onclick="placeOrder()" class="btn-full" style="font-size:1.1rem;padding:16px;border-radius:14px;margin-top:8px;">
+        🛒 Place Order
+      </button>
+      <p style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:10px;">🔒 Your data is secure and encrypted</p>
+    </div>
+
+    <!-- RIGHT — ORDER SUMMARY -->
+    <div style="position:sticky;top:88px;">
+      <div class="cart-summary">
+        <h3>🧾 Order Summary</h3>
+        <div id="summary-items"></div>
+        <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0</span></div>
+        <div class="summary-row"><span>Delivery Charge</span><span id="s-delivery">—</span></div>
+        <div class="summary-row" style="font-size:0.8rem;color:var(--text-muted);">
+          <span>Payment Mode</span><span id="s-mode">Online</span>
+        </div>
+        <div class="summary-row total"><span>Grand Total</span><span id="s-total">₹0</span></div>
+        <div style="margin-top:14px;padding:12px;background:var(--bg-input);border-radius:10px;font-size:0.8rem;color:var(--text-muted);">
+          📍 Delivery charges will be calculated based on your pincode.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AD 3 — SABSE LAST MEIN -->
+<div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
+  <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+    <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
+  </a>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div style="font-size:1.1rem;font-weight:800;color:var(--primary);">💍 Mansi Jewellery & Cosmetics</div>
+      <p>Your trusted local market. Serving Raipur and all of India.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="index.html">🏠 Home</a>
+      <a href="products.html">🛍️ Products</a>
+      <a href="cart.html">🛒 Cart</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="#">📍 Ward No 47, Raipur, CG</a>
+      <a href="tel:+919876543210">📞 +91 98765 43210</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Mansi Jewellery & Cosmetics</span>
+  </div>
+</footer>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="success-modal">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:4rem;margin-bottom:12px;">🎉</div>
+    <h3 style="font-size:1.4rem;margin-bottom:8px;">Order Placed Successfully!</h3>
+    <p style="color:var(--text-muted);margin-bottom:16px;">Your order ID: <strong id="modal-order-id" style="color:var(--primary);"></strong></p>
+    <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:20px;">We will confirm your order on WhatsApp. Thank you for shopping with us! 💍</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a id="whatsapp-order-btn" href="#" target="_blank"
+         style="background:#25D366;color:#fff;padding:12px;border-radius:12px;font-weight:700;font-size:0.95rem;display:flex;align-items:center;justify-content:center;gap:8px;">
+        💬 Track Order on WhatsApp
+      </a>
+      <button onclick="location.href='orders.html'" class="btn-full" style="background:var(--primary);">📦 View My Orders</button>
+      <button onclick="location.href='index.html'" class="btn-outline" style="padding:12px;border-radius:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:none;color:var(--text);">🏠 Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPI PAYMENT MODAL -->
+<div id="upi-modal" class="modal-overlay">
+  <div class="modal" style="text-align: center; max-width: 420px; padding: 30px;">
+    <div style="font-size: 3rem; margin-bottom: 12px;">📲</div>
+    <h3 style="font-size: 1.4rem; margin-bottom: 12px;">Pay via UPI</h3>
+    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px;">
+      Pay <strong><span id="upi-modal-amount" style="color: var(--primary);">₹0</span></strong> to complete your order.
+    </p>
+    
+    <!-- QR Code Container -->
+    <div style="background: white; padding: 15px; display: inline-block; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow);">
+      <img id="upi-qr-img" src="" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;" />
+    </div>
+    
+    <!-- Mobile UPI Apps Shortcut (Shown only on mobile) -->
+    <div id="upi-mobile-apps" style="display:none; margin-bottom: 20px;">
+      <a id="upi-intent-link" href="#" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+        📱 Pay with UPI App (GPay/PhonePe/Paytm)
+      </a>
+    </div>
+    
+    <p style="font-size: 0.78rem; color: var(--text-light); margin-bottom: 20px; line-height: 1.4;">
+      <strong>Instructions:</strong> Scan the QR code or click the button above to pay. After payment, click the button below to confirm.
+    </p>
+    
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button onclick="confirmUpiPayment()" class="btn-primary" style="width:100%; justify-content:center; background:var(--success); padding: 14px; box-shadow: 0 4px 12px rgba(16,185,129,0.35);">
+        ✅ Payment Done (Confirm Order)
+      </button>
+      <button onclick="closeUpiModal()" class="btn-outline" style="padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; border: 2px solid var(--border); background: none; color: var(--text);">
+        ❌ Cancel Payment
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  loadTheme();
+  initNavbar();
+
+  // Redirect if not logged in
+  const session = DB.getSession();
+  if (!session) {
+    alert("Please login to continue checkout.");
+    location.href = "login.html";
+  }
+
+  let currentZone = null;
+  let currentPayment = "online";
+  const cartItems = Cart.get();
+  const subtotal = Cart.total();
+
+  // Show UPI option if configured in settings
+  const hasUpi = STORE.gpayUpi || STORE.phonepeUpi || STORE.paytmUpi;
+  if (hasUpi) {
+    document.getElementById("opt-upi").style.display = "flex";
+  }
+
+  // Pre-fill name and phone from session
+  if (session) {
+    document.getElementById("c-name").value = session.name || "";
+  }
+
+  // Render summary items
+  function renderSummary() {
+    const el = document.getElementById("summary-items");
+    if (!cartItems.length) { location.href = "cart.html"; return; }
+    el.innerHTML = cartItems.map(i => `
+      <div class="mini-item">
+        <img src="${i.image || ''}" onerror="this.src='https://via.placeholder.com/50'" alt="${i.name}"/>
+        <div class="mini-item-name">${i.name} × ${i.qty}</div>
+        <div class="mini-item-price">₹${i.price * i.qty}</div>
+      </div>`).join("");
+    document.getElementById("s-subtotal").textContent = "₹" + subtotal;
+    updateTotal();
+  }
+
+  function updateTotal() {
+    if (!currentZone) {
+      document.getElementById("s-delivery").textContent = "Enter pincode";
+      document.getElementById("s-total").textContent = "₹" + subtotal;
+      document.getElementById("online-charge-label").textContent = "Enter pincode to calculate";
+      document.getElementById("cod-charge-label").textContent = "Enter pincode (+₹45 COD fee)";
+      if (hasUpi) document.getElementById("upi-charge-label").textContent = "Enter pincode to calculate";
+      return;
+    }
+    const calcMode = currentPayment === "upi" ? "prepaid" : currentPayment;
+    const info = getDeliveryCharges(document.getElementById("c-pin").value, calcMode);
+    if (!info) return;
+    const charge = info.charge;
+    const grand = subtotal + charge;
+    document.getElementById("s-delivery").textContent = "₹" + charge;
+    document.getElementById("s-total").textContent = "₹" + grand;
+    document.getElementById("s-mode").textContent = currentPayment === "cod" ? "COD" : (currentPayment === "upi" ? "UPI" : "Online");
+
+    // Update labels
+    const onlineInfo = getDeliveryCharges(document.getElementById("c-pin").value, "prepaid");
+    const codInfo = getDeliveryCharges(document.getElementById("c-pin").value, "cod");
+    if (onlineInfo) {
+      document.getElementById("online-charge-label").textContent = `Delivery: ₹${onlineInfo.charge} (${onlineInfo.label})`;
+      if (hasUpi) {
+        document.getElementById("upi-charge-label").textContent = `Delivery: ₹${onlineInfo.charge} (${onlineInfo.label}) — 0% Fee`;
+      }
+    }
+    if (codInfo) document.getElementById("cod-charge-label").textContent = `Delivery: ₹${codInfo.charge} (COD fee included)`;
+  }
+
+  function checkPincode(pin) {
+    const info = document.getElementById("delivery-info");
+    const err = document.getElementById("pin-error");
+    if (pin.length === 6) {
+      const calcMode = currentPayment === "upi" ? "prepaid" : currentPayment;
+      const result = getDeliveryCharges(pin, calcMode);
+      if (result) {
+        currentZone = result.zone;
+        document.getElementById("d-zone").textContent = result.label;
+        document.getElementById("d-days").textContent = result.days;
+        info.style.display = "block";
+        err.style.display = "none";
+        updateTotal();
+      } else {
+        currentZone = null;
+        info.style.display = "none";
+        err.style.display = "block";
+      }
+    } else {
+      info.style.display = "none";
+      err.style.display = "none";
+    }
+  }
+
+  function selectPayment(mode) {
+    currentPayment = mode;
+    document.getElementById("opt-online").classList.toggle("selected", mode === "online");
+    document.getElementById("opt-cod").classList.toggle("selected", mode === "cod");
+    if (hasUpi) {
+      document.getElementById("opt-upi").classList.toggle("selected", mode === "upi");
+    }
+    updateTotal();
+  }
+
+  // Check if Razorpay is configured
+  const hasRazorpay = STORE.razorpayKey && STORE.razorpayKey !== "rzp_test_XXXXXXXXXX" && STORE.razorpayKey.trim() !== "";
+  if (!hasRazorpay) {
+    document.getElementById("opt-online").style.display = "none";
+  }
+
+  // Init selected state dynamically
+  if (hasRazorpay) {
+    currentPayment = "online";
+    document.getElementById("opt-online").classList.add("selected");
+  } else if (hasUpi) {
+    currentPayment = "upi";
+    document.getElementById("opt-upi").classList.add("selected");
+  } else {
+    currentPayment = "cod";
+    document.getElementById("opt-cod").classList.add("selected");
+  }
+
+  function placeOrder() {
+    // Validate
+    const name = document.getElementById("c-name").value.trim();
+    const phone = document.getElementById("c-phone").value.trim();
+    const street = document.getElementById("c-street").value.trim();
+    const city = document.getElementById("c-city").value.trim();
+    const state = document.getElementById("c-state").value;
+    const pin = document.getElementById("c-pin").value.trim();
+
+    if (!name || !phone || !street || !city || !state || !pin) {
+      alert("⚠️ Please fill all required fields!"); return;
+    }
+    if (phone.length !== 10 || isNaN(phone)) {
+      alert("⚠️ Please enter a valid 10-digit phone number!"); return;
+    }
+    if (!currentZone) {
+      alert("⚠️ Please enter a valid pincode to calculate delivery charges!"); return;
+    }
+    if (!cartItems.length) {
+      alert("Your cart is empty!"); location.href = "cart.html"; return;
+    }
+
+    const deliveryMode = currentPayment === "upi" ? "prepaid" : currentPayment;
+    const deliveryInfo = getDeliveryCharges(pin, deliveryMode);
+    const order = {
+      userId: session.id,
+      customerName: name,
+      phone,
+      address: {
+        house: document.getElementById("c-house").value.trim(),
+        street, city, state, pincode: pin
+      },
+      items: cartItems,
+      subtotal,
+      deliveryCharge: deliveryInfo.charge,
+      grandTotal: subtotal + deliveryInfo.charge,
+      paymentMode: currentPayment,
+      deliveryZone: deliveryInfo.zone,
+    };
+
+    if (currentPayment === "cod") {
+      const newOrder = DB.addOrder(order);
+      Cart.clear();
+      showSuccess(newOrder);
+    } else if (currentPayment === "upi") {
+      const upiId = STORE.gpayUpi || STORE.phonepeUpi || STORE.paytmUpi;
+      if (!upiId) {
+        alert("UPI payment option is not configured by the administrator yet.");
+        return;
+      }
+      const tempOrderId = "ORD" + Math.floor(Math.random() * 900000 + 100000);
+      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(STORE.name)}&am=${order.grandTotal}&cu=INR&tn=${encodeURIComponent("Order " + tempOrderId)}`;
+      
+      document.getElementById("upi-modal-amount").textContent = "₹" + order.grandTotal;
+      document.getElementById("upi-qr-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
+      
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        document.getElementById("upi-mobile-apps").style.display = "block";
+        document.getElementById("upi-intent-link").href = upiLink;
+      } else {
+        document.getElementById("upi-mobile-apps").style.display = "none";
+      }
+      
+      window.pendingUpiOrder = order;
+      window.pendingUpiOrder.id = tempOrderId;
+      document.getElementById("upi-modal").classList.add("open");
+    } else {
+      // Online payment via Razorpay
+      if (typeof Razorpay === "undefined") {
+        alert("Payment gateway not loaded. Please try COD or refresh the page.");
+        return;
+      }
+      const newOrder = DB.addOrder(order);
+      const rzp = new Razorpay({
+        key: STORE.razorpayKey,
+        amount: order.grandTotal * 100,
+        currency: "INR",
+        name: STORE.name,
+        description: `Order — ${cartItems.length} item(s)`,
+        handler: function(response) {
+          DB.updateOrderStatus(newOrder.id, "confirmed");
+          Cart.clear();
+          showSuccess(newOrder);
+        },
+        prefill: { name, contact: phone },
+        theme: { color: "#F59E0B" }
+      });
+      rzp.open();
+    }
+  }
+
+  function confirmUpiPayment() {
+    if (!window.pendingUpiOrder) return;
+    const finalOrder = DB.addOrder(window.pendingUpiOrder);
+    Cart.clear();
+    closeUpiModal();
+    showSuccess(finalOrder);
+  }
+
+  function closeUpiModal() {
+    document.getElementById("upi-modal").classList.remove("open");
+  }
+
+  function showSuccess(order) {
+    document.getElementById("modal-order-id").textContent = order.id;
+    const msg = encodeURIComponent(
+      `🛍️ New Order!\nOrder ID: ${order.id}\nCustomer: ${order.customerName}\nPhone: ${order.phone}\nAddress: ${order.address.house}, ${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}\nItems: ${order.items.map(i => `${i.name} x${i.qty}`).join(", ")}\nTotal: ₹${order.grandTotal}\nPayment: ${order.paymentMode.toUpperCase()}`
+    );
+    const waUrl = `https://wa.me/${STORE.whatsapp}?text=${msg}`;
+    document.getElementById("whatsapp-order-btn").href = waUrl;
+    document.getElementById("success-modal").classList.add("open");
+    
+    // Background Auto-Notification to Admin's WhatsApp via CallMeBot
+    if (STORE.callMeBotApiKey) {
+      const adminMsg = encodeURIComponent(
+        `🛍️ *Mansi Jewellery — New Order!*\n\n*Order ID:* ${order.id}\n*Customer:* ${order.customerName}\n*Phone:* ${order.phone}\n*Items:* ${order.items.map(i => `${i.name} (x${i.qty})`).join(", ")}\n*Total:* ₹${order.grandTotal}\n*Payment:* ${order.paymentMode.toUpperCase()}\n*Address:* ${order.address.house}, ${order.address.street}, ${order.address.city}, ${order.address.pincode}`
+      );
+      const callMeBotUrl = `https://api.callmebot.com/whatsapp.php?phone=${STORE.whatsapp}&text=${adminMsg}&apikey=${STORE.callMeBotApiKey}`;
+      
+      fetch(callMeBotUrl).then(response => {
+        console.log("✅ Admin WhatsApp alert sent successfully!");
+      }).catch(err => {
+        console.error("❌ Admin WhatsApp alert failed:", err);
+      });
+    }
+  }
+
+  renderSummary();
+</script>
+</body>
+</html>
