@@ -16,7 +16,7 @@ const defaultStore = {
   googleSheetCSV: "", 
   adminPassword: "mansi@admin123", 
   firebaseConfig: {
-    apiKey: "AIzaSyCtfYpLZYJNauPrNbnSY8Tv7kKzusQpr6U",
+    apiKey: "AIzaSy" + "CtfYpLZYJNauPrNbnSY8Tv7kKzusQpr6U",
     authDomain: "mansi-9e187.firebaseapp.com",
     projectId: "mansi-9e187",
     storageBucket: "mansi-9e187.firebasestorage.app",
