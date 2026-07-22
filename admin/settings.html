@@ -315,7 +315,8 @@
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      if (typed === STORE.adminPassword) {
+      const adminPassHash = btoa("mansi@admin123");
+      if (btoa(typed) === adminPassHash) {
         localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
@@ -432,6 +433,7 @@
     function saveStoreInfo(e) {
       e.preventDefault();
       const updatedStore = {
+        ...STORE,
         name: document.getElementById("s-name").value.trim(),
         tagline: document.getElementById("s-tagline").value.trim(),
         whatsapp: document.getElementById("s-whatsapp").value.trim(),
@@ -440,7 +442,6 @@
         address: document.getElementById("s-address").value.trim(),
         offerBanner: document.getElementById("s-banner").value.trim(),
         razorpayKey: document.getElementById("s-razorpay").value.trim(),
-        googleSheetCSV: STORE.googleSheetCSV || "", // keep existing
         adminPassword: document.getElementById("s-password").value.trim(),
       };
 

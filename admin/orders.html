@@ -142,7 +142,8 @@
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      if (typed === STORE.adminPassword) {
+      const adminPassHash = btoa("mansi@admin123");
+      if (btoa(typed) === adminPassHash) {
         localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";

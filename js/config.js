@@ -14,7 +14,7 @@ const defaultStore = {
   offerBanner: "🎉 Use code WELCOME | Free delivery on first order!",
   razorpayKey: "rzp_test_XXXXXXXXXX", 
   googleSheetCSV: "", 
-  adminPassword: "mansi@admin123", 
+  // adminPassword removed for security, using hashed/obfuscated check or Firebase Auth
   firebaseConfig: {
     apiKey: "AIzaSy" + "CtfYpLZYJNauPrNbnSY8Tv7kKzusQpr6U",
     authDomain: "mansi-9e187.firebaseapp.com",

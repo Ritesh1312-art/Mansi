@@ -217,7 +217,19 @@ const DB = {
     const orders = this.getOrders();
     order.id = order.id || "ORD" + Date.now();
     order.createdAt = order.createdAt || new Date().toISOString();
-    order.status = "pending";
+    order.status = order.status || "pending";
+
+    // Update product stock and sales
+    order.items.forEach(item => {
+      const product = this.getProductById(item.productId);
+      if (product) {
+        const newStock = Math.max(0, (product.stock || 0) - item.qty);
+        this.updateProduct(item.productId, { 
+          stock: newStock,
+          sales: (product.sales || 0) + item.qty 
+        });
+      }
+    });
 
     orders.unshift(order);
     this.saveOrders(orders);
@@ -225,14 +237,6 @@ const DB = {
     if (isFirebaseActive) {
       fbDb.collection("orders").doc(order.id).set(order);
     }
-
-    // Update product sales
-    order.items.forEach(item => {
-      const product = this.getProductById(item.productId);
-      if (product) {
-        this.updateProduct(item.productId, { sales: (product.sales || 0) + item.qty });
-      }
-    });
 
     return order;
   },

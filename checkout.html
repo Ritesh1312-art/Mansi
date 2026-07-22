@@ -457,7 +457,6 @@
         alert("Payment gateway not loaded. Please try COD or refresh the page.");
         return;
       }
-      const newOrder = DB.addOrder(order);
       const rzp = new Razorpay({
         key: STORE.razorpayKey,
         amount: order.grandTotal * 100,
@@ -465,7 +464,9 @@
         name: STORE.name,
         description: `Order — ${cartItems.length} item(s)`,
         handler: function(response) {
-          DB.updateOrderStatus(newOrder.id, "confirmed");
+          order.status = "confirmed";
+          order.paymentId = response.razorpay_payment_id;
+          const newOrder = DB.addOrder(order);
           Cart.clear();
           showSuccess(newOrder);
         },

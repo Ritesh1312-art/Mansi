@@ -771,3 +771,24 @@ select.form-input { appearance: none; cursor: pointer; }
     background: var(--primary-light);
   }
 }
+
+/* =============================================
+   MOBILE ENHANCEMENTS (Fixing padding, gaps, and readability)
+   ============================================= */
+@media (max-width: 480px) {
+  .nav-logo-text { font-size: 1.1rem; }
+  .product-card-name { font-size: 0.85rem; height: 34px; overflow: hidden; }
+  .price-current { font-size: 1rem; }
+  .btn-add-cart { padding: 8px; font-size: 0.8rem; }
+  .section-title { font-size: 1.25rem; margin-bottom: 16px; }
+  .hero h1 { font-size: 1.75rem; }
+  .hero p { font-size: 0.9rem; }
+  .footer { padding: 32px 16px; }
+  .admin-table th, .admin-table td { font-size: 0.75rem; padding: 8px 4px; }
+  .table-img { width: 40px; height: 40px; }
+  .admin-header h1 { font-size: 1.4rem; }
+}
+
+/* Fix for horizontal scroll on mobile */
+body { overflow-x: hidden; width: 100%; }
+.navbar, .hero, .section, .footer { width: 100%; box-sizing: border-box; }

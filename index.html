@@ -256,7 +256,8 @@
     // Mobile Menu
     function toggleMobileMenu() {
       const menu = document.getElementById("mobile-menu");
-      menu.style.display = menu.style.display === "none" ? "flex" : "none";
+      const isHidden = !menu.style.display || menu.style.display === "none";
+      menu.style.display = isHidden ? "flex" : "none";
     }
 
     // Run
