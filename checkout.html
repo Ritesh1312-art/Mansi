@@ -479,6 +479,8 @@
 
   function confirmUpiPayment() {
     if (!window.pendingUpiOrder) return;
+    // Mark as confirmed for admin to verify manually
+    window.pendingUpiOrder.status = "pending_verification";
     const finalOrder = DB.addOrder(window.pendingUpiOrder);
     Cart.clear();
     closeUpiModal();

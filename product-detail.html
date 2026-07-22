@@ -562,7 +562,13 @@
     // ============================================================
     function switchImage(idx, src) {
       activeImgIdx = idx;
-      document.getElementById('main-product-img').src = src;
+      const mainImg = document.getElementById('main-product-img');
+      mainImg.style.opacity = '0';
+      setTimeout(() => {
+        mainImg.src = src;
+        mainImg.style.opacity = '1';
+      }, 200);
+      
       // Update thumb active
       const imgs = product.images || [product.image];
       imgs.forEach((_, i) => {
@@ -570,6 +576,19 @@
         if (thumb) thumb.classList.toggle('active', i === idx);
       });
     }
+
+    // Advanced Zoom Logic
+    document.addEventListener('mousemove', (e) => {
+      const container = document.querySelector('.detail-main-img-container');
+      if (!container) return;
+      const img = container.querySelector('img');
+      if (e.target === img || container.contains(e.target)) {
+        const rect = container.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        img.style.transformOrigin = `${x}% ${y}%`;
+      }
+    });
 
     // ============================================================
     // QTY CONTROL

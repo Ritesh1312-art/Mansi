@@ -55,15 +55,18 @@
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
-        <div class="brand">⚙️ Admin Panel</div>
-        <div class="brand-sub">Mansi Jewellery</div>
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px;">
+          <span>🛍️</span> Mansi Admin
+        </div>
         <nav>
           <a href="index.html" class="admin-nav-item">📊 Dashboard</a>
           <a href="products.html" class="admin-nav-item active">🛍️ Products</a>
           <a href="orders.html" class="admin-nav-item">📦 Orders</a>
           <a href="settings.html" class="admin-nav-item">⚙️ Settings</a>
-          <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
-          <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color:var(--error); margin-top: 20px;">🚪 Logout</a>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
+            <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color: var(--error);">🚪 Logout</a>
+          </div>
         </nav>
       </aside>
 
@@ -244,6 +247,13 @@
       renderProductsTable();
     }
 
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.toString().replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
     function renderProductsTable() {
       const query = document.getElementById("product-search").value.toLowerCase().trim();
       const products = DB.getProducts();
@@ -259,11 +269,13 @@
         return;
       }
 
-      list.innerHTML = filtered.map(p => `
+      list.innerHTML = filtered.map(p => {
+        const safeName = escapeHTML(p.name);
+        return `
         <tr>
-          <td><img src="${p.image || 'https://via.placeholder.com/80?text=No+Image'}" class="table-img" alt="${p.name}" /></td>
-          <td><strong>${p.name}</strong></td>
-          <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--primary-light);color:var(--primary-dark);border-radius:4px;font-weight:700;">${p.category.toUpperCase()}</span></td>
+          <td><img src="${p.image || 'https://via.placeholder.com/80?text=No+Image'}" class="table-img" alt="${safeName}" /></td>
+          <td><strong>${safeName}</strong></td>
+          <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--primary-light);color:var(--primary-dark);border-radius:4px;font-weight:700;">${escapeHTML(p.category.toUpperCase())}</span></td>
           <td style="font-weight:700;">₹${p.price}</td>
           <td style="color:var(--text-light);text-decoration:line-through;font-size:0.8rem;">₹${p.mrp}</td>
           <td>${p.stock}</td>
@@ -274,8 +286,8 @@
               <button onclick="deleteProduct('${p.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);">🗑️ Delete</button>
             </div>
           </td>
-        </tr>
-      `).join("");
+        </tr>`;
+      }).join("");
     }
 
     let uploadedImageBase64 = "";

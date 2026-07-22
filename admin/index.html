@@ -1,128 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard — Mansi Jewellery & Cosmetics</title>
-  <link rel="stylesheet" href="../css/style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — Mansi Jewellery</title>
+  <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    /* Admin Login Overlay */
-    .admin-auth-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-    }
-    .admin-auth-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
+    .admin-auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+    .admin-auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow-hover); }
+    .admin-header-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+    .easy-btn { padding: 20px; border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; flex: 1; min-width: 150px; box-shadow: var(--shadow); border: 2px solid transparent; }
+    .easy-btn:hover { border-color: var(--primary); transform: translateY(-4px); }
+    .easy-btn span { font-size: 2.5rem; }
   </style>
 </head>
-<body>
+<body onload="checkAdminAuth()">
 
-  <!-- ADMIN AUTH OVERLAY -->
+  <!-- ADMIN AUTH -->
   <div id="admin-auth" class="admin-auth-overlay">
     <div class="admin-auth-card">
-      <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
-      <h2 style="margin-bottom: 8px;">Admin Login</h2>
-      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Enter password to access the panel</p>
-      <div class="form-group" style="text-align: left;">
-        <label class="form-label">Password</label>
-        <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()" />
-      </div>
-      <button class="btn-full" onclick="verifyAdminPassword()" style="margin-top: 12px;">Login as Admin</button>
-      <p id="admin-auth-err" style="color: var(--error); font-size: 0.85rem; margin-top: 12px; display: none;">❌ Incorrect password!</p>
+      <div style="font-size: 4rem; margin-bottom: 16px;">🔐</div>
+      <h2 style="margin-bottom: 8px;">Admin Control</h2>
+      <p style="color: var(--text-muted); margin-bottom: 32px;">Enter password to unlock your store</p>
+      <input type="password" id="admin-pass-input" class="btn-outline btn-full" style="margin-bottom: 16px; text-align: center;" placeholder="••••••••" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
+      <button class="btn-primary btn-full" onclick="verifyAdminPassword()">Unlock Panel</button>
+      <p id="admin-auth-err" style="color: var(--error); font-weight: 700; margin-top: 16px; display: none;">❌ Wrong Password!</p>
     </div>
   </div>
 
   <div id="admin-content" style="display: none;">
-    <!-- AD 1 — SABSE UPAR -->
-    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-      </a>
-    </div>
-
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
-        <div class="brand">⚙️ Admin Panel</div>
-        <div class="brand-sub">Mansi Jewellery</div>
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px;">
+          <span>💍</span> Mansi Admin
+        </div>
         <nav>
           <a href="index.html" class="admin-nav-item active">📊 Dashboard</a>
           <a href="products.html" class="admin-nav-item">🛍️ Products</a>
           <a href="orders.html" class="admin-nav-item">📦 Orders</a>
           <a href="settings.html" class="admin-nav-item">⚙️ Settings</a>
-          <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
-          <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color:var(--error); margin-top: 20px;">🚪 Logout</a>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
+            <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color: var(--error);">🚪 Logout</a>
+          </div>
         </nav>
       </aside>
 
-      <!-- MAIN CONTENT -->
+      <!-- MAIN -->
       <main class="admin-main">
-        <div class="admin-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
           <div>
-            <h1>📊 Dashboard</h1>
-            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;" id="current-date"></p>
+            <h1 style="font-size: 2rem; font-weight: 900;">Welcome Back! 👋</h1>
+            <p id="current-date" style="color: var(--text-muted); font-weight: 600;"></p>
           </div>
-          <a href="../index.html" target="_blank" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">🌐 View Live Store</a>
         </div>
 
-        <!-- AD 2 — BICH MEIN -->
-        <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-          </a>
+        <!-- QUICK ACTIONS (Ultra Easy) -->
+        <div style="margin-bottom: 40px;">
+          <h3 style="margin-bottom: 20px;">Quick Actions</h3>
+          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <a href="products.html" class="easy-btn" style="background: #EBF5FF; color: #1E40AF;">
+              <span>➕</span> Add Product
+            </a>
+            <a href="orders.html" class="easy-btn" style="background: #ECFDF5; color: #065F46;">
+              <span>📦</span> View Orders
+            </a>
+            <a href="settings.html" class="easy-btn" style="background: #FFF7ED; color: #9A3412;">
+              <span>⚙️</span> Store Settings
+            </a>
+          </div>
         </div>
 
-        <!-- STATS GRID -->
-        <div class="stats-grid">
+        <!-- STATS -->
+        <div class="admin-grid" style="margin-bottom: 40px;">
           <div class="stat-card">
-            <div class="stat-icon">💰</div>
-            <div class="stat-value" id="stat-total-revenue">₹0</div>
-            <div class="stat-label">Total Revenue</div>
+            <div class="icon">💰</div>
+            <div class="value" id="stat-total-revenue">₹0</div>
+            <div class="label">Total Revenue</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📈</div>
-            <div class="stat-value" id="stat-today-revenue">₹0</div>
-            <div class="stat-label">Today's Revenue</div>
+            <div class="icon">📈</div>
+            <div class="value" id="stat-today-revenue">₹0</div>
+            <div class="label">Today's Sales</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📦</div>
-            <div class="stat-value" id="stat-total-orders">0</div>
-            <div class="stat-label">Total Orders</div>
+            <div class="icon">🛍️</div>
+            <div class="value" id="stat-total-orders">0</div>
+            <div class="label">Total Orders</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">⏳</div>
-            <div class="stat-value" id="stat-pending-orders">0</div>
-            <div class="stat-label">Pending Orders</div>
+            <div class="icon">⏳</div>
+            <div class="value" id="stat-pending-orders">0</div>
+            <div class="label">Pending Orders</div>
           </div>
         </div>
 
         <!-- RECENT ORDERS -->
-        <div style="background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 28px;">
-          <h2 style="font-size: 1.2rem; margin-bottom: 16px;">📦 Recent Orders</h2>
+        <div class="admin-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="font-weight: 800;">Recent Orders</h3>
+            <a href="orders.html" style="color: var(--primary); font-weight: 700;">View All →</a>
+          </div>
           <div style="overflow-x: auto;">
-            <table class="admin-table">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
               <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer Name</th>
-                  <th>Total Price</th>
-                  <th>Payment</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
+                <tr style="border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 0.85rem;">
+                  <th style="padding: 12px;">ORDER ID</th>
+                  <th style="padding: 12px;">CUSTOMER</th>
+                  <th style="padding: 12px;">AMOUNT</th>
+                  <th style="padding: 12px;">STATUS</th>
+                  <th style="padding: 12px;">DATE</th>
                 </tr>
               </thead>
               <tbody id="recent-orders-list">
@@ -130,21 +118,6 @@
               </tbody>
             </table>
           </div>
-        </div>
-
-        <!-- REVENUE BAR CHART (CSS PURE) -->
-        <div style="background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border);">
-          <h2 style="font-size: 1.2rem; margin-bottom: 16px;">📅 Last 7 Days Orders Summary</h2>
-          <div style="display: flex; align-items: flex-end; justify-content: space-around; height: 200px; padding: 20px 0; border-bottom: 2px solid var(--border); border-left: 2px solid var(--border);" id="chart-container">
-            <!-- Dynamic Chart Bars -->
-          </div>
-        </div>
-
-        <!-- AD 3 — SABSE LAST MEIN -->
-        <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-          </a>
         </div>
       </main>
     </div>
@@ -154,10 +127,6 @@
   <script src="../js/data.js"></script>
   <script src="../js/app.js"></script>
   <script>
-    // Theme setup
-    loadTheme();
-
-    // Check Admin Session
     function checkAdminAuth() {
       if (localStorage.getItem("adminAuth") === "true") {
         document.getElementById("admin-auth").style.display = "none";
@@ -169,14 +138,10 @@
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      // Use a simple obfuscation/hash for local check if Firebase is not active
       const adminPassHash = btoa("mansi@admin123");
       if (btoa(typed) === adminPassHash) {
         localStorage.setItem("adminAuth", "true");
-        document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
-        err.style.display = "none";
-        initDashboard();
+        location.reload();
       } else {
         err.style.display = "block";
       }
@@ -187,101 +152,30 @@
       location.reload();
     }
 
-    // Dashboard Init
     function initDashboard() {
-      // Date
       document.getElementById("current-date").textContent = new Date().toDateString();
-
-      // Stats
       const rev = DB.getRevenue();
       document.getElementById("stat-total-revenue").textContent = "₹" + rev.total;
       document.getElementById("stat-today-revenue").textContent = "₹" + rev.todayRevenue;
       document.getElementById("stat-total-orders").textContent = rev.totalOrders;
       document.getElementById("stat-pending-orders").textContent = rev.pendingOrders;
 
-      // Render Recent Orders
       const orders = DB.getOrders().slice(0, 5);
       const list = document.getElementById("recent-orders-list");
-
       if (orders.length === 0) {
-        list.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">No orders found yet.</td></tr>`;
-      } else {
-        list.innerHTML = orders.map(o => {
-          let badgeClass = "badge-warning";
-          if (o.status === "confirmed") badgeClass = "badge-info";
-          if (o.status === "shipped") badgeClass = "badge-warning";
-          if (o.status === "delivered") badgeClass = "badge-success";
-
-          return `
-            <tr>
-              <td><strong>${o.id}</strong></td>
-              <td>${o.customerName}</td>
-              <td style="color:var(--primary);font-weight:700;">₹${o.grandTotal}</td>
-              <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--bg-input);border-radius:4px;font-weight:700;">${o.paymentMode.toUpperCase()}</span></td>
-              <td><span class="badge ${badgeClass}">${o.status.toUpperCase()}</span></td>
-              <td style="font-size:0.8rem;color:var(--text-muted);">${new Date(o.createdAt).toLocaleDateString()}</td>
-              <td>
-                <select onchange="updateStatus('${o.id}', this.value)" class="form-input" style="padding:6px 10px;font-size:0.78rem;width:auto;">
-                  <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
-                  <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>Confirmed</option>
-                  <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
-                  <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
-                </select>
-              </td>
-            </tr>
-          `;
-        }).join("");
+        list.innerHTML = `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-muted);">No orders yet.</td></tr>`;
+        return;
       }
-
-      // Render Bar Chart
-      renderChart();
+      list.innerHTML = orders.map(o => `
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 16px; font-weight: 700;">#${o.id.slice(-6)}</td>
+          <td style="padding: 16px;">${o.customerName}</td>
+          <td style="padding: 16px; color: var(--primary); font-weight: 800;">₹${o.grandTotal}</td>
+          <td style="padding: 16px;"><span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; background: var(--primary-light); color: var(--primary);">${o.status.toUpperCase()}</span></td>
+          <td style="padding: 16px; color: var(--text-muted); font-size: 0.85rem;">${new Date(o.createdAt).toLocaleDateString()}</td>
+        </tr>
+      `).join("");
     }
-
-    function updateStatus(orderId, newStatus) {
-      DB.updateOrderStatus(orderId, newStatus);
-      initDashboard(); // refresh stats & table
-      Cart.showToast("Order status updated successfully!");
-    }
-
-    function renderChart() {
-      const container = document.getElementById("chart-container");
-      const orders = DB.getOrders();
-      const last7Days = [];
-
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        last7Days.push({
-          dateStr: d.toDateString(),
-          label: d.toLocaleDateString(undefined, { weekday: 'short' }),
-          count: 0
-        });
-      }
-
-      orders.forEach(o => {
-        const oDateStr = new Date(o.createdAt).toDateString();
-        const found = last7Days.find(d => d.dateStr === oDateStr);
-        if (found) {
-          found.count++;
-        }
-      });
-
-      const maxCount = Math.max(...last7Days.map(d => d.count), 1);
-
-      container.innerHTML = last7Days.map(d => {
-        const heightPct = (d.count / maxCount) * 85; // max 85% height
-        return `
-          <div style="display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;width:40px;">
-            <div style="font-size:0.75rem;font-weight:700;color:var(--primary);margin-bottom:4px;">${d.count}</div>
-            <div style="width:24px;height:${heightPct}%;background:linear-gradient(to top, var(--primary-dark), var(--primary));border-radius:4px 4px 0 0;transition:height 0.3s;"></div>
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;font-weight:500;">${d.label}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    // Run Auth check
-    checkAdminAuth();
   </script>
 </body>
 </html>

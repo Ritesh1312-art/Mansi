@@ -29,17 +29,20 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 24px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
     }
     .settings-section h2 {
-      font-size: 1.1rem;
-      margin-bottom: 18px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      color: var(--text);
     }
   </style>
 </head>
@@ -71,15 +74,18 @@
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
-        <div class="brand">⚙️ Admin Panel</div>
-        <div class="brand-sub">Mansi Jewellery</div>
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px;">
+          <span>⚙️</span> Mansi Admin
+        </div>
         <nav>
           <a href="index.html" class="admin-nav-item">📊 Dashboard</a>
           <a href="products.html" class="admin-nav-item">🛍️ Products</a>
           <a href="orders.html" class="admin-nav-item">📦 Orders</a>
           <a href="settings.html" class="admin-nav-item active">⚙️ Settings</a>
-          <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
-          <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color:var(--error); margin-top: 20px;">🚪 Logout</a>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
+            <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color: var(--error);">🚪 Logout</a>
+          </div>
         </nav>
       </aside>
 

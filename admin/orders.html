@@ -55,15 +55,18 @@
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
-        <div class="brand">⚙️ Admin Panel</div>
-        <div class="brand-sub">Mansi Jewellery</div>
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px;">
+          <span>📦</span> Mansi Admin
+        </div>
         <nav>
           <a href="index.html" class="admin-nav-item">📊 Dashboard</a>
           <a href="products.html" class="admin-nav-item">🛍️ Products</a>
           <a href="orders.html" class="admin-nav-item active">📦 Orders</a>
           <a href="settings.html" class="admin-nav-item">⚙️ Settings</a>
-          <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
-          <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color:var(--error); margin-top: 20px;">🚪 Logout</a>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
+            <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color: var(--error);">🚪 Logout</a>
+          </div>
         </nav>
       </aside>
 
