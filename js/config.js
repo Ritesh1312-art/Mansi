@@ -93,6 +93,8 @@ const THEMES = [
 function applyTheme(themeId) {
   document.documentElement.setAttribute("data-theme", themeId);
   localStorage.setItem("theme", themeId);
+  // Update all theme selectors on the page
+  document.querySelectorAll('select.glass').forEach(s => s.value = themeId);
 }
 
 function loadTheme() {

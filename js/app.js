@@ -244,3 +244,95 @@ function initAdminMobileNav() {
   document.body.appendChild(nav);
   document.body.style.paddingBottom = "80px";
 }
+
+// =============================================
+// DUAL AI CHATBOTS (User & Admin)
+// =============================================
+
+const AIChat = {
+  isOpen: false,
+  isAdmin: false,
+
+  init() {
+    this.isAdmin = window.location.pathname.includes('/admin/');
+    this.renderWidget();
+  },
+
+  renderWidget() {
+    const widget = document.createElement('div');
+    widget.className = 'chat-widget';
+    widget.innerHTML = `
+      <div class="chat-window glass" id="chat-window">
+        <div class="chat-header">
+          <span>${this.isAdmin ? '🔐 Admin AI Assistant' : '✨ Mansi Assistant'}</span>
+          <button onclick="AIChat.toggle()" style="color:#000; font-size:1.5rem;">×</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg bot">${this.isAdmin ? 'Hello Admin! Main aapke store ka saara data jaanta hoon. Kya poochna chahte hain?' : 'Namaste! Main Mansi Jewellery se hoon. Main aapki kaise madad kar sakta hoon?'}</div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Type in Hindi or English..." onkeydown="if(event.key==='Enter') AIChat.send()">
+          <button onclick="AIChat.send()" style="font-size:1.2rem;">🚀</button>
+        </div>
+      </div>
+      <div class="chat-btn" onclick="AIChat.toggle()">
+        ${this.isAdmin ? '🤖' : '💬'}
+      </div>
+    `;
+    document.body.appendChild(widget);
+  },
+
+  toggle() {
+    this.isOpen = !this.isOpen;
+    document.getElementById('chat-window').classList.toggle('open', this.isOpen);
+  },
+
+  async send() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    this.addMessage(text, 'user');
+    input.value = '';
+
+    // Simulated AI Response (Hindi/English Hybrid)
+    setTimeout(() => {
+      let response = "";
+      if (this.isAdmin) {
+        response = this.getAdminResponse(text);
+      } else {
+        response = this.getUserResponse(text);
+      }
+      this.addMessage(response, 'bot');
+    }, 800);
+  },
+
+  addMessage(text, side) {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = `msg ${side}`;
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  },
+
+  getUserResponse(q) {
+    q = q.toLowerCase();
+    if (q.includes('order')) return "Aap 'My Orders' section mein apna status dekh sakte hain. Kya main aapke liye link open karoon?";
+    if (q.includes('price') || q.includes('daam')) return "Hamare saare products best prices par hain! Aap category select karke check kar sakte hain.";
+    if (q.includes('delivery')) return "Raipur mein 1-2 din aur baaki India mein 5-7 din lagte hain. COD bhi available hai!";
+    return "Dhanyawad! Main ek AI assistant hoon. Aap mujhse delivery, products, ya orders ke baare mein kuch bhi pooch sakte hain.";
+  },
+
+  getAdminResponse(q) {
+    const rev = DB.getRevenue();
+    q = q.toLowerCase();
+    if (q.includes('sale') || q.includes('revenue')) return `Aaj ki total revenue ₹${rev.todayRevenue} hai aur ab tak ki total revenue ₹${rev.total} ho chuki hai.`;
+    if (q.includes('order')) return `Abhi total ${rev.totalOrders} orders hain, jinmein se ${rev.pendingOrders} pending hain.`;
+    if (q.includes('user')) return `Aapke store par abhi ${DB.getUsers().length} registered users hain.`;
+    return "Main aapke store ka data analyze kar sakta hoon. Poochiye: 'Aaj ki sale kitni hai?' ya 'Pending orders kitne hain?'";
+  }
+};
+
+// Start Chat
+document.addEventListener('DOMContentLoaded', () => AIChat.init());
