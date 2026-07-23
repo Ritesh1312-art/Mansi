@@ -3,28 +3,26 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Manage Orders — Mansi Jewellery & Cosmetics</title>
+  <title>Manage Orders — Mansi Admin</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    .admin-auth-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-    }
-    .admin-auth-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
+    .admin-auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+    .admin-auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 400px; box-shadow: var(--shadow); text-align: center; }
+    .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    .admin-sidebar { background: var(--primary); color: var(--white); padding: 40px 24px; }
+    .admin-sidebar h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 48px; letter-spacing: 2px; }
+    .admin-nav-item { display: block; padding: 16px 0; color: rgba(255,255,255,0.6); text-transform: uppercase; font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; }
+    .admin-nav-item.active { color: var(--accent); }
+    .admin-nav-item:hover { color: var(--white); }
+    .admin-main { padding: 60px 5%; background: var(--bg-soft); }
+    .admin-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: var(--bg-card); border-radius: 12px; overflow: hidden; }
+    .admin-table th { text-align: left; padding: 12px 10px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+    .admin-table td { padding: 14px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .badge-warning { background: #FEF3C7; color: #92400E; }
+    .badge-info { background: #DBEAFE; color: #1E40AF; }
+    .badge-success { background: #D1FAE5; color: #065F46; }
   </style>
 </head>
 <body>
@@ -45,7 +43,7 @@
   </div>
 
   <div id="admin-content" style="display: none;">
-    <!-- AD 1 — SABSE UPAR -->
+    <!-- AD 1 -->
     <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
       <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
         <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
@@ -53,10 +51,9 @@
     </div>
 
     <div class="admin-layout">
-      <!-- SIDEBAR -->
       <aside class="admin-sidebar">
-        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px;">
-          <span>📦</span> Mansi Admin
+        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px;">
+          <span>⚙️</span> Mansi Admin
         </div>
         <nav>
           <a href="index.html" class="admin-nav-item">📊 Dashboard</a>
@@ -70,55 +67,48 @@
         </nav>
       </aside>
 
-      <!-- MAIN CONTENT -->
       <main class="admin-main">
-        <div class="admin-header" style="flex-wrap: wrap; gap: 16px;">
+        <div class="admin-header">
           <div>
-            <h1>📦 All Orders</h1>
-            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">Track and update customer order status</p>
+            <h1>📦 Manage Orders</h1>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">View, track, and update customer orders</p>
           </div>
-          <div>
-            <select id="status-filter" class="form-input" style="padding: 10px 16px; width: auto;" onchange="renderOrdersTable()">
-              <option value="all">All Orders</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-            </select>
-          </div>
+          <select id="status-filter" onchange="renderOrdersTable()" style="padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-sans); font-size: 0.85rem;">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+          </select>
         </div>
 
-        <!-- AD 2 — BICH MEIN -->
+        <!-- AD 2 -->
         <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
           <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
             <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
           </a>
         </div>
 
-        <!-- ORDERS TABLE -->
-        <div style="background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto;">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Contact</th>
-                <th>Items (Qty)</th>
-                <th>Total Value</th>
-                <th>Del. Charge</th>
-                <th>Payment</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="admin-orders-list">
-              <!-- Dynamic -->
-            </tbody>
-          </table>
-        </div>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Items</th>
+              <th>Amount</th>
+              <th>Delivery</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-orders-list">
+          </tbody>
+        </table>
 
-        <!-- AD 3 — SABSE LAST MEIN -->
+        <!-- AD 3 -->
         <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
           <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
             <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
@@ -134,6 +124,12 @@
   <script>
     loadTheme();
 
+    // ===== ADMIN AUTH — Uses saved password from settings =====
+    function getAdminPassword() {
+      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      return settings.adminPassword || "";
+    }
+
     function checkAdminAuth() {
       if (localStorage.getItem("adminAuth") === "true") {
         document.getElementById("admin-auth").style.display = "none";
@@ -145,14 +141,24 @@
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      const adminPassHash = btoa("mansi@admin123");
-      if (btoa(typed) === adminPassHash) {
+      
+      if (!typed) {
+        err.textContent = "❌ Please enter a password!";
+        err.style.display = "block";
+        return;
+      }
+
+      const savedPass = getAdminPassword();
+      const correctPass = savedPass || "mansi@admin123";
+      
+      if (btoa(typed) === btoa(correctPass)) {
         localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         err.style.display = "none";
         renderOrdersTable();
       } else {
+        err.textContent = "❌ Incorrect password!";
         err.style.display = "block";
       }
     }
@@ -183,7 +189,6 @@
         const itemsCount = o.items.reduce((sum, item) => sum + item.qty, 0);
         const itemsList = o.items.map(item => `${item.name} (x${item.qty})`).join(", ");
 
-        // WhatsApp message contents
         const statusMsg = encodeURIComponent(
           `Hello ${o.customerName},\nYour Order #${o.id} at Mansi Jewellery & Cosmetics has been marked as *${o.status.toUpperCase()}*.\nTotal Order Amount: ₹${o.grandTotal}\nThank you for shopping with us!`
         );
@@ -193,31 +198,31 @@
             <td><strong>${o.id}</strong></td>
             <td>
               <div style="font-weight:700;">${o.customerName}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${o.address.house}, ${o.address.street}, ${o.address.city}, ${o.address.state} - ${o.address.pincode}">
-                📍 ${o.address.city}, ${o.address.pincode}
+              <div style="font-size:0.75rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${o.address?.house || ''}, ${o.address?.street || ''}, ${o.address?.city || ''}, ${o.address?.state || ''} - ${o.address?.pincode || ''}">
+                📍 ${o.address?.city || 'N/A'}, ${o.address?.pincode || 'N/A'}
               </div>
             </td>
             <td>
-              <a href="tel:${o.phone}" style="color:var(--primary);">${o.phone}</a>
+              <a href="https://wa.me/${o.phone}" target="_blank" style="color:var(--primary);font-weight:600;">💬 Message</a>
             </td>
             <td>
               <span title="${itemsList}" style="cursor:help;border-bottom:1px dashed var(--text-light);">${itemsCount} Item(s)</span>
             </td>
             <td style="color:var(--primary);font-weight:700;">₹${o.grandTotal}</td>
             <td style="color:var(--text-muted);">₹${o.deliveryCharge}</td>
-            <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--bg-input);border-radius:4px;font-weight:700;">${o.paymentMode.toUpperCase()}</span></td>
-            <td><span class="badge ${badgeClass}">${o.status.toUpperCase()}</span></td>
-            <td style="font-size:0.78rem;color:var(--text-muted);">${new Date(o.createdAt).toLocaleDateString()} ${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+            <td style="font-size:0.75rem;padding:3px 6px;background:var(--bg-input);border-radius:4px;font-weight:700;display:inline-block;">${(o.paymentMode || 'cod').toUpperCase()}</td>
+            <td><span class="badge ${badgeClass}">${(o.status || 'pending').toUpperCase()}</span></td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">${o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A'}</td>
             <td>
               <div style="display:flex;gap:6px;align-items:center;">
-                <select onchange="updateStatus('${o.id}', this.value)" class="form-input" style="padding:6px 10px;font-size:0.78rem;width:auto;">
+                <select onchange="updateStatus('${o.id}', this.value)" style="padding:6px 10px;font-size:0.78rem;border:1px solid var(--border);border-radius:6px;">
                   <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
                   <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>Confirmed</option>
                   <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
                   <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
                 </select>
-                <a href="https://wa.me/91${o.phone}?text=${statusMsg}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#25D366;color:#25D366;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
-                  💬 Chat
+                <a href="https://wa.me/${o.phone}?text=${statusMsg}" target="_blank" style="padding:6px 10px;font-size:0.75rem;border:1px solid #25D366;color:#25D366;text-decoration:none;border-radius:6px;font-weight:600;white-space:nowrap;">
+                  💬 Notify
                 </a>
               </div>
             </td>
@@ -232,7 +237,6 @@
       Cart.showToast("Order status updated!");
     }
 
-    // Run auth check
     checkAdminAuth();
   </script>
 </body>

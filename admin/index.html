@@ -23,6 +23,7 @@
       <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; color: var(--text-light); margin-bottom: 40px;">Secure Access Only</p>
       <input type="password" id="admin-pass-input" placeholder="PASSWORD" style="width: 100%; padding: 16px; border: 1px solid var(--border); margin-bottom: 24px; text-align: center; letter-spacing: 4px;"/>
       <button class="btn btn-primary btn-full" onclick="verifyAdminPassword()" style="width: 100%;">Enter Dashboard</button>
+      <p id="admin-auth-err" style="color: #dc2626; font-size: 0.85rem; margin-top: 12px; display: none;">❌ Incorrect password!</p>
     </div>
   </div>
 
@@ -86,14 +87,32 @@
       }
     }
 
+    function getAdminPassword() {
+      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      return settings.adminPassword || "";
+    }
+
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
-      const adminPassHash = btoa("mansi@admin123");
-      if (btoa(typed) === adminPassHash) {
+      const err = document.getElementById("admin-auth-err");
+
+      if (!typed) {
+        err.textContent = "❌ Please enter a password!";
+        err.style.display = "block";
+        return;
+      }
+
+      const savedPass = getAdminPassword();
+      const correctPass = savedPass || "mansi@admin123";
+
+      if (btoa(typed) === btoa(correctPass)) {
         localStorage.setItem("adminAuth", "true");
-        location.reload();
+        document.getElementById("admin-auth").style.display = "none";
+        document.getElementById("admin-content").style.display = "grid";
+        initDashboard();
       } else {
-        alert("Invalid Access");
+        err.textContent = "❌ Incorrect password!";
+        err.style.display = "block";
       }
     }
 

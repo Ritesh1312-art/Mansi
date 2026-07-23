@@ -3,57 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Orders — Mansi Jewellery &amp; Cosmetics</title>
-  <meta name="description" content="Track all your orders from Mansi Jewellery &amp; Cosmetics. View order status, details and track via WhatsApp." />
+  <title>My Orders — Mansi Jewellery & Cosmetics</title>
+  <meta name="description" content="Track all your orders from Mansi Jewellery & Cosmetics. View order status, details and track via WhatsApp." />
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .page-title-section {
-      max-width: 800px; margin: 32px auto 0; padding: 0 24px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .page-title-section { max-width: 800px; margin: 32px auto 0; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
     .page-title-section h1 { font-size: 1.6rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
     .orders-count { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
-    .status-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 12px; border-radius: 20px;
-      font-size: 0.78rem; font-weight: 700;
-    }
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
     .status-pending   { background: #FEF3C7; color: #92400E; }
     .status-confirmed { background: #DBEAFE; color: #1E40AF; }
     .status-shipped   { background: #EDE9FE; color: #5B21B6; }
     .status-delivered { background: #D1FAE5; color: #065F46; }
     .status-cancelled { background: #FEE2E2; color: #991B1B; }
-    .order-wa-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #25D366; color: #fff;
-      padding: 8px 16px; border-radius: 10px;
-      font-size: 0.82rem; font-weight: 700;
-      border: none; cursor: pointer; transition: all 0.2s;
-      text-decoration: none;
-    }
+    .order-wa-btn { display: inline-flex; align-items: center; gap: 6px; background: #25D366; color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
     .order-wa-btn:hover { background: #1ebe5d; transform: translateY(-1px); }
-    .order-items-preview {
-      display: flex; flex-direction: column; gap: 6px;
-      border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;
-    }
-    .order-preview-row {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.85rem;
-    }
+    .order-items-preview { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+    .order-preview-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
     .order-preview-name { color: var(--text); font-weight: 500; }
     .order-preview-price { color: var(--primary); font-weight: 700; }
-    .empty-orders {
-      text-align: center; padding: 80px 24px; color: var(--text-muted);
-    }
+    .empty-orders { text-align: center; padding: 80px 24px; color: var(--text-muted); }
     .empty-orders .empty-icon { font-size: 4rem; margin-bottom: 16px; }
     .empty-orders h3 { font-size: 1.3rem; margin-bottom: 8px; color: var(--text); }
-    .address-mini {
-      font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .order-meta {
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px;
-    }
+    .order-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
     .order-meta-item { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
   </style>
 </head>
@@ -71,7 +43,6 @@
       <span>🎉 Use code WELCOME — Free delivery on first order!</span>
       <span>💍 New Jewellery Collection Arrived!</span>
       <span>📦 COD Available All Over India</span>
-      <span>⭐ Trusted by 500+ Customers in Raipur</span>
       <span>🎉 Use code WELCOME — Free delivery on first order!</span>
     </div>
   </div>
@@ -80,23 +51,15 @@
   <nav class="navbar">
     <a class="nav-logo" href="index.html">
       <div class="nav-logo-icon">💍</div>
-      <div>
-        <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
-      </div>
+      <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
     </a>
-    <div class="nav-center">
-      <div class="nav-search">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" placeholder="Search products..." />
-      </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="products.html" class="nav-link">Collections</a>
     </div>
     <div class="nav-right">
-      <a href="index.html" class="nav-link">Shop</a>
+      <a href="cart.html" class="cart-btn">🛒 Cart <span class="cart-count" style="display:none;">0</span></a>
       <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
-      <a href="cart.html" class="cart-btn">
-        🛒 Cart
-        <span class="cart-count"></span>
-      </a>
     </div>
     <button class="hamburger" onclick="document.getElementById('mobile-menu').style.display = document.getElementById('mobile-menu').style.display === 'flex' ? 'none' : 'flex'">☰</button>
   </nav>
@@ -104,6 +67,7 @@
   <!-- MOBILE MENU -->
   <div id="mobile-menu" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;gap:12px;flex-direction:column;">
     <a href="index.html" style="font-weight:600;color:var(--text);">🏠 Home</a>
+    <a href="products.html" style="font-weight:600;color:var(--text);">🛍️ Collections</a>
     <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
     <a href="orders.html" style="font-weight:600;color:var(--text);">📦 My Orders</a>
   </div>
@@ -131,32 +95,8 @@
     </a>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
-        <p>Premium quality jewellery, cosmetics &amp; more. Trusted by 500+ customers in Raipur and all over India. COD available.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Quick Links</h4>
-        <a href="index.html">Home</a>
-        <a href="cart.html">My Cart</a>
-        <a href="orders.html">My Orders</a>
-        <a href="login.html">Login</a>
-      </div>
-      <div class="footer-col">
-        <h4>Contact Us</h4>
-        <a href="https://wa.me/919876543210" target="_blank">📱 WhatsApp Us</a>
-        <a href="mailto:mansi@example.com">📧 Email Us</a>
-        <a href="#">📍 Ward No 47, Raipur, CG</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2025 Mansi Jewellery &amp; Cosmetics</span>
-      <span>Made with ❤️ in Raipur</span>
-    </div>
-  </footer>
+  <!-- FOOTER (rendered by JS) -->
+  <footer class="footer"></footer>
 
   <script src="js/config.js"></script>
   <script src="js/data.js"></script>
@@ -210,7 +150,7 @@
             <div class="empty-icon">📦</div>
             <h3>No orders yet!</h3>
             <p>You haven't placed any orders. Explore our collection and shop now!</p>
-            <a href="index.html" class="btn-primary" style="margin-top:24px;display:inline-flex;align-items:center;gap:8px;">
+            <a href="index.html" style="margin-top:24px;display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:var(--white);padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
               🛍️ Start Shopping
             </a>
           </div>`;
@@ -255,7 +195,7 @@
 
             <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
               <a href="${buildWhatsAppLink(order)}" target="_blank" class="order-wa-btn">
-                📱 Track on WhatsApp
+                💬 Track on WhatsApp
               </a>
               ${order.status === 'delivered' ? '<span style="font-size:0.82rem;color:var(--success);font-weight:600;">✅ Order Delivered!</span>' : ''}
             </div>

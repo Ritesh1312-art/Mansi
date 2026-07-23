@@ -5,16 +5,15 @@
 const defaultStore = {
   name: "Mansi Jewellery & Cosmetics",
   tagline: "Apna Local Market — Style Meets Tradition",
-  whatsapp: "919876543210", 
+  whatsapp: "91XXXXXXXXXX", // Admin: Change this to your WhatsApp number (with country code, no + or spaces)
+  phone: "", // Not displayed publicly — kept for internal use only
   address: "Ward No 47, Near Gurudwara, Raipur, Chhattisgarh",
   city: "Raipur",
   pincode: "492001",
-  email: "mansi@example.com",
-  phone: "+91 98765 43210",
+  email: "", // Admin: Set your store email in Settings
   offerBanner: "🎉 Use code WELCOME | Free delivery on first order!",
   razorpayKey: "rzp_test_XXXXXXXXXX", 
   googleSheetCSV: "", 
-  // adminPassword removed for security, using hashed/obfuscated check or Firebase Auth
   firebaseConfig: {
     apiKey: "AIzaSy" + "CtfYpLZYJNauPrNbnSY8Tv7kKzusQpr6U",
     authDomain: "mansi-9e187.firebaseapp.com",
@@ -23,10 +22,11 @@ const defaultStore = {
     messagingSenderId: "399147392144",
     appId: "1:399147392144:web:00166d6c57b146914f8c15"
   },
-  callMeBotApiKey: "", // For free background WhatsApp notifications
+  callMeBotApiKey: "",
   gpayUpi: "",
   phonepeUpi: "",
   paytmUpi: "",
+  adminPassword: "",
 };
 
 const defaultDelivery = {
@@ -104,7 +104,5 @@ const CATEGORIES = [
   { id: "all",       name: "All Products",    icon: "🛍️" },
   { id: "jewellery", name: "Jewellery",       icon: "💍" },
   { id: "cosmetics", name: "Cosmetics",       icon: "💄" },
-  { id: "tea-sets",  name: "Tea Cup Sets",    icon: "☕" },
-  { id: "paintings", name: "Paintings",       icon: "🖼️" },
   { id: "gifts",     name: "Gift Items",      icon: "🎁" },
 ];

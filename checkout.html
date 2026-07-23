@@ -43,7 +43,7 @@
 <div class="checkout-page" style="max-width:1100px;margin:32px auto;padding:0 24px;">
   <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:24px;">🧾 Checkout</h1>
 
-  <div class="checkout-grid" style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start;">
+  <div class="checkout-grid">
 
     <!-- LEFT — FORM -->
     <div>
@@ -57,7 +57,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Phone Number *</label>
-            <input type="tel" id="c-phone" class="form-input" placeholder="10-digit mobile number"/>
+            <input type="tel" id="c-phone" class="form-input" placeholder="10-digit mobile number" maxlength="10"/>
           </div>
           <div class="form-group" style="grid-column:1/-1;">
             <label class="form-label">House / Flat No & Building</label>
@@ -180,29 +180,8 @@
   </a>
 </div>
 
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <div style="font-size:1.1rem;font-weight:800;color:var(--primary);">💍 Mansi Jewellery & Cosmetics</div>
-      <p>Your trusted local market. Serving Raipur and all of India.</p>
-    </div>
-    <div class="footer-col">
-      <h4>Quick Links</h4>
-      <a href="index.html">🏠 Home</a>
-      <a href="products.html">🛍️ Products</a>
-      <a href="cart.html">🛒 Cart</a>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <a href="#">📍 Ward No 47, Raipur, CG</a>
-      <a href="tel:+919876543210">📞 +91 98765 43210</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2025 Mansi Jewellery & Cosmetics</span>
-  </div>
-</footer>
+<!-- FOOTER (rendered by JS) -->
+<footer class="footer"></footer>
 
 <!-- SUCCESS MODAL -->
 <div class="modal-overlay" id="success-modal">
@@ -217,7 +196,7 @@
         💬 Track Order on WhatsApp
       </a>
       <button onclick="location.href='orders.html'" class="btn-full" style="background:var(--primary);">📦 View My Orders</button>
-      <button onclick="location.href='index.html'" class="btn-outline" style="padding:12px;border-radius:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:none;color:var(--text);">🏠 Continue Shopping</button>
+      <button onclick="location.href='index.html'" style="padding:12px;border-radius:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:none;color:var(--text);">🏠 Continue Shopping</button>
     </div>
   </div>
 </div>
@@ -231,14 +210,12 @@
       Pay <strong><span id="upi-modal-amount" style="color: var(--primary);">₹0</span></strong> to complete your order.
     </p>
     
-    <!-- QR Code Container -->
     <div style="background: white; padding: 15px; display: inline-block; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow);">
       <img id="upi-qr-img" src="" alt="UPI QR Code" style="width: 200px; height: 200px; display: block;" />
     </div>
     
-    <!-- Mobile UPI Apps Shortcut (Shown only on mobile) -->
     <div id="upi-mobile-apps" style="display:none; margin-bottom: 20px;">
-      <a id="upi-intent-link" href="#" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
+      <a id="upi-intent-link" href="#" style="display:block;padding:14px;background:var(--primary);color:#fff;border-radius:12px;font-weight:700;font-size:0.95rem;text-align:center;">
         📱 Pay with UPI App (GPay/PhonePe/Paytm)
       </a>
     </div>
@@ -248,10 +225,10 @@
     </p>
     
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <button onclick="confirmUpiPayment()" class="btn-primary" style="width:100%; justify-content:center; background:var(--success); padding: 14px; box-shadow: 0 4px 12px rgba(16,185,129,0.35);">
+      <button onclick="confirmUpiPayment()" style="width:100%;padding:14px;background:var(--success);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:0.95rem;cursor:pointer;">
         ✅ Payment Done (Confirm Order)
       </button>
-      <button onclick="closeUpiModal()" class="btn-outline" style="padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; border: 2px solid var(--border); background: none; color: var(--text);">
+      <button onclick="closeUpiModal()" style="padding:12px;border-radius:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:none;color:var(--text);">
         ❌ Cancel Payment
       </button>
     </div>
@@ -283,7 +260,7 @@
     document.getElementById("opt-upi").style.display = "flex";
   }
 
-  // Pre-fill name and phone from session
+  // Pre-fill name from session
   if (session) {
     document.getElementById("c-name").value = session.name || "";
   }
@@ -385,7 +362,6 @@
   }
 
   function placeOrder() {
-    // Validate
     const name = document.getElementById("c-name").value.trim();
     const phone = document.getElementById("c-phone").value.trim();
     const street = document.getElementById("c-street").value.trim();
@@ -452,7 +428,6 @@
       window.pendingUpiOrder.id = tempOrderId;
       document.getElementById("upi-modal").classList.add("open");
     } else {
-      // Online payment via Razorpay
       if (typeof Razorpay === "undefined") {
         alert("Payment gateway not loaded. Please try COD or refresh the page.");
         return;
@@ -479,7 +454,6 @@
 
   function confirmUpiPayment() {
     if (!window.pendingUpiOrder) return;
-    // Mark as confirmed for admin to verify manually
     window.pendingUpiOrder.status = "pending_verification";
     const finalOrder = DB.addOrder(window.pendingUpiOrder);
     Cart.clear();
@@ -503,15 +477,9 @@
     // Background Auto-Notification to Admin's WhatsApp via CallMeBot
     if (STORE.callMeBotApiKey) {
       const adminMsg = encodeURIComponent(
-        `🛍️ *Mansi Jewellery — New Order!*\n\n*Order ID:* ${order.id}\n*Customer:* ${order.customerName}\n*Phone:* ${order.phone}\n*Items:* ${order.items.map(i => `${i.name} (x${i.qty})`).join(", ")}\n*Total:* ₹${order.grandTotal}\n*Payment:* ${order.paymentMode.toUpperCase()}\n*Address:* ${order.address.house}, ${order.address.street}, ${order.address.city}, ${order.address.pincode}`
+        `🛍️ New Order!\nOrder ID: ${order.id}\nCustomer: ${order.customerName}\nPhone: ${order.phone}\nAddress: ${order.address.house}, ${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}\nItems: ${order.items.map(i => `${i.name} x${i.qty}`).join(", ")}\nTotal: ₹${order.grandTotal}\nPayment: ${order.paymentMode.toUpperCase()}`
       );
-      const callMeBotUrl = `https://api.callmebot.com/whatsapp.php?phone=${STORE.whatsapp}&text=${adminMsg}&apikey=${STORE.callMeBotApiKey}`;
-      
-      fetch(callMeBotUrl).then(response => {
-        console.log("✅ Admin WhatsApp alert sent successfully!");
-      }).catch(err => {
-        console.error("❌ Admin WhatsApp alert failed:", err);
-      });
+      fetch(`https://api.callmebot.com/whatsapp.php?phone=${STORE.whatsapp}&text=${adminMsg}&apikey=${STORE.callMeBotApiKey}`);
     }
   }
 

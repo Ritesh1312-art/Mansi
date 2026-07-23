@@ -3,33 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Product Details — Mansi</title>
+  <title>Product Details — Mansi Jewellery & Cosmetics</title>
   <link rel="stylesheet" href="css/style.css" />
-  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
   <style>
-    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 60px 5%; }
-    .detail-img-container { background: var(--bg-soft); aspect-ratio: 3/4; overflow: hidden; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 60px 5%; max-width: 1300px; margin: 0 auto; }
+    .detail-img-container { background: var(--bg-soft); aspect-ratio: 3/4; overflow: hidden; border-radius: 8px; }
     .detail-img-container img { width: 100%; height: 100%; object-fit: cover; }
     .detail-info { padding-top: 20px; }
     .detail-category { text-transform: uppercase; letter-spacing: 3px; font-size: 0.75rem; color: var(--text-light); margin-bottom: 12px; }
     .detail-title { font-family: var(--font-serif); font-size: 3rem; margin-bottom: 24px; line-height: 1.1; }
-    .detail-price { font-size: 1.5rem; font-weight: 600; margin-bottom: 40px; }
+    .detail-price { font-size: 1.5rem; font-weight: 600; margin-bottom: 40px; color: var(--primary); }
     .detail-desc { color: var(--text-muted); margin-bottom: 40px; font-size: 0.95rem; line-height: 1.8; }
-    @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; gap: 40px; } }
+    @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; gap: 40px; padding: 40px 5%; } }
   </style>
 </head>
 <body>
 
   <!-- NAVBAR -->
   <nav class="navbar">
-    <a class="nav-logo" href="index.html">Mansi<span>.</span></a>
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">💍</div>
+      <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+    </a>
     <div class="nav-links">
       <a href="index.html" class="nav-link">Home</a>
       <a href="products.html" class="nav-link">Collections</a>
-      <a href="orders.html" class="nav-link">My Orders</a>
     </div>
-    <div class="nav-actions">
-      <a href="cart.html" style="font-size:0.8rem; font-weight:700;">CART (<span class="cart-count">0</span>)</a>
+    <div class="nav-right">
+      <a href="cart.html" class="cart-btn">🛒 Cart <span class="cart-count" style="display:none;">0</span></a>
+      <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
     </div>
   </nav>
 
@@ -37,6 +39,9 @@
   <div class="detail-grid" id="product-detail">
     <!-- Dynamic Content -->
   </div>
+
+  <!-- FOOTER (rendered by JS) -->
+  <footer class="footer"></footer>
 
   <script src="js/config.js"></script>
   <script src="js/data.js"></script>
@@ -52,7 +57,7 @@
       const id = urlParams.get('id');
       const p = DB.getProductById(id);
       if (!p) {
-        document.getElementById('product-detail').innerHTML = "<h1>Product not found</h1>";
+        document.getElementById('product-detail').innerHTML = '<div style="text-align:center;padding:80px;"><h2>Product Not Found</h2><p style="color:var(--text-muted);margin-top:10px;">The product you are looking for does not exist.</p><a href="products.html" style="color:var(--primary);font-weight:600;margin-top:20px;display:inline-block;">Browse Collections →</a></div>';
         return;
       }
 
@@ -63,12 +68,17 @@
         <div class="detail-info">
           <div class="detail-category">${p.category}</div>
           <h1 class="detail-title">${p.name}</h1>
-          <div class="detail-price">₹${p.price}</div>
+          <div class="detail-price">₹${p.price}${p.mrp && p.mrp > p.price ? ' <span style="font-size:1rem;color:var(--text-muted);text-decoration:line-through;margin-left:8px;">₹${p.mrp}</span>' : ''}</div>
           <p class="detail-desc">${p.description || 'A timeless piece crafted with precision and elegance, designed to elevate your sophisticated style.'}</p>
           
-          <div style="display: flex; gap: 16px;">
-            <button class="btn btn-primary" onclick="Cart.add('${p.id}')">Add to Bag</button>
-            <button class="btn btn-outline" onclick="window.open('https://wa.me/${STORE.whatsapp}?text=I am interested in ${p.name}', '_blank')">Inquire via WhatsApp</button>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <button onclick="Cart.add('${p.id}')" style="padding:14px 32px;background:var(--primary);color:var(--white);border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">Add to Bag</button>
+            <button onclick="window.open('https://wa.me/${STORE.whatsapp}?text=Hi! I am interested in ${encodeURIComponent(p.name)} (₹${p.price}). Please share more details.', '_blank')" style="padding:14px 32px;background:#25D366;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">💬 Ask on WhatsApp</button>
+          </div>
+          <div style="margin-top:24px;display:flex;gap:24px;font-size:0.82rem;color:var(--text-muted);">
+            <span>📦 Free delivery available</span>
+            <span>🔒 Secure payment</span>
+            <span>💳 COD available</span>
           </div>
         </div>
       `;

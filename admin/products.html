@@ -216,17 +216,32 @@
       }
     }
 
+    function getAdminPassword() {
+      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      return settings.adminPassword || "";
+    }
+
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      const adminPassHash = btoa("mansi@admin123");
-      if (btoa(typed) === adminPassHash) {
+
+      if (!typed) {
+        err.textContent = "❌ Please enter a password!";
+        err.style.display = "block";
+        return;
+      }
+
+      const savedPass = getAdminPassword();
+      const correctPass = savedPass || "mansi@admin123";
+
+      if (btoa(typed) === btoa(correctPass)) {
         localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         err.style.display = "none";
         initProductsPage();
       } else {
+        err.textContent = "❌ Incorrect password!";
         err.style.display = "block";
       }
     }

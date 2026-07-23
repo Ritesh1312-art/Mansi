@@ -51,7 +51,7 @@ const Cart = {
     const count = this.count();
     badges.forEach(b => {
       b.textContent = count;
-      b.style.display = count > 0 ? "flex" : "none";
+      b.style.display = count > 0 ? "inline" : "none";
     });
   },
   showToast(msg) {
@@ -72,7 +72,7 @@ const SheetSync = {
     try {
       const response = await fetch(csvUrl);
       const text = await response.text();
-      const rows = text.split("\n").slice(1); // skip header
+      const rows = text.split("\n").slice(1);
       let imported = 0;
       rows.forEach(row => {
         const cols = row.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
@@ -116,7 +116,7 @@ const Payment = {
     }
     const options = {
       key: STORE.razorpayKey,
-      amount: order.grandTotal * 100, // paise
+      amount: order.grandTotal * 100,
       currency: "INR",
       name: STORE.name,
       description: `Order #${order.id}`,
@@ -145,11 +145,6 @@ function openWhatsAppChat(e) {
   window.open(`https://wa.me/${STORE.whatsapp}`, "_blank");
 }
 
-function callSupport(e) {
-  if (e) e.preventDefault();
-  window.location.href = `tel:${STORE.phone}`;
-}
-
 function renderFooter() {
   const footer = document.querySelector(".footer");
   if (!footer) return;
@@ -171,11 +166,12 @@ function renderFooter() {
         <a href="products.html">🛍️ Products</a>
         <a href="cart.html">🛒 Cart</a>
         <a href="orders.html">📦 My Orders</a>
+        <a href="login.html">🔑 Login</a>
+        <a href="signup.html">📝 Sign Up</a>
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
         <a href="#">📍 ${STORE.address}</a>
-        <a href="#" onclick="callSupport(event)">📞 Call Support</a>
         <a href="mailto:${STORE.email}">✉️ ${STORE.email}</a>
         <a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>
       </div>
@@ -186,27 +182,75 @@ function renderFooter() {
   `;
 }
 
-function initNavbar() {
+// =============================================
+// NAVBAR AUTH — Works for ALL navbar styles
+// =============================================
+function updateNavbarAuth() {
   const session = DB.getSession();
-  const userArea = document.getElementById("user-area");
-  if (!userArea) return;
 
-  if (session) {
-    userArea.innerHTML = `
-      <a href="orders.html" class="nav-link">My Orders</a>
-      <div class="user-dropdown">
-        <button class="nav-btn user-btn">👤 ${session.name.split(" ")[0]}</button>
-        <div class="dropdown-menu">
-          <a href="orders.html">📦 My Orders</a>
-          <a href="#" onclick="DB.clearSession();location.href='index.html'">🚪 Logout</a>
-        </div>
-      </div>`;
-  } else {
-    userArea.innerHTML = `
-      <a href="login.html" class="nav-btn outline-btn">Login</a>
-      <a href="signup.html" class="nav-btn primary-btn">Sign Up</a>`;
+  // Style 1: Modern navbar with #user-area
+  const userArea = document.getElementById("user-area");
+  if (userArea) {
+    if (session) {
+      userArea.innerHTML = `
+        <a href="orders.html" class="nav-link">My Orders</a>
+        <div class="user-dropdown">
+          <button class="nav-btn user-btn">👤 ${session.name.split(" ")[0]}</button>
+          <div class="dropdown-menu">
+            <a href="orders.html">📦 My Orders</a>
+            <a href="#" onclick="DB.clearSession();location.href='index.html'">🚪 Logout</a>
+          </div>
+        </div>`;
+    } else {
+      userArea.innerHTML = `
+        <a href="login.html" class="nav-btn outline-btn">Login</a>
+        <a href="signup.html" class="nav-btn primary-btn">Sign Up</a>`;
+    }
+    Cart.updateCount();
+    return;
   }
-  Cart.updateCount();
+
+  // Style 2: Classic navbar with .nav-links
+  const navLinks = document.querySelector(".nav-links");
+  if (navLinks) {
+    const hasLoginLink = navLinks.querySelector('a[href="login.html"]');
+    const hasOrdersLink = navLinks.querySelector('a[href="orders.html"]');
+
+    if (session) {
+      // User is logged in — ensure Orders link exists, add Logout
+      if (!hasOrdersLink) {
+        const ordersLink = document.createElement("a");
+        ordersLink.href = "orders.html";
+        ordersLink.className = "nav-link";
+        ordersLink.textContent = "My Orders";
+        navLinks.appendChild(ordersLink);
+      }
+      const logoutLink = navLinks.querySelector('a.nav-link-logout');
+      if (!logoutLink) {
+        const logout = document.createElement("a");
+        logout.href = "#";
+        logout.className = "nav-link nav-link-logout";
+        logout.textContent = "Logout";
+        logout.onclick = function(e) { e.preventDefault(); DB.clearSession(); location.href = "index.html"; };
+        navLinks.appendChild(logout);
+      }
+    } else {
+      // User is NOT logged in — ensure Login link exists
+      if (!hasLoginLink) {
+        const loginLink = document.createElement("a");
+        loginLink.href = "login.html";
+        loginLink.className = "nav-link";
+        loginLink.textContent = "Login";
+        navLinks.appendChild(loginLink);
+      }
+    }
+    Cart.updateCount();
+    return;
+  }
+}
+
+function initNavbar() {
+  updateNavbarAuth();
   renderFooter();
 }
 
@@ -295,7 +339,6 @@ const AIChat = {
     this.addMessage(text, 'user');
     input.value = '';
 
-    // Simulated AI Response (Hindi/English Hybrid)
     setTimeout(() => {
       let response = "";
       if (this.isAdmin) {
@@ -334,5 +377,4 @@ const AIChat = {
   }
 };
 
-// Start Chat
 document.addEventListener('DOMContentLoaded', () => AIChat.init());

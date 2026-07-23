@@ -6,44 +6,21 @@
   <title>Store Settings — Mansi Jewellery & Cosmetics</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    .admin-auth-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-    }
-    .admin-auth-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-    .settings-section {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      margin-bottom: 32px;
-      box-shadow: var(--shadow);
-    }
-    .settings-section h2 {
-      font-size: 1.25rem;
-      font-weight: 800;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid var(--primary-light);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text);
-    }
+    .admin-auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+    .admin-auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 400px; box-shadow: var(--shadow); text-align: center; }
+    .settings-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 32px; box-shadow: var(--shadow); }
+    .settings-section h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--primary-light); display: flex; align-items: center; gap: 10px; color: var(--text); }
+    .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    .admin-sidebar { background: var(--primary); color: var(--white); padding: 40px 24px; }
+    .admin-sidebar h2 { font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 48px; letter-spacing: 2px; }
+    .admin-nav-item { display: block; padding: 16px 0; color: rgba(255,255,255,0.6); text-transform: uppercase; font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; }
+    .admin-nav-item.active { color: var(--accent); }
+    .admin-nav-item:hover { color: var(--white); }
+    .admin-main { padding: 60px 5%; background: var(--bg-soft); }
+    .admin-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
+    .theme-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+    .theme-chip { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+    .theme-chip.active { border-color: var(--primary); background: var(--primary-light); }
   </style>
 </head>
 <body>
@@ -64,7 +41,7 @@
   </div>
 
   <div id="admin-content" style="display: none;">
-    <!-- AD 1 — SABSE UPAR -->
+    <!-- AD 1 — TOP -->
     <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
       <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
         <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
@@ -98,7 +75,7 @@
           </div>
         </div>
 
-        <!-- AD 2 — BICH MEIN -->
+        <!-- AD 2 — MIDDLE -->
         <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
           <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
             <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
@@ -125,15 +102,9 @@
               <label class="form-label">Store Tagline</label>
               <input type="text" id="s-tagline" class="form-input" required/>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label class="form-label">WhatsApp Number (with country code, e.g. 919876543210)</label>
-                <input type="text" id="s-whatsapp" class="form-input" required/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Store Phone Number</label>
-                <input type="text" id="s-phone" class="form-input" required/>
-              </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp Number (with country code, e.g. 919876543210)</label>
+              <input type="text" id="s-whatsapp" class="form-input" required/>
             </div>
             <div class="form-group">
               <label class="form-label">Email Address</label>
@@ -154,10 +125,10 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Admin Password</label>
-                <input type="text" id="s-password" class="form-input" required/>
+                <input type="password" id="s-password" class="form-input" placeholder="Enter new admin password"/>
               </div>
             </div>
-            <button type="submit" class="btn-primary" style="margin-top: 10px; padding: 12px 24px;">Save Store Information</button>
+            <button type="submit" class="btn-full" style="margin-top: 10px;">Save Store Information</button>
           </form>
         </div>
 
@@ -196,7 +167,7 @@
                 </tr>
               </tbody>
             </table>
-            <button type="submit" class="btn-primary" style="padding: 12px 24px;">Save Delivery Rates</button>
+            <button type="submit" class="btn-full" style="padding: 14px 24px;">Save Delivery Rates</button>
           </form>
         </div>
 
@@ -207,7 +178,7 @@
             <label class="form-label">Published CSV Link</label>
             <input type="url" id="s-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"/>
           </div>
-          <button onclick="saveSheetUrl()" class="btn-primary" style="padding: 12px 24px;">Save CSV Link</button>
+          <button onclick="saveSheetUrl()" class="btn-full" style="padding: 12px 24px;">Save CSV Link</button>
         </div>
 
         <!-- SECTION 5: FIREBASE CENTRAL DATABASE -->
@@ -242,29 +213,28 @@
               <input type="text" id="fb-appid" class="form-input" placeholder="1:847291..."/>
             </div>
           </div>
-          <button onclick="saveFirebaseConfig()" class="btn-primary" style="padding: 12px 24px; margin-top: 10px;">Save Firebase Connection</button>
+          <button onclick="saveFirebaseConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save Firebase Connection</button>
         </div>
 
-        <!-- SECTION 5: WHATSAPP AUTO NOTIFICATION -->
+        <!-- SECTION 6: WHATSAPP AUTO NOTIFICATION -->
         <div class="settings-section">
           <h2>💬 WhatsApp Notification</h2>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
-            Get instant WhatsApp alerts on your phone whenever an order is placed on your website. 
+            Get instant WhatsApp alerts on your phone whenever an order is placed.
             <br/><strong>Setup:</strong> Chat with <a href="https://wa.me/34623786449?text=I+allow+callmebot+to+send+me+messages" target="_blank" style="color:var(--primary);font-weight:600;">CallMeBot on WhatsApp</a>, send the message, and copy the API Key they send you.
           </p>
           <div class="form-group">
             <label class="form-label">WhatsApp Notification Code</label>
             <input type="text" id="s-callmebot" class="form-input" placeholder="Enter code here (e.g. 123456)"/>
           </div>
-          <button onclick="saveCallMeBotKey()" class="btn-primary" style="padding: 12px 24px;">Save WhatsApp Notification</button>
+          <button onclick="saveCallMeBotKey()" class="btn-full" style="padding: 12px 24px;">Save WhatsApp Notification</button>
         </div>
 
-        <!-- SECTION 5: UPI PAYMENTS -->
+        <!-- SECTION 7: UPI PAYMENTS -->
         <div class="settings-section">
           <h2>💳 UPI Payment Configuration</h2>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
-            Set up direct UPI payments. If configured, customers can pay using Google Pay, PhonePe, or Paytm. 
-            On mobile, it will directly open the selected UPI app. On desktop, it will display a scan-to-pay QR Code!
+            Set up direct UPI payments. If configured, customers can pay using Google Pay, PhonePe, or Paytm.
           </p>
           <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
             <div class="form-group">
@@ -280,21 +250,21 @@
               <input type="text" id="s-upi-paytm" class="form-input" placeholder="e.g. name@paytm"/>
             </div>
           </div>
-          <button onclick="saveUpiConfig()" class="btn-primary" style="padding: 12px 24px; margin-top: 10px;">Save UPI Settings</button>
+          <button onclick="saveUpiConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save UPI Settings</button>
         </div>
 
-        <!-- SECTION 5: DANGER ZONE -->
-        <div class="settings-section" style="border-color: var(--error); background: #fff5f5; color: #881337;">
+        <!-- DANGER ZONE -->
+        <div class="settings-section" style="border-color: var(--error); background: #fff5f5;">
           <h2 style="color: var(--error); border-bottom-color: #fecdd3;">⚠️ Danger Zone</h2>
           <p style="font-size: 0.85rem; margin-bottom: 16px;">Perform destructive database operations. Use with care.</p>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button onclick="clearOrders()" class="btn-outline" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700;">Clear All Orders</button>
-            <button onclick="clearProducts()" class="btn-outline" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700;">Reset Products list</button>
-            <button onclick="factoryReset()" class="btn-full" style="background: var(--error); padding: 10px 16px; font-size: 0.85rem; width: auto; font-weight: 700;">Factory Reset Website</button>
+            <button onclick="clearOrders()" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; border: 1.5px solid var(--error);">Clear All Orders</button>
+            <button onclick="clearProducts()" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; border: 1.5px solid var(--error);">Reset Products list</button>
+            <button onclick="factoryReset()" style="background: var(--error); color: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; border: none;">Factory Reset Website</button>
           </div>
         </div>
 
-        <!-- AD 3 — SABSE LAST MEIN -->
+        <!-- AD 3 — BOTTOM -->
         <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
           <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
             <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
@@ -310,6 +280,13 @@
   <script>
     loadTheme();
 
+    // ===== ADMIN AUTH — Uses saved password from settings =====
+    function getAdminPassword() {
+      // Priority: saved settings > default
+      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      return settings.adminPassword || "";
+    }
+
     function checkAdminAuth() {
       if (localStorage.getItem("adminAuth") === "true") {
         document.getElementById("admin-auth").style.display = "none";
@@ -321,14 +298,26 @@
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      const adminPassHash = btoa("mansi@admin123");
-      if (btoa(typed) === adminPassHash) {
+      
+      if (!typed) {
+        err.textContent = "❌ Please enter a password!";
+        err.style.display = "block";
+        return;
+      }
+
+      const savedPass = getAdminPassword();
+      
+      // If admin password is saved, use that; otherwise use default
+      const correctPass = savedPass || "mansi@admin123";
+      
+      if (btoa(typed) === btoa(correctPass)) {
         localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         err.style.display = "none";
         initSettings();
       } else {
+        err.textContent = "❌ Incorrect password!";
         err.style.display = "block";
       }
     }
@@ -355,7 +344,6 @@
       document.getElementById("s-name").value = STORE.name || "";
       document.getElementById("s-tagline").value = STORE.tagline || "";
       document.getElementById("s-whatsapp").value = STORE.whatsapp || "";
-      document.getElementById("s-phone").value = STORE.phone || "";
       document.getElementById("s-email").value = STORE.email || "";
       document.getElementById("s-address").value = STORE.address || "";
       document.getElementById("s-banner").value = STORE.offerBanner || "";
@@ -431,7 +419,6 @@
 
     function changeTheme(themeId) {
       applyTheme(themeId);
-      // refresh UI highlights
       initSettings();
       Cart.showToast(`Theme changed to ${THEMES.find(t=>t.id===themeId).name}!`);
     }
@@ -443,7 +430,6 @@
         name: document.getElementById("s-name").value.trim(),
         tagline: document.getElementById("s-tagline").value.trim(),
         whatsapp: document.getElementById("s-whatsapp").value.trim(),
-        phone: document.getElementById("s-phone").value.trim(),
         email: document.getElementById("s-email").value.trim(),
         address: document.getElementById("s-address").value.trim(),
         offerBanner: document.getElementById("s-banner").value.trim(),
@@ -500,7 +486,7 @@
     function clearProducts() {
       if (confirm("⚠️ This will remove all your products and reset to defaults. Continue?")) {
         localStorage.removeItem("products");
-        DB.seedSampleProducts(); // reload samples
+        DB.seedSampleProducts();
         Cart.showToast("Products catalog reset.");
       }
     }
