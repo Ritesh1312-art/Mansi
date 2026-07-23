@@ -3,124 +3,71 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard — Mansi Jewellery</title>
+  <title>Admin Dashboard — Mansi</title>
   <link rel="stylesheet" href="../css/style.css"/>
   <style>
-    .admin-auth-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99999; }
-    .admin-auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow-hover); }
-    .admin-header-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-    .easy-btn { padding: 20px; border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; flex: 1; min-width: 150px; box-shadow: var(--shadow); border: 2px solid transparent; }
-    .easy-btn:hover { border-color: var(--primary); transform: translateY(-4px); }
-    .easy-btn span { font-size: 2.5rem; }
+    .admin-auth-overlay { position: fixed; inset: 0; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .admin-auth-card { width: 100%; max-width: 400px; text-align: center; padding: 40px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 48px; }
+    .stat-item { background: #fff; padding: 32px; border: 1px solid var(--border); }
+    .stat-label { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: var(--text-light); margin-bottom: 8px; font-weight: 700; }
+    .stat-value { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; }
   </style>
 </head>
 <body onload="checkAdminAuth()">
 
-  <!-- ADMIN AUTH -->
+  <!-- AUTH -->
   <div id="admin-auth" class="admin-auth-overlay">
     <div class="admin-auth-card">
-      <div style="font-size: 4rem; margin-bottom: 16px;">🔐</div>
-      <h2 style="margin-bottom: 8px;">Admin Control</h2>
-      <p style="color: var(--text-muted); margin-bottom: 32px;">Enter password to unlock your store</p>
-      <input type="password" id="admin-pass-input" class="btn-outline btn-full" style="margin-bottom: 16px; text-align: center;" placeholder="••••••••" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
-      <button class="btn-primary btn-full" onclick="verifyAdminPassword()">Unlock Panel</button>
-      <p id="admin-auth-err" style="color: var(--error); font-weight: 700; margin-top: 16px; display: none;">❌ Wrong Password!</p>
+      <h1 style="font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 8px;">Admin Login</h1>
+      <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; color: var(--text-light); margin-bottom: 40px;">Secure Access Only</p>
+      <input type="password" id="admin-pass-input" placeholder="PASSWORD" style="width: 100%; padding: 16px; border: 1px solid var(--border); margin-bottom: 24px; text-align: center; letter-spacing: 4px;"/>
+      <button class="btn btn-primary btn-full" onclick="verifyAdminPassword()" style="width: 100%;">Enter Dashboard</button>
     </div>
   </div>
 
   <div id="admin-content" style="display: none;">
-    <div class="admin-layout">
-      <!-- SIDEBAR -->
+    <div class="admin-container">
       <aside class="admin-sidebar">
-        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px;">
-          <span>💍</span> Mansi Admin
-        </div>
+        <h2>Mansi<span>.</span></h2>
         <nav>
-          <a href="index.html" class="admin-nav-item active">📊 Dashboard</a>
-          <a href="products.html" class="admin-nav-item">🛍️ Products</a>
-          <a href="orders.html" class="admin-nav-item">📦 Orders</a>
-          <a href="settings.html" class="admin-nav-item">⚙️ Settings</a>
-          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);">
-            <a href="../index.html" class="admin-nav-item">🏠 View Store</a>
-            <a href="#" onclick="logoutAdmin()" class="admin-nav-item" style="color: var(--error);">🚪 Logout</a>
-          </div>
+          <a href="index.html" class="admin-nav-item active">Dashboard</a>
+          <a href="products.html" class="admin-nav-item">Products</a>
+          <a href="orders.html" class="admin-nav-item">Orders</a>
+          <a href="settings.html" class="admin-nav-item">Settings</a>
+          <a href="../index.html" class="admin-nav-item" style="margin-top: 40px; color: var(--accent);">View Store</a>
+          <a href="#" onclick="logoutAdmin()" class="admin-nav-item">Logout</a>
         </nav>
       </aside>
 
-      <!-- MAIN -->
       <main class="admin-main">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+        <header class="admin-header">
           <div>
-            <h1 style="font-size: 2rem; font-weight: 900;">Welcome Back! 👋</h1>
-            <p id="current-date" style="color: var(--text-muted); font-weight: 600;"></p>
+            <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; color: var(--text-light);">Overview</p>
+            <h1 style="font-size: 2.5rem; font-family: var(--font-serif);">Dashboard</h1>
           </div>
-          <div class="glass" style="padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--primary);">
-            <span style="font-size: 1.5rem;">🤖</span>
-            <div style="font-size: 0.85rem; font-weight: 800;">Admin AI Online</div>
+          <div id="admin-date" style="font-size: 0.8rem; font-weight: 600;"></div>
+        </header>
+
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value" id="stat-revenue">₹0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-value" id="stat-orders">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Pending Orders</div>
+            <div class="stat-value" id="stat-pending">0</div>
           </div>
         </div>
 
-        <!-- QUICK ACTIONS (Ultra Easy) -->
-        <div style="margin-bottom: 40px;">
-          <h3 style="margin-bottom: 20px;">Quick Actions</h3>
-          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <a href="products.html" class="easy-btn" style="background: #EBF5FF; color: #1E40AF;">
-              <span>➕</span> Add Product
-            </a>
-            <a href="orders.html" class="easy-btn" style="background: #ECFDF5; color: #065F46;">
-              <span>📦</span> View Orders
-            </a>
-            <a href="settings.html" class="easy-btn" style="background: #FFF7ED; color: #9A3412;">
-              <span>⚙️</span> Store Settings
-            </a>
-          </div>
-        </div>
-
-        <!-- STATS -->
-        <div class="admin-grid" style="margin-bottom: 40px;">
-          <div class="stat-card">
-            <div class="icon">💰</div>
-            <div class="value" id="stat-total-revenue">₹0</div>
-            <div class="label">Total Revenue</div>
-          </div>
-          <div class="stat-card">
-            <div class="icon">📈</div>
-            <div class="value" id="stat-today-revenue">₹0</div>
-            <div class="label">Today's Sales</div>
-          </div>
-          <div class="stat-card">
-            <div class="icon">🛍️</div>
-            <div class="value" id="stat-total-orders">0</div>
-            <div class="label">Total Orders</div>
-          </div>
-          <div class="stat-card">
-            <div class="icon">⏳</div>
-            <div class="value" id="stat-pending-orders">0</div>
-            <div class="label">Pending Orders</div>
-          </div>
-        </div>
-
-        <!-- RECENT ORDERS -->
         <div class="admin-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="font-weight: 800;">Recent Orders</h3>
-            <a href="orders.html" style="color: var(--primary); font-weight: 700;">View All →</a>
-          </div>
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-              <thead>
-                <tr style="border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 0.85rem;">
-                  <th style="padding: 12px;">ORDER ID</th>
-                  <th style="padding: 12px;">CUSTOMER</th>
-                  <th style="padding: 12px;">AMOUNT</th>
-                  <th style="padding: 12px;">STATUS</th>
-                  <th style="padding: 12px;">DATE</th>
-                </tr>
-              </thead>
-              <tbody id="recent-orders-list">
-                <!-- Dynamic -->
-              </tbody>
-            </table>
+          <h3 style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 24px;">Recent Activity</h3>
+          <div id="recent-activity-list">
+            <!-- Dynamic -->
           </div>
         </div>
       </main>
@@ -134,20 +81,19 @@
     function checkAdminAuth() {
       if (localStorage.getItem("adminAuth") === "true") {
         document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
+        document.getElementById("admin-content").style.display = "grid";
         initDashboard();
       }
     }
 
     function verifyAdminPassword() {
       const typed = document.getElementById("admin-pass-input").value;
-      const err = document.getElementById("admin-auth-err");
       const adminPassHash = btoa("mansi@admin123");
       if (btoa(typed) === adminPassHash) {
         localStorage.setItem("adminAuth", "true");
         location.reload();
       } else {
-        err.style.display = "block";
+        alert("Invalid Access");
       }
     }
 
@@ -157,28 +103,11 @@
     }
 
     function initDashboard() {
-      document.getElementById("current-date").textContent = new Date().toDateString();
+      document.getElementById("admin-date").textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       const rev = DB.getRevenue();
-      document.getElementById("stat-total-revenue").textContent = "₹" + rev.total;
-      document.getElementById("stat-today-revenue").textContent = "₹" + rev.todayRevenue;
-      document.getElementById("stat-total-orders").textContent = rev.totalOrders;
-      document.getElementById("stat-pending-orders").textContent = rev.pendingOrders;
-
-      const orders = DB.getOrders().slice(0, 5);
-      const list = document.getElementById("recent-orders-list");
-      if (orders.length === 0) {
-        list.innerHTML = `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-muted);">No orders yet.</td></tr>`;
-        return;
-      }
-      list.innerHTML = orders.map(o => `
-        <tr style="border-bottom: 1px solid var(--border);">
-          <td style="padding: 16px; font-weight: 700;">#${o.id.slice(-6)}</td>
-          <td style="padding: 16px;">${o.customerName}</td>
-          <td style="padding: 16px; color: var(--primary); font-weight: 800;">₹${o.grandTotal}</td>
-          <td style="padding: 16px;"><span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; background: var(--primary-light); color: var(--primary);">${o.status.toUpperCase()}</span></td>
-          <td style="padding: 16px; color: var(--text-muted); font-size: 0.85rem;">${new Date(o.createdAt).toLocaleDateString()}</td>
-        </tr>
-      `).join("");
+      document.getElementById("stat-revenue").textContent = "₹" + rev.total;
+      document.getElementById("stat-orders").textContent = rev.totalOrders;
+      document.getElementById("stat-pending").textContent = rev.pendingOrders;
     }
   </script>
 </body>

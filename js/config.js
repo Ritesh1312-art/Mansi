@@ -83,18 +83,13 @@ function getDeliveryCharges(pincode, paymentMode = "prepaid") {
 // THEMES
 // =============================================
 const THEMES = [
-  { id: "default", name: "Golden Classic", icon: "✨" },
-  { id: "dark",    name: "Midnight Dark",  icon: "🌙" },
-  { id: "rose",    name: "Rose Blush",     icon: "🌸" },
-  { id: "royal",   name: "Royal Blue",     icon: "💙" },
-  { id: "emerald", name: "Emerald Glow",   icon: "💚" },
+  { id: "default", name: "Light", icon: "☀️" },
+  { id: "dark",    name: "Dark",  icon: "🌙" },
 ];
 
 function applyTheme(themeId) {
   document.documentElement.setAttribute("data-theme", themeId);
   localStorage.setItem("theme", themeId);
-  // Update all theme selectors on the page
-  document.querySelectorAll('select.glass').forEach(s => s.value = themeId);
 }
 
 function loadTheme() {
