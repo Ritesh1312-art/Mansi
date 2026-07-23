@@ -171,8 +171,8 @@ function renderFooter() {
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
-        <a href="#">📍 ${STORE.address}</a>
-        <a href="mailto:${STORE.email}">✉️ ${STORE.email}</a>
+        ${STORE.address ? `<a href="#">📍 ${STORE.address}</a>` : ''}
+        ${STORE.email ? `<a href="mailto:${STORE.email}">✉️ ${STORE.email}</a>` : ''}
         <a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>
       </div>
     </div>

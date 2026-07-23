@@ -277,7 +277,21 @@ const DB = {
 
   // ---- SEED SAMPLE DATA ----
   seedSampleProducts() {
-    if (this.getProducts().length > 0) return;
+    const existing = this.getProducts();
+    // Check if we have old/bad data (tea-sets, paintings categories) — replace them
+    const hasOldData = existing.some(p => ['tea-sets', 'paintings'].includes(p.category));
+    const hasValidData = existing.some(p => ['jewellery', 'cosmetics', 'gifts'].includes(p.category));
+    
+    // If products exist and are valid (jewellery/cosmetics/gifts), don't re-seed
+    if (existing.length > 0 && hasValidData && !hasOldData) return;
+    
+    // Clear old/bad data from Firebase too
+    if (hasOldData && isFirebaseActive) {
+      existing.filter(p => ['tea-sets', 'paintings'].includes(p.category)).forEach(p => {
+        fbDb.collection("products").doc(p.id).delete();
+      });
+    }
+    
     const samples = [
       { id: "p1", name: "Gold Plated Necklace Set", price: 299, mrp: 599, category: "jewellery", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400", description: "Elegant gold plated necklace with matching earrings. Perfect for weddings and parties.", stock: 8 },
       { id: "p2", name: "Diamond Studded Earrings", price: 399, mrp: 799, category: "jewellery", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400", description: "Stunning diamond studded earrings. Lightweight and comfortable for daily wear.", stock: 12 },
@@ -292,7 +306,7 @@ const DB = {
   }
 };
 
-// Start Firebase sync if configured
-DB.initFirebase();
-// Seed sample data on first load
+// Seed sample data FIRST (before Firebase sync)
 DB.seedSampleProducts();
+// Then start Firebase sync if configured
+DB.initFirebase();
