@@ -1,7 +1,6 @@
 // =============================================
 // STORE CONFIGURATION — Edit these values
 // =============================================
-// Load from localStorage or use defaults
 const defaultStore = {
   name: "Mansi Jewellery & Cosmetics",
   tagline: "Apna Local Market — Style Meets Tradition",
@@ -23,7 +22,8 @@ const defaultStore = {
     messagingSenderId: "399147392144",
     appId: "1:399147392144:web:00166d6c57b146914f8c15"
   },
-  callMeBotApiKey: "", // For free background WhatsApp notifications
+  telegramBotToken: "", 
+  telegramChatId: "",
   gpayUpi: "",
   phonepeUpi: "",
   paytmUpi: "",
@@ -38,7 +38,6 @@ const defaultDelivery = {
 
 const STORE = { ...defaultStore, ...JSON.parse(localStorage.getItem("storeSettings") || "{}") };
 const DELIVERY = { ...defaultDelivery, ...JSON.parse(localStorage.getItem("deliverySettings") || "{}") };
-
 
 // =============================================
 // PINCODE ZONE DETECTION

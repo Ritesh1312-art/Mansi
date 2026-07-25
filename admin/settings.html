@@ -225,18 +225,26 @@
           <button onclick="saveFirebaseConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save Firebase Connection</button>
         </div>
 
-        <!-- SECTION 6: WHATSAPP AUTO NOTIFICATION -->
+        <!-- SECTION 6: TELEGRAM BOT INSTANT ALERTS -->
         <div class="settings-section">
-          <h2>💬 WhatsApp Notification</h2>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
-            Get instant WhatsApp alerts on your phone whenever an order is placed.
-            <br/><strong>Setup:</strong> Chat with <a href="https://wa.me/34623786449?text=I+allow+callmebot+to+send+me+messages" target="_blank" style="color:var(--primary);font-weight:600;">CallMeBot on WhatsApp</a>, send the message, and copy the API Key they send you.
+          <h2>✈️ Telegram Instant Order Alerts</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Get instant real-time order alerts directly on your phone via Telegram Bot when any customer places an order.
+            <br/><strong>Quick 1-Minute Setup:</strong>
+            <br/>1. Create a bot on Telegram with <a href="https://t.me/BotFather" target="_blank" style="color:var(--primary);font-weight:700;">@BotFather</a> and copy your <code>Bot Token</code>.
+            <br/>2. Start your bot and get your <code>Chat ID</code> from <a href="https://t.me/userinfobot" target="_blank" style="color:var(--primary);font-weight:700;">@userinfobot</a>.
           </p>
-          <div class="form-group">
-            <label class="form-label">WhatsApp Notification Code</label>
-            <input type="text" id="s-callmebot" class="form-input" placeholder="Enter code here (e.g. 123456)"/>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Telegram Bot Token</label>
+              <input type="text" id="s-telegram-token" class="form-input" placeholder="e.g. 7123456789:AAFx..."/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telegram Chat ID / Channel ID</label>
+              <input type="text" id="s-telegram-chat" class="form-input" placeholder="e.g. 987654321 or @MyChannel"/>
+            </div>
           </div>
-          <button onclick="saveCallMeBotKey()" class="btn-full" style="padding: 12px 24px;">Save WhatsApp Notification</button>
+          <button onclick="saveTelegramConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save Telegram Bot Alerts</button>
         </div>
 
         <!-- SECTION 7: UPI PAYMENTS -->
@@ -263,13 +271,13 @@
         </div>
 
         <!-- DANGER ZONE -->
-        <div class="settings-section" style="border-color: var(--error); background: #fff5f5;">
-          <h2 style="color: var(--error); border-bottom-color: #fecdd3;">⚠️ Danger Zone</h2>
-          <p style="font-size: 0.85rem; margin-bottom: 16px;">Perform destructive database operations. Use with care.</p>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button onclick="clearOrders()" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; border: 1.5px solid var(--error);">Clear All Orders</button>
-            <button onclick="clearProducts()" style="border-color: var(--error); color: var(--error); background: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; border: 1.5px solid var(--error);">Reset Products list</button>
-            <button onclick="factoryReset()" style="background: var(--error); color: #fff; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; border: none;">Factory Reset Website</button>
+        <div class="settings-section" style="border: 2px solid var(--error); background: var(--bg-card);">
+          <h2 style="color: var(--error) !important; border-bottom: 1px solid var(--border);">⚠️ Danger Zone</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted) !important; margin-bottom: 16px;">Perform destructive database operations. Use with care.</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button onclick="clearOrders()" class="btn-outline" style="border-color: var(--error); color: var(--error); padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Clear All Orders</button>
+            <button onclick="clearProducts()" class="btn-outline" style="border-color: var(--error); color: var(--error); padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Reset Products list</button>
+            <button onclick="factoryReset()" style="background: var(--error); color: #FFFFFF; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 10px; border: none;">Factory Reset Website</button>
           </div>
         </div>
 
@@ -373,8 +381,9 @@
       document.getElementById("fb-sendersid").value = fb.messagingSenderId || "";
       document.getElementById("fb-appid").value = fb.appId || "";
 
-      // 6. Pre-fill CallMeBot API Key
-      document.getElementById("s-callmebot").value = STORE.callMeBotApiKey || "";
+      // 6. Pre-fill Telegram Bot Config
+      document.getElementById("s-telegram-token").value = STORE.telegramBotToken || "";
+      document.getElementById("s-telegram-chat").value = STORE.telegramChatId || "";
 
       // 7. Pre-fill UPI Configurations
       document.getElementById("s-upi-gpay").value = STORE.gpayUpi || "";
@@ -413,11 +422,13 @@
       applyTheme("custom", { primary, primaryDark: primary, primaryLight: bg, bg, card, text, textMuted: text, border: "#2A2A38" });
     }
 
-    function saveCallMeBotKey() {
-      const key = document.getElementById("s-callmebot").value.trim();
-      STORE.callMeBotApiKey = key;
+    function saveTelegramConfig() {
+      const token = document.getElementById("s-telegram-token").value.trim();
+      const chatId = document.getElementById("s-telegram-chat").value.trim();
+      STORE.telegramBotToken = token;
+      STORE.telegramChatId = chatId;
       localStorage.setItem("storeSettings", JSON.stringify(STORE));
-      Cart.showToast("WhatsApp notification settings saved!");
+      Cart.showToast("✈️ Telegram Bot Alert settings saved!");
       setTimeout(() => location.reload(), 1000);
     }
 

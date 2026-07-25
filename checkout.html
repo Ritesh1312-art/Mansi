@@ -499,24 +499,53 @@
     document.getElementById("whatsapp-order-btn").href = waUrl;
     document.getElementById("success-modal").classList.add("open");
     
-    // AUTOMATIC INSTANT WHATSAPP TRIGGER: No button press required by customer
-    setTimeout(() => {
-      window.open(waUrl, "_blank");
-    }, 400);
+    // Background Telegram Notification to Store Owner
+    sendTelegramOrderAlert(order);
+  }
+
+  function sendTelegramOrderAlert(order) {
+    const token = STORE.telegramBotToken;
+    const chatId = STORE.telegramChatId;
     
-    // Background Auto-Notification to Admin's WhatsApp via CallMeBot
-    if (STORE.callMeBotApiKey) {
-      const adminMsg = encodeURIComponent(
-        `🛍️ *Mansi Store Alert — New Order!*\n\n*Order ID:* ${order.id}\n*Customer:* ${order.customerName}\n*Phone:* ${order.phone}\n*Items:* ${order.items.map(i => `${i.name} (x${i.qty})`).join(", ")}\n*Total:* ₹${order.grandTotal}\n*Payment:* ${order.paymentMode.toUpperCase()}\n*Address:* ${order.address.house ? order.address.house + ', ' : ''}${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}`
-      );
-      const callMeBotUrl = `https://api.callmebot.com/whatsapp.php?phone=${STORE.whatsapp}&text=${adminMsg}&apikey=${STORE.callMeBotApiKey}`;
-      
-      fetch(callMeBotUrl).then(response => {
-        console.log("✅ Admin WhatsApp alert sent successfully!");
-      }).catch(err => {
-        console.error("❌ Admin WhatsApp alert failed:", err);
-      });
+    if (!token || !chatId) {
+      console.log("ℹ️ Telegram notifications not configured by admin.");
+      return;
     }
+
+    const messageText = 
+`🛍️ *NEW ORDER RECEIVED! #${order.id}*
+
+👤 *Customer Name:* ${order.customerName}
+📞 *Phone:* ${order.phone}
+📍 *Delivery Address:* ${order.address.house ? order.address.house + ', ' : ''}${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}
+
+📦 *Items Ordered:*
+${order.items.map(i => `• ${i.name} (x${i.qty}) - ₹${i.price * i.qty}`).join('\n')}
+
+💰 *Subtotal:* ₹${order.subtotal}
+🚚 *Delivery Charge:* ₹${order.deliveryCharge}
+💵 *Grand Total:* ₹${order.grandTotal}
+💳 *Payment Mode:* ${order.paymentMode.toUpperCase()}`;
+
+    const tgUrl = `https://api.telegram.org/bot${token.trim()}/sendMessage`;
+
+    fetch(tgUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId.trim(),
+        text: messageText,
+        parse_mode: "Markdown"
+      })
+    }).then(res => res.json()).then(data => {
+      if (data.ok) {
+        console.log("✈️ Telegram Order Notification sent to Admin successfully!");
+      } else {
+        console.error("❌ Telegram Bot Error:", data);
+      }
+    }).catch(err => {
+      console.error("❌ Telegram Network Error:", err);
+    });
   }
 
   renderSummary();
