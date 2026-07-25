@@ -225,26 +225,30 @@
           <button onclick="saveFirebaseConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save Firebase Connection</button>
         </div>
 
-        <!-- SECTION 6: TELEGRAM BOT INSTANT ALERTS -->
+        <!-- SECTION 6: TELEGRAM BOT & SUPPORT ALERTS -->
         <div class="settings-section">
-          <h2>✈️ Telegram Instant Order Alerts</h2>
+          <h2>✈️ Telegram Support & Instant Order Alerts</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-            Get instant real-time order alerts directly on your phone via Telegram Bot when any customer places an order.
-            <br/><strong>Quick 1-Minute Setup:</strong>
-            <br/>1. Create a bot on Telegram with <a href="https://t.me/BotFather" target="_blank" style="color:var(--primary);font-weight:700;">@BotFather</a> and copy your <code>Bot Token</code>.
-            <br/>2. Start your bot and get your <code>Chat ID</code> from <a href="https://t.me/userinfobot" target="_blank" style="color:var(--primary);font-weight:700;">@userinfobot</a>.
+            Set your Telegram Support Username for customer contact links across the site, and your Telegram Bot Token & Chat ID for instant background order alerts.
           </p>
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">Telegram Support Username (without @, e.g. MansiJewellery)</label>
+            <input type="text" id="s-telegram-username" class="form-input" placeholder="e.g. MansiJewellery"/>
+            <div style="font-size: 0.78rem; color: var(--primary); margin-top: 4px; font-weight: 600;">
+              ✨ Updating this automatically updates Telegram support buttons across Footer, Checkout, Customer Orders, and Admin panel!
+            </div>
+          </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="form-group">
-              <label class="form-label">Telegram Bot Token</label>
+              <label class="form-label">Telegram Bot Token (from @BotFather)</label>
               <input type="text" id="s-telegram-token" class="form-input" placeholder="e.g. 7123456789:AAFx..."/>
             </div>
             <div class="form-group">
-              <label class="form-label">Telegram Chat ID / Channel ID</label>
-              <input type="text" id="s-telegram-chat" class="form-input" placeholder="e.g. 987654321 or @MyChannel"/>
+              <label class="form-label">Telegram Chat ID (from @userinfobot)</label>
+              <input type="text" id="s-telegram-chat" class="form-input" placeholder="e.g. 987654321"/>
             </div>
           </div>
-          <button onclick="saveTelegramConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save Telegram Bot Alerts</button>
+          <button onclick="saveTelegramConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save All Telegram Settings</button>
         </div>
 
         <!-- SECTION 7: UPI PAYMENTS -->
@@ -381,7 +385,8 @@
       document.getElementById("fb-sendersid").value = fb.messagingSenderId || "";
       document.getElementById("fb-appid").value = fb.appId || "";
 
-      // 6. Pre-fill Telegram Bot Config
+      // 6. Pre-fill Telegram Config
+      document.getElementById("s-telegram-username").value = STORE.telegramUsername || "";
       document.getElementById("s-telegram-token").value = STORE.telegramBotToken || "";
       document.getElementById("s-telegram-chat").value = STORE.telegramChatId || "";
 
@@ -423,12 +428,16 @@
     }
 
     function saveTelegramConfig() {
+      const username = document.getElementById("s-telegram-username").value.trim().replace('@', '');
       const token = document.getElementById("s-telegram-token").value.trim();
       const chatId = document.getElementById("s-telegram-chat").value.trim();
+      
+      STORE.telegramUsername = username;
       STORE.telegramBotToken = token;
       STORE.telegramChatId = chatId;
+      
       localStorage.setItem("storeSettings", JSON.stringify(STORE));
-      Cart.showToast("✈️ Telegram Bot Alert settings saved!");
+      Cart.showToast("✈️ Telegram Support & Bot Alert settings updated successfully!");
       setTimeout(() => location.reload(), 1000);
     }
 

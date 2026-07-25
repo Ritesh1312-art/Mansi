@@ -164,6 +164,7 @@ function renderFooter() {
   if (!footer) return;
   const session = DB.getSession();
   const isAdmin = localStorage.getItem("adminAuth") === "true";
+  const tgUser = (STORE.telegramUsername || "").replace('@', '');
 
   footer.innerHTML = `
     <div class="footer-inner">
@@ -171,9 +172,9 @@ function renderFooter() {
         <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 ${STORE.name}</div>
         <p>${STORE.tagline}</p>
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
-          <a href="#" onclick="openTelegramChat(event)"
+          <a href="${tgUser ? 'https://t.me/' + tgUser : '#'}" target="_blank" onclick="${!tgUser ? 'openTelegramChat(event)' : ''}"
              style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
-            ✈️ Telegram Support
+            ✈️ Telegram Support ${tgUser ? '(@' + tgUser + ')' : ''}
           </a>
           <button onclick="openThemeModal()" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
             🎨 Theme Switcher
