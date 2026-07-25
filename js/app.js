@@ -387,13 +387,83 @@ function updateCustomThemeFromPicker() {
 }
 
 // Automatically add mobile admin navigation bar if in admin subdirectory
-// Automatically add mobile admin navigation bar if in admin subdirectory & init Kinetic Grid
+// Automatically add mobile admin navigation bar, Kinetic Grid, and Click Burst animation
 document.addEventListener("DOMContentLoaded", () => {
   if (window.location.pathname.includes("/admin/")) {
     initAdminMobileNav();
   }
   initKineticGrid();
+  initClickAnimation();
 });
+
+// =============================================
+// MOUSE CLICK ANIMATION — Ripple & Sparkle Burst
+// =============================================
+function initClickAnimation() {
+  document.addEventListener("click", (e) => {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    const computed = getComputedStyle(document.documentElement);
+    const primary = computed.getPropertyValue("--primary").trim() || "#FF4F7E";
+    const accent = computed.getPropertyValue("--accent").trim() || "#FBBF24";
+
+    // 1. Expanding Ripple Ring
+    const ring = document.createElement("div");
+    ring.style.cssText = `
+      position: fixed;
+      left: ${x}px;
+      top: ${y}px;
+      width: 12px;
+      height: 12px;
+      margin-left: -6px;
+      margin-top: -6px;
+      border: 2px solid ${primary};
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999999;
+      box-shadow: 0 0 12px ${primary};
+      animation: clickRipple 0.45s ease-out forwards;
+    `;
+    document.body.appendChild(ring);
+    setTimeout(() => ring.remove(), 450);
+
+    // 2. Radial Sparkle Particles (8 particles)
+    const particleCount = 8;
+    for (let i = 0; i < particleCount; i++) {
+      const p = document.createElement("div");
+      const angle = (i / particleCount) * Math.PI * 2;
+      const distance = 24 + Math.random() * 20;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+      const color = i % 2 === 0 ? primary : accent;
+
+      p.style.cssText = `
+        position: fixed;
+        left: ${x}px;
+        top: ${y}px;
+        width: 6px;
+        height: 6px;
+        margin-left: -3px;
+        margin-top: -3px;
+        background: ${color};
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999999;
+        box-shadow: 0 0 8px ${color};
+        transition: transform 0.4s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.4s ease-out;
+      `;
+      document.body.appendChild(p);
+
+      requestAnimationFrame(() => {
+        p.style.transform = `translate(${dx}px, ${dy}px) scale(0.2)`;
+        p.style.opacity = "0";
+      });
+
+      setTimeout(() => p.remove(), 420);
+    }
+  });
+}
 
 function initAdminMobileNav() {
   const nav = document.createElement("div");
