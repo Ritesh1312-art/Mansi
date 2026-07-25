@@ -417,6 +417,31 @@ ul { list-style: none; }
   border: 1.5px solid transparent;
   transition: border 0.2s;
 }
+/* =============================================
+   UNIVERSAL HIGH-CONTRAST FORM & THEME OVERRIDES
+   ============================================= */
+input, select, textarea {
+  color: var(--text) !important;
+  background: var(--bg-input) !important;
+  border: 1px solid var(--border) !important;
+}
+select option {
+  background: var(--bg-card) !important;
+  color: var(--text) !important;
+}
+.form-label {
+  color: var(--text) !important;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+.btn-primary, .primary-btn {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.admin-sidebar h2 {
+  color: var(--text) !important;
+}
+
 .nav-search:focus-within { border-color: var(--primary); }
 .nav-search input {
   flex: 1; background: none; border: none; outline: none;

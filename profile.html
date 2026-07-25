@@ -139,20 +139,13 @@
           <div class="form-group">
             <label class="form-label">State</label>
             <select id="a-state" class="form-input" required>
-              <option value="Chhattisgarh">Chhattisgarh</option>
-              <option value="Madhya Pradesh">Madhya Pradesh</option>
-              <option value="Odisha">Odisha</option>
-              <option value="Jharkhand">Jharkhand</option>
-              <option value="Uttar Pradesh">Uttar Pradesh</option>
-              <option value="Maharashtra">Maharashtra</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Other">Other</option>
+              <option value="">-- Select State / Union Territory --</option>
             </select>
           </div>
         </div>
         <div class="form-group" style="margin-top:12px;">
           <label class="form-label">Pincode (6 digits)</label>
-          <input type="text" id="a-pin" class="form-input" placeholder="492001" maxlength="6" required />
+          <input type="text" id="a-pin" class="form-input" placeholder="e.g. 492001" maxlength="6" required />
         </div>
         <button type="submit" class="btn-primary" style="margin-top:14px;padding:12px 28px;">
           🏡 Save Default Address
@@ -209,12 +202,23 @@
     </div>
   </footer>
 
-  <script src="js/config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/config.js?v=3.0"></script>
+  <script src="js/data.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
   <script>
     loadTheme();
     initNavbar();
+
+    // Populate all 36 Indian states
+    function populateStates() {
+      const stateSelect = document.getElementById('a-state');
+      if (!stateSelect) return;
+      if (typeof INDIAN_STATES !== 'undefined') {
+        stateSelect.innerHTML = '<option value="">-- Select State / Union Territory --</option>' + 
+          INDIAN_STATES.map(s => `<option value="${s}">${s}</option>`).join('');
+      }
+    }
+    populateStates();
 
     const session = DB.getSession();
     if (!session) {
@@ -232,9 +236,15 @@
       if (user.address) {
         document.getElementById('a-house').value = user.address.house || '';
         document.getElementById('a-street').value = user.address.street || '';
-        document.getElementById('a-city').value = user.address.city || 'Raipur';
-        document.getElementById('a-state').value = user.address.state || 'Chhattisgarh';
+        document.getElementById('a-city').value = user.address.city || '';
+        document.getElementById('a-state').value = user.address.state || '';
         document.getElementById('a-pin').value = user.address.pincode || '';
+      } else {
+        document.getElementById('a-house').value = '';
+        document.getElementById('a-street').value = '';
+        document.getElementById('a-city').value = '';
+        document.getElementById('a-state').value = '';
+        document.getElementById('a-pin').value = '';
       }
     }
 

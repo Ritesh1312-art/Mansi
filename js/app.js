@@ -150,10 +150,18 @@ function callSupport(e) {
   window.location.href = `tel:${STORE.phone}`;
 }
 
+function logoutAdmin(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  localStorage.removeItem("adminAuth");
+  alert("🚪 Admin logged out!");
+  window.location.href = "index.html";
+}
+
 function renderFooter() {
   const footer = document.querySelector(".footer");
   if (!footer) return;
   const session = DB.getSession();
+  const isAdmin = localStorage.getItem("adminAuth") === "true";
 
   footer.innerHTML = `
     <div class="footer-inner">
@@ -175,14 +183,18 @@ function renderFooter() {
         <a href="index.html">🏠 Home</a>
         <a href="products.html">🛍️ Products</a>
         <a href="cart.html">🛒 Cart</a>
-        ${session ? `<a href="orders.html">📦 My Orders</a>` : `<a href="login.html">👤 Login / Sign Up</a>`}
+        ${isAdmin 
+          ? `<a href="admin/index.html">⚙️ Admin Dashboard</a>` 
+          : session 
+            ? `<a href="orders.html">📦 My Orders</a>` 
+            : `<a href="login.html">👤 Login / Sign Up</a>`}
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
         <a href="#">📍 ${STORE.address}</a>
-        <a href="#" onclick="callSupport(event)">📞 Call Support</a>
         <a href="mailto:${STORE.email}">✉️ ${STORE.email}</a>
-        <a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>
+        ${!session && !isAdmin ? `<a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>` : ""}
+        ${isAdmin ? `<a href="javascript:void(0)" onclick="logoutAdmin(event)" style="color:var(--error);font-size:0.85rem;margin-top:8px;font-weight:600;">🚪 Admin Logout</a>` : ""}
       </div>
     </div>
     <div class="footer-bottom">
@@ -260,11 +272,20 @@ function logoutUser(e) {
 
 function initNavbar() {
   const session = DB.getSession();
+  const isAdmin = localStorage.getItem("adminAuth") === "true";
   const userArea = document.getElementById("user-area");
   const mobileMenu = document.getElementById("mobile-menu");
 
   if (userArea) {
-    if (session) {
+    if (isAdmin) {
+      userArea.innerHTML = `
+        <a href="wishlist.html" class="cart-btn wishlist-nav-btn" style="background:var(--primary-light);color:var(--primary);margin-right:4px;">
+          ❤️ Wishlist
+          <span class="cart-count wishlist-count" id="wishlist-badge">0</span>
+        </a>
+        <a href="admin/index.html" class="nav-btn primary-btn" style="margin-right:4px;">⚙️ Admin Panel</a>
+        <button class="nav-btn outline-btn" onclick="logoutAdmin(event)" style="color:var(--error);">🚪 Admin Logout</button>`;
+    } else if (session) {
       userArea.innerHTML = `
         <a href="wishlist.html" class="cart-btn wishlist-nav-btn" style="background:var(--primary-light);color:var(--primary);margin-right:4px;">
           ❤️ Wishlist
@@ -291,7 +312,14 @@ function initNavbar() {
   }
 
   if (mobileMenu) {
-    if (session) {
+    if (isAdmin) {
+      mobileMenu.innerHTML = `
+        <a href="products.html" style="font-weight:600;color:var(--text);">🛍️ Products</a>
+        <a href="wishlist.html" style="font-weight:600;color:var(--text);">❤️ Wishlist</a>
+        <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+        <a href="admin/index.html" style="font-weight:600;color:var(--primary);">⚙️ Admin Dashboard</a>
+        <a href="javascript:void(0)" onclick="logoutAdmin(event)" style="font-weight:600;color:var(--error);">🚪 Admin Logout</a>`;
+    } else if (session) {
       mobileMenu.innerHTML = `
         <a href="products.html" style="font-weight:600;color:var(--text);">🛍️ Products</a>
         <a href="wishlist.html" style="font-weight:600;color:var(--text);">❤️ Wishlist</a>
