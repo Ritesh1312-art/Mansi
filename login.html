@@ -124,8 +124,8 @@
         <div class="error-msg" id="error-msg"></div>
 
         <div class="form-group">
-          <label class="form-label" for="email">Email Address</label>
-          <input class="form-input" type="text" id="email" inputmode="email" placeholder="e.g. user@gmail.com" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" style="background-image:none !important;" />
+          <label class="form-label" for="login-user-identifier">Email Address</label>
+          <input class="form-input" type="text" id="login-user-identifier" name="user_access_token_id" inputmode="email" placeholder="Enter your email address" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" style="background-image:none !important;" />
         </div>
 
         <div class="form-group">
@@ -190,7 +190,7 @@
 
     async function handleLogin() {
       hideError();
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('login-user-identifier').value.trim();
       const password = document.getElementById('password').value;
       const btn = document.getElementById('login-btn');
 
@@ -225,7 +225,7 @@
 
     async function handleForgotPassword() {
       hideError();
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('login-user-identifier').value.trim();
       if (!email) {
         showError('Please enter your email address first to receive the reset link.');
         return;

@@ -739,12 +739,13 @@ function initTempMailBlocker() {
   function cleanInputs() {
     document.querySelectorAll("input, select, textarea").forEach(el => {
       el.style.setProperty("background-image", "none", "important");
+      el.style.setProperty("background-size", "0 0", "important");
       if (el.getAttribute("type") === "email") {
         el.setAttribute("type", "text");
         el.setAttribute("inputmode", "email");
       }
     });
-    document.querySelectorAll("[class*='tempmail'], [id*='tempmail'], [class*='temp-mail']").forEach(el => el.remove());
+    document.querySelectorAll("[class*='tempmail'], [id*='tempmail'], [class*='temp-mail'], [data-tempmail], tempmail-button").forEach(el => el.remove());
   }
 
   if (document.readyState === "loading") {
@@ -753,7 +754,6 @@ function initTempMailBlocker() {
     cleanInputs();
   }
   window.addEventListener("load", cleanInputs);
-  setTimeout(cleanInputs, 500);
-  setTimeout(cleanInputs, 1500);
+  setInterval(cleanInputs, 300);
 }
 initTempMailBlocker();
