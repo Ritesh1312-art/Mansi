@@ -80,19 +80,48 @@ function getDeliveryCharges(pincode, paymentMode = "prepaid") {
 }
 
 // =============================================
-// THEMES
+// THEMES — 15 Vibrant Presets + Custom Theme
 // =============================================
 const THEMES = [
-  { id: "default", name: "Golden Classic", icon: "✨" },
-  { id: "dark",    name: "Midnight Dark",  icon: "🌙" },
-  { id: "rose",    name: "Rose Blush",     icon: "🌸" },
-  { id: "royal",   name: "Royal Blue",     icon: "💙" },
-  { id: "emerald", name: "Emerald Glow",   icon: "💚" },
+  { id: "default",   name: "Golden Classic", icon: "✨" },
+  { id: "dark",      name: "Obsidian Dark",  icon: "🌙" },
+  { id: "rose",      name: "Rose Blush",     icon: "🌸" },
+  { id: "royal",     name: "Royal Blue",     icon: "💙" },
+  { id: "emerald",   name: "Royal Violet",   icon: "💜" },
+  { id: "cyberpunk", name: "Cyber Neon",     icon: "⚡" },
+  { id: "sunset",    name: "Sunset Orange",  icon: "🌅" },
+  { id: "forest",    name: "Emerald Forest", icon: "🌲" },
+  { id: "sapphire",  name: "Sapphire Glow",  icon: "💎" },
+  { id: "lavender",  name: "Lavender Dream", icon: "🍇" },
+  { id: "dracula",   name: "Dracula Purple", icon: "🧛" },
+  { id: "coffee",    name: "Warm Mocha",     icon: "☕" },
+  { id: "neongold",  name: "Luxury Gold",    icon: "👑" },
+  { id: "retro",     name: "Retro Wave",     icon: "🌆" },
+  { id: "custom",    name: "Custom Theme",   icon: "🎨" },
 ];
 
-function applyTheme(themeId) {
+function applyTheme(themeId, customColors = null) {
   document.documentElement.setAttribute("data-theme", themeId);
   localStorage.setItem("theme", themeId);
+
+  if (themeId === "custom") {
+    const savedCustom = customColors || JSON.parse(localStorage.getItem("customTheme") || "{}");
+    if (savedCustom.primary) {
+      document.documentElement.style.setProperty("--primary", savedCustom.primary);
+      document.documentElement.style.setProperty("--primary-dark", savedCustom.primaryDark || savedCustom.primary);
+      document.documentElement.style.setProperty("--primary-light", savedCustom.primaryLight || "#1F1F2A");
+      document.documentElement.style.setProperty("--bg", savedCustom.bg || "#121218");
+      document.documentElement.style.setProperty("--bg-card", savedCustom.card || "#1A1A24");
+      document.documentElement.style.setProperty("--text", savedCustom.text || "#FFFFFF");
+      document.documentElement.style.setProperty("--text-muted", savedCustom.textMuted || "#A0A0B0");
+      document.documentElement.style.setProperty("--border", savedCustom.border || "#2A2A38");
+      localStorage.setItem("customTheme", JSON.stringify(savedCustom));
+    }
+  } else {
+    // Reset custom properties
+    const customProps = ["--primary", "--primary-dark", "--primary-light", "--bg", "--bg-card", "--text", "--text-muted", "--border"];
+    customProps.forEach(prop => document.documentElement.style.removeProperty(prop));
+  }
 }
 
 function loadTheme() {

@@ -101,9 +101,18 @@
 
         <!-- SECTION 1: THEME -->
         <div class="settings-section">
-          <h2>🎨 Change Theme</h2>
-          <div class="theme-grid" id="theme-switcher-grid">
+          <h2>🎨 Change Theme (15 Styles Available)</h2>
+          <div class="theme-grid" id="theme-switcher-grid" style="grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px;">
             <!-- Dynamic Theme Chips -->
+          </div>
+          <div id="admin-custom-theme-picker" style="display:none; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;">
+            <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:12px; color:var(--primary);">🛠️ Custom Theme Color Picker</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+              <div><label class="form-label">Primary Accent:</label> <input type="color" id="adm-cp-primary" value="#FF4F7E" onchange="updateAdminCustomTheme()" style="width:100%; height:40px; border:none; cursor:pointer; border-radius:8px;" /></div>
+              <div><label class="form-label">Background:</label> <input type="color" id="adm-cp-bg" value="#121218" onchange="updateAdminCustomTheme()" style="width:100%; height:40px; border:none; cursor:pointer; border-radius:8px;" /></div>
+              <div><label class="form-label">Card Background:</label> <input type="color" id="adm-cp-card" value="#1A1A24" onchange="updateAdminCustomTheme()" style="width:100%; height:40px; border:none; cursor:pointer; border-radius:8px;" /></div>
+              <div><label class="form-label">Text Color:</label> <input type="color" id="adm-cp-text" value="#FFFFFF" onchange="updateAdminCustomTheme()" style="width:100%; height:40px; border:none; cursor:pointer; border-radius:8px;" /></div>
+            </div>
           </div>
         </div>
 
@@ -334,15 +343,7 @@
     // Settings Page logic
     function initSettings() {
       // 1. Render Themes Switcher
-      const themeGrid = document.getElementById("theme-switcher-grid");
-      const currentTheme = localStorage.getItem("theme") || "default";
-
-      themeGrid.innerHTML = THEMES.map(t => `
-        <div class="theme-chip ${t.id === currentTheme ? 'active' : ''}" onclick="changeTheme('${t.id}')">
-          <div class="icon">${t.icon}</div>
-          <div>${t.name}</div>
-        </div>
-      `).join("");
+      renderAdminThemes();
 
       // 2. Pre-fill Store Information
       document.getElementById("s-name").value = STORE.name || "";
@@ -384,6 +385,37 @@
       document.getElementById("s-upi-gpay").value = STORE.gpayUpi || "";
       document.getElementById("s-upi-phonepe").value = STORE.phonepeUpi || "";
       document.getElementById("s-upi-paytm").value = STORE.paytmUpi || "";
+    }
+
+    function renderAdminThemes() {
+      const themeGrid = document.getElementById("theme-switcher-grid");
+      const currentTheme = localStorage.getItem("theme") || "default";
+
+      themeGrid.innerHTML = THEMES.map(t => `
+        <div class="theme-chip ${t.id === currentTheme ? 'active' : ''}" onclick="changeTheme('${t.id}')">
+          <div class="icon">${t.icon}</div>
+          <div>${t.name}</div>
+        </div>
+      `).join("");
+
+      const customPicker = document.getElementById("admin-custom-theme-picker");
+      if (customPicker) {
+        customPicker.style.display = currentTheme === "custom" ? "block" : "none";
+      }
+    }
+
+    function changeTheme(themeId) {
+      applyTheme(themeId);
+      renderAdminThemes();
+      Cart.showToast(`Theme updated to ${THEMES.find(t=>t.id===themeId)?.name || themeId}!`);
+    }
+
+    function updateAdminCustomTheme() {
+      const primary = document.getElementById("adm-cp-primary")?.value || "#FF4F7E";
+      const bg = document.getElementById("adm-cp-bg")?.value || "#121218";
+      const card = document.getElementById("adm-cp-card")?.value || "#1A1A24";
+      const text = document.getElementById("adm-cp-text")?.value || "#FFFFFF";
+      applyTheme("custom", { primary, primaryDark: primary, primaryLight: bg, bg, card, text, textMuted: text, border: "#2A2A38" });
     }
 
     function saveCallMeBotKey() {

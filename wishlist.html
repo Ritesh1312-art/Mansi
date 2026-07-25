@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Wishlist — Mansi Jewellery &amp; Cosmetics</title>
+  <meta name="description" content="View your saved wishlist items from Mansi Jewellery &amp; Cosmetics." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .wishlist-header {
+      max-width: 1200px;
+      margin: 32px auto 20px;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wishlist-header h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- OFFER MARQUEE -->
+  <div class="offer-banner">
+    <div class="offer-banner-inner">
+      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>💍 New Jewellery Collection Arrived!</span>
+      <span>📦 COD Available All Over India</span>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="nav-logo" href="index.html">
+      <div class="nav-logo-icon">💍</div>
+      <div>
+        <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
+      </div>
+    </a>
+    <div class="nav-center">
+      <div class="nav-search">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search products..." />
+      </div>
+    </div>
+    <div class="nav-right">
+      <a href="index.html" class="nav-link">Shop</a>
+      <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
+      <a href="cart.html" class="cart-btn">
+        🛒 Cart
+        <span class="cart-count"></span>
+      </a>
+    </div>
+    <button class="hamburger" onclick="document.getElementById('mobile-menu').style.display = document.getElementById('mobile-menu').style.display === 'flex' ? 'none' : 'flex'">☰</button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div id="mobile-menu" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;gap:12px;flex-direction:column;">
+    <a href="index.html" style="font-weight:600;color:var(--text);">🏠 Home</a>
+    <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+    <a href="orders.html" style="font-weight:600;color:var(--text);">📦 My Orders</a>
+  </div>
+
+  <div class="wishlist-header">
+    <h1>❤️ My Wishlist</h1>
+    <span style="font-size:0.9rem;color:var(--text-muted);font-weight:600;" id="wishlist-count-text"></span>
+  </div>
+
+  <!-- WISHLIST PRODUCTS GRID -->
+  <div class="section" style="padding-top:0;">
+    <div class="products-grid" id="wishlist-grid"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
+        <p>Your trusted local market for jewellery, cosmetics, and gift items. COD available.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="products.html">Products</a>
+        <a href="cart.html">Cart</a>
+        <a href="orders.html">My Orders</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Mansi Jewellery &amp; Cosmetics</span>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    loadTheme();
+    initNavbar();
+
+    function renderWishlist() {
+      const ids = Wishlist.get();
+      const allProducts = DB.getProducts();
+      const wishlistProducts = allProducts.filter(p => ids.includes(p.id));
+      const grid = document.getElementById("wishlist-grid");
+      const countText = document.getElementById("wishlist-count-text");
+
+      if (wishlistProducts.length === 0) {
+        countText.textContent = "";
+        grid.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:80px 24px;color:var(--text-muted);">
+            <div style="font-size:4rem;margin-bottom:16px;">❤️</div>
+            <h3 style="font-size:1.3rem;margin-bottom:8px;color:var(--text);">Your Wishlist is empty!</h3>
+            <p style="margin-bottom:24px;">Explore our items and save your favorites here.</p>
+            <a href="products.html" class="btn-primary">🛍️ Browse Products</a>
+          </div>`;
+        return;
+      }
+
+      countText.textContent = `${wishlistProducts.length} item${wishlistProducts.length > 1 ? 's' : ''} saved`;
+
+      grid.innerHTML = wishlistProducts.map(p => {
+        const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
+        return `
+          <div class="product-card" onclick="location.href='product-detail.html?id=${p.id}'">
+            <div class="product-card-img">
+              <img src="${p.image || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" />
+              ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
+              <button class="product-wishlist active" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');renderWishlist();">❤️</button>
+            </div>
+            <div class="product-card-body">
+              <div class="product-card-name">${p.name}</div>
+              <div class="product-card-rating">
+                <span class="stars">★★★★★</span>
+                <span class="rating-count">(${p.reviews || 0})</span>
+              </div>
+              <div class="product-card-price">
+                <span class="price-current">₹${p.price}</span>
+                ${p.mrp > p.price ? `<span class="price-mrp">₹${p.mrp}</span><span class="price-off">Save ₹${p.mrp - p.price}</span>` : ""}
+              </div>
+              <button class="btn-add-cart" onclick="event.stopPropagation();Cart.add('${p.id}')">
+                🛒 Add to Cart
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    renderWishlist();
+  </script>
+</body>
+</html>

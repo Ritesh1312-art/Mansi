@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Orders — Mansi Jewellery &amp; Cosmetics</title>
   <meta name="description" content="Track all your orders from Mansi Jewellery &amp; Cosmetics. View order status, details and track via WhatsApp." />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3.0" />
   <style>
     .page-title-section {
       max-width: 800px; margin: 32px auto 0; padding: 0 24px;
@@ -158,9 +158,9 @@
     </div>
   </footer>
 
-  <script src="js/config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/config.js?v=3.0"></script>
+  <script src="js/data.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
   <script>
     loadTheme();
     initNavbar();
@@ -198,7 +198,7 @@
     }
 
     function renderOrders() {
-      const orders = DB.getOrdersByUser(session.id);
+      const orders = DB.getOrdersByUser(session);
       const container = document.getElementById('orders-container');
       const countEl = document.getElementById('orders-count');
 
@@ -229,6 +229,9 @@
           ? `${order.address.house}, ${order.address.street}, ${order.address.city} — ${order.address.pincode}`
           : '';
 
+        const statusLower = (order.status || 'pending').toLowerCase();
+        const isCancellable = statusLower !== 'shipped' && statusLower !== 'delivered' && statusLower !== 'cancelled';
+
         return `
           <div class="order-card">
             <div class="order-card-header">
@@ -252,14 +255,38 @@
               <span>${formatCurrency(order.grandTotal)}</span>
             </div>
 
-            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-              <a href="${buildWhatsAppLink(order)}" target="_blank" class="order-wa-btn">
-                📱 Track on WhatsApp
-              </a>
-              ${order.status === 'delivered' ? '<span style="font-size:0.82rem;color:var(--success);font-weight:600;">✅ Order Delivered!</span>' : ''}
+            ${order.status === 'cancelled' ? `
+              <div style="margin-top:12px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px dashed var(--error);border-radius:10px;font-size:0.82rem;color:var(--error);">
+                ❌ Order Cancelled ${order.cancelReason ? `(${order.cancelReason})` : ''}
+              </div>
+            ` : ''}
+
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <a href="${buildWhatsAppLink(order)}" target="_blank" class="order-wa-btn">
+                  📱 Track on WhatsApp
+                </a>
+                ${order.status === 'delivered' ? '<span style="font-size:0.82rem;color:var(--success);font-weight:600;">✅ Order Delivered!</span>' : ''}
+              </div>
+              ${isCancellable ? `
+                <button onclick="promptCancelOrder('${order.id}')" style="background:transparent;border:1px solid var(--error);color:var(--error);padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                  ❌ Cancel Order
+                </button>
+              ` : ''}
             </div>
           </div>`;
       }).join('');
+    }
+
+    function promptCancelOrder(orderId) {
+      const reason = prompt("Why do you want to cancel this order?\n(e.g., Mind changed / Wrong address / Ordered by mistake)", "Mind changed");
+      if (reason === null) return; // User clicked Cancel in prompt
+
+      const updated = DB.cancelOrder(orderId, reason.trim() || "Mind changed");
+      if (updated) {
+        Cart.showToast(`Order #${orderId} cancelled successfully.`);
+        renderOrders();
+      }
     }
 
     renderOrders();

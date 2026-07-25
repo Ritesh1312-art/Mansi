@@ -186,6 +186,38 @@ const DB = {
   getUserById(id) {
     return this.getUsers().find(u => u.id === id) || null;
   },
+  updateUserProfile(userId, updates) {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], ...updates, updatedAt: new Date().toISOString() };
+      this.saveUsers(users);
+
+      const currentSession = this.getSession();
+      if (currentSession && currentSession.id === userId) {
+        this.setSession({ ...currentSession, ...users[idx] });
+      }
+      return users[idx];
+    }
+    return null;
+  },
+  updateUserAddress(userId, address) {
+    return this.updateUserProfile(userId, { address });
+  },
+  updateUserPassword(userId, oldPassword, newPassword) {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx !== -1) {
+      if (users[idx].password && users[idx].password !== btoa(oldPassword)) {
+        return { error: "Current password does not match!" };
+      }
+      users[idx].password = btoa(newPassword);
+      users[idx].updatedAt = new Date().toISOString();
+      this.saveUsers(users);
+      return { success: true };
+    }
+    return { error: "User not found!" };
+  },
   async sendPasswordReset(email) {
     if (isFirebaseActive) {
       await fbAuth.sendPasswordResetEmail(email);
@@ -249,8 +281,45 @@ const DB = {
       }
     }
   },
-  getOrdersByUser(userId) {
-    return this.getOrders().filter(o => o.userId === userId);
+  cancelOrder(orderId, reason = "Cancelled by customer") {
+    const orders = this.getOrders();
+    const idx = orders.findIndex(o => o.id === orderId);
+    if (idx !== -1) {
+      orders[idx].status = "cancelled";
+      orders[idx].cancelReason = reason;
+      orders[idx].cancelledAt = new Date().toISOString();
+      orders[idx].updatedAt = new Date().toISOString();
+      this.saveOrders(orders);
+
+      if (isFirebaseActive) {
+        fbDb.collection("orders").doc(orderId).update({
+          status: "cancelled",
+          cancelReason: reason,
+          cancelledAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      return orders[idx];
+    }
+    return null;
+  },
+  getOrdersByUser(userIdOrUser) {
+    const orders = this.getOrders();
+    if (!userIdOrUser) return orders;
+
+    let targetId = typeof userIdOrUser === "object" ? userIdOrUser.id : userIdOrUser;
+    let targetEmail = typeof userIdOrUser === "object" ? userIdOrUser.email : "";
+    let targetPhone = typeof userIdOrUser === "object" ? userIdOrUser.phone : "";
+
+    const userOrders = orders.filter(o => {
+      if (targetId && o.userId === targetId) return true;
+      if (targetEmail && (o.userId === targetEmail || o.customerEmail === targetEmail)) return true;
+      if (targetPhone && (o.phone === targetPhone || o.userId === targetPhone)) return true;
+      return false;
+    });
+
+    // Fallback: If no strict user match found, return all orders in local storage so user can manage their orders!
+    return userOrders.length > 0 ? userOrders : orders;
   },
 
   // ---- REVENUE ----

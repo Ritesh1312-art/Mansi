@@ -6,7 +6,7 @@
   <title>All Products — Mansi Jewellery &amp; Cosmetics</title>
   <meta name="description" content="Browse all products — jewellery, cosmetics, tea sets, paintings, gift items and more. Shop at best prices with fast delivery and COD available." />
   <meta name="keywords" content="jewellery, cosmetics, tea sets, paintings, gifts, Raipur, online shopping, mansi" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3.0" />
   <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
   <style>
     /* ---- Products Page Specific Styles ---- */
@@ -276,9 +276,9 @@
   </footer>
 
   <!-- SCRIPTS -->
-  <script src="js/config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/config.js?v=3.0"></script>
+  <script src="js/data.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
   <script>
     // ============================================================
     // PRODUCTS PAGE — State
@@ -409,7 +409,7 @@
           <div class="product-card-img">
             <img src="${img}" alt="${p.name}" loading="lazy" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
-            <button class="product-wishlist" onclick="event.stopPropagation();toggleWishlist(this)">🤍</button>
+            <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? 'active' : ''}" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? '❤️' : '🤍'}</button>
           </div>
           <div class="product-card-body">
             <div class="product-card-name">${p.name}</div>

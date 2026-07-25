@@ -6,7 +6,7 @@
   <title>Mansi Jewellery & Cosmetics — Apna Local Market</title>
   <meta name="description" content="Shop jewellery, cosmetics, tea sets, paintings and more at best prices. Fast delivery in Raipur and all over India. COD available." />
   <meta name="1921d0f1b72b1e655d86b0a0a39da449365d5246" content="1921d0f1b72b1e655d86b0a0a39da449365d5246" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3.0" />
   <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 </head>
 <body>
@@ -189,9 +189,9 @@
   </footer>
 
   <!-- SCRIPTS -->
-  <script src="js/config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/config.js?v=3.0"></script>
+  <script src="js/data.js?v=3.0"></script>
+  <script src="js/app.js?v=3.0"></script>
   <script>
     // Init
     loadTheme();
@@ -214,7 +214,7 @@
           <div class="product-card-img">
             <img src="${p.image || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
-            <button class="product-wishlist" onclick="event.stopPropagation();this.textContent=this.textContent==='🤍'?'❤️':'🤍'">🤍</button>
+            <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? 'active' : ''}" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? '❤️' : '🤍'}</button>
           </div>
           <div class="product-card-body">
             <div class="product-card-name">${p.name}</div>

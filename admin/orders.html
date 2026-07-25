@@ -81,6 +81,7 @@
               <option value="confirmed">Confirmed</option>
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -175,6 +176,7 @@
         if (o.status === "confirmed") badgeClass = "badge-info";
         if (o.status === "shipped") badgeClass = "badge-warning";
         if (o.status === "delivered") badgeClass = "badge-success";
+        if (o.status === "cancelled") badgeClass = "badge-error";
 
         const itemsCount = o.items.reduce((sum, item) => sum + item.qty, 0);
         const itemsList = o.items.map(item => `${item.name} (x${item.qty})`).join(", ");
@@ -202,7 +204,10 @@
             <td style="color:var(--primary);font-weight:700;">₹${o.grandTotal}</td>
             <td style="color:var(--text-muted);">₹${o.deliveryCharge}</td>
             <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--bg-input);border-radius:4px;font-weight:700;">${o.paymentMode.toUpperCase()}</span></td>
-            <td><span class="badge ${badgeClass}">${o.status.toUpperCase()}</span></td>
+            <td>
+              <span class="badge ${badgeClass}">${o.status.toUpperCase()}</span>
+              ${o.cancelReason ? `<div style="font-size:0.7rem;color:var(--error);margin-top:2px;">Reason: ${o.cancelReason}</div>` : ''}
+            </td>
             <td style="font-size:0.78rem;color:var(--text-muted);">${new Date(o.createdAt).toLocaleDateString()} ${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
             <td>
               <div style="display:flex;gap:6px;align-items:center;">
@@ -211,6 +216,7 @@
                   <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>Confirmed</option>
                   <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
                   <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
+                  <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>Cancelled</option>
                 </select>
                 <a href="https://wa.me/91${o.phone}?text=${statusMsg}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#25D366;color:#25D366;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
                   💬 Chat

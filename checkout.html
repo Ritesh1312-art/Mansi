@@ -283,9 +283,22 @@
     document.getElementById("opt-upi").style.display = "flex";
   }
 
-  // Pre-fill name and phone from session
+  // Pre-fill name, phone, and saved address from user profile
   if (session) {
-    document.getElementById("c-name").value = session.name || "";
+    const fullUser = DB.getUserById(session.id) || session;
+    document.getElementById("c-name").value = fullUser.name || session.name || "";
+    document.getElementById("c-phone").value = fullUser.phone || "";
+
+    if (fullUser.address) {
+      document.getElementById("c-house").value = fullUser.address.house || "";
+      document.getElementById("c-street").value = fullUser.address.street || "";
+      document.getElementById("c-city").value = fullUser.address.city || "";
+      if (fullUser.address.state) document.getElementById("c-state").value = fullUser.address.state;
+      if (fullUser.address.pincode) {
+        document.getElementById("c-pin").value = fullUser.address.pincode;
+        setTimeout(() => checkPincode(fullUser.address.pincode), 200);
+      }
+    }
   }
 
   // Render summary items
