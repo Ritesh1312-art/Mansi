@@ -221,6 +221,11 @@
                 <a href="https://wa.me/91${o.phone}?text=${statusMsg}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#25D366;color:#25D366;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
                   💬 Chat
                 </a>
+                ${o.status === 'delivered' ? `
+                  <button onclick="confirmDeleteOrder('${o.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);border-radius:10px;font-weight:600;cursor:pointer;" title="Delete Delivered Order">
+                    🗑️ Delete
+                  </button>
+                ` : ''}
               </div>
             </td>
           </tr>
@@ -232,6 +237,18 @@
       DB.updateOrderStatus(orderId, newStatus);
       renderOrdersTable();
       Cart.showToast("Order status updated!");
+    }
+
+    function confirmDeleteOrder(orderId) {
+      if (confirm(`⚠️ Are you sure you want to permanently delete delivered order #${orderId}?`)) {
+        const success = DB.deleteOrder(orderId);
+        if (success) {
+          renderOrdersTable();
+          Cart.showToast("Delivered order deleted permanently!");
+        } else {
+          alert("⚠️ Only delivered orders can be deleted!");
+        }
+      }
     }
 
     // Run auth check

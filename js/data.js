@@ -307,6 +307,20 @@ const DB = {
     }
     return null;
   },
+  deleteOrder(orderId) {
+    let orders = this.getOrders();
+    const target = orders.find(o => o.id === orderId);
+    // Allow deleting ONLY if order is delivered
+    if (target && target.status === "delivered") {
+      orders = orders.filter(o => o.id !== orderId);
+      this.saveOrders(orders);
+      if (isFirebaseActive) {
+        fbDb.collection("orders").doc(orderId).delete().catch(e => console.error("Firebase delete order error:", e));
+      }
+      return true;
+    }
+    return false;
+  },
   getOrdersByUser(userIdOrUser) {
     const orders = this.getOrders();
     if (!userIdOrUser) return orders;
