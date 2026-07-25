@@ -3,50 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Cart — Mansi Jewellery &amp; Cosmetics</title>
-  <meta name="description" content="View your shopping cart at Mansi Jewellery &amp; Cosmetics. Review items, update quantities and proceed to checkout." />
+  <title>My Cart — Mansi Jewellery & Cosmetics</title>
+  <meta name="description" content="View your shopping cart at Mansi Jewellery & Cosmetics. Review items, update quantities and proceed to checkout." />
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .page-title-bar {
-      max-width: 1100px; margin: 28px auto 0; padding: 0 24px;
-    }
-    .page-title-bar h1 {
-      font-size: 1.6rem; font-weight: 800;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .cart-item-qty-ctrl {
-      display: flex; align-items: center; gap: 0;
-      border: 1.5px solid var(--border); border-radius: 8px;
-      overflow: hidden; width: fit-content;
-    }
-    .cart-qty-btn {
-      width: 32px; height: 32px; background: var(--bg-input);
-      border: none; font-size: 1rem; font-weight: 700;
-      color: var(--text); cursor: pointer; transition: background 0.2s;
-      flex-shrink: 0;
-    }
+    .page-title-bar { max-width: 1100px; margin: 28px auto 0; padding: 0 24px; }
+    .page-title-bar h1 { font-size: 1.6rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .cart-item-qty-ctrl { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; }
+    .cart-qty-btn { width: 32px; height: 32px; background: var(--bg-input); border: none; font-size: 1rem; font-weight: 700; color: var(--text); cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
     .cart-qty-btn:hover { background: var(--primary); color: #fff; }
-    .cart-qty-val {
-      width: 36px; text-align: center; font-weight: 700;
-      font-size: 0.9rem; color: var(--text);
-    }
+    .cart-qty-val { width: 36px; text-align: center; font-weight: 700; font-size: 0.9rem; color: var(--text); }
     .cart-item-info { flex: 1; }
-    .continue-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      color: var(--primary); font-weight: 600; font-size: 0.9rem;
-      margin-top: 16px; transition: gap 0.2s;
-    }
+    .continue-link { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-weight: 600; font-size: 0.9rem; margin-top: 16px; transition: gap 0.2s; }
     .continue-link:hover { gap: 10px; }
-    .delivery-note {
-      background: var(--primary-light); border-radius: 10px;
-      padding: 10px 14px; font-size: 0.82rem;
-      color: var(--primary-dark); font-weight: 600; margin: 12px 0;
-    }
-    .cart-section-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 16px; border-bottom: 1px solid var(--border);
-      font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
-    }
+    .delivery-note { background: var(--primary-light); border-radius: 10px; padding: 10px 14px; font-size: 0.82rem; color: var(--text); font-weight: 600; margin: 12px 0; }
+    .cart-section-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+    .empty-cart { text-align: center; padding: 80px 24px; color: var(--text-muted); }
+    .empty-cart .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+    .empty-cart h3 { font-size: 1.3rem; margin-bottom: 8px; color: var(--text); }
   </style>
 </head>
 <body>
@@ -63,7 +37,6 @@
       <span>🎉 Use code WELCOME — Free delivery on first order!</span>
       <span>💍 New Jewellery Collection Arrived!</span>
       <span>📦 COD Available All Over India</span>
-      <span>⭐ Trusted by 500+ Customers in Raipur</span>
       <span>🎉 Use code WELCOME — Free delivery on first order!</span>
     </div>
   </div>
@@ -72,30 +45,23 @@
   <nav class="navbar">
     <a class="nav-logo" href="index.html">
       <div class="nav-logo-icon">💍</div>
-      <div>
-        <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
-      </div>
+      <div class="nav-logo-text"><span>Mansi</span> Jewellery</div>
     </a>
-    <div class="nav-center">
-      <div class="nav-search">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" placeholder="Search products..." />
-      </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="products.html" class="nav-link">Collections</a>
     </div>
     <div class="nav-right">
-      <a href="index.html" class="nav-link">Shop</a>
+      <a href="cart.html" class="cart-btn">🛒 Cart <span class="cart-count" style="display:none;">0</span></a>
       <div id="user-area" style="display:flex;gap:8px;align-items:center;"></div>
-      <a href="cart.html" class="cart-btn">
-        🛒 Cart
-        <span class="cart-count"></span>
-      </a>
     </div>
-    <button class="hamburger" onclick="this.closest('nav').nextElementSibling.style.display = this.closest('nav').nextElementSibling.style.display === 'flex' ? 'none' : 'flex'">☰</button>
+    <button class="hamburger" onclick="document.getElementById('mobile-menu').style.display = document.getElementById('mobile-menu').style.display === 'flex' ? 'none' : 'flex'">☰</button>
   </nav>
 
   <!-- MOBILE MENU -->
   <div id="mobile-menu" style="display:none;background:var(--bg-card);border-bottom:1px solid var(--border);padding:16px 24px;gap:12px;flex-direction:column;">
     <a href="index.html" style="font-weight:600;color:var(--text);">🏠 Home</a>
+    <a href="products.html" style="font-weight:600;color:var(--text);">🛍️ Collections</a>
     <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
     <a href="orders.html" style="font-weight:600;color:var(--text);">📦 My Orders</a>
   </div>
@@ -122,32 +88,8 @@
     </a>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
-        <p>Premium quality jewellery, cosmetics &amp; more. Trusted by 500+ customers in Raipur and all over India. COD available.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Quick Links</h4>
-        <a href="index.html">Home</a>
-        <a href="cart.html">My Cart</a>
-        <a href="orders.html">My Orders</a>
-        <a href="login.html">Login</a>
-      </div>
-      <div class="footer-col">
-        <h4>Contact Us</h4>
-        <a href="https://wa.me/919876543210" target="_blank">📱 WhatsApp Us</a>
-        <a href="mailto:mansi@example.com">📧 Email Us</a>
-        <a href="#">📍 Ward No 47, Raipur, CG</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2025 Mansi Jewellery &amp; Cosmetics</span>
-      <span>Made with ❤️ in Raipur</span>
-    </div>
-  </footer>
+  <!-- FOOTER (rendered by JS) -->
+  <footer class="footer"></footer>
 
   <script src="js/config.js"></script>
   <script src="js/data.js"></script>
@@ -170,7 +112,7 @@
             <div class="empty-icon">🛒</div>
             <h3>Your cart is empty!</h3>
             <p>Looks like you haven't added anything yet. Explore our beautiful collection.</p>
-            <a href="index.html" class="btn-primary" style="margin-top:24px;display:inline-flex;align-items:center;gap:8px;">
+            <a href="index.html" style="margin-top:24px;display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:var(--white);padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
               🛍️ Shop Now
             </a>
           </div>`;
@@ -225,7 +167,7 @@
                 <span>Subtotal</span>
                 <span id="cart-total-val">${formatCurrency(subtotal)}</span>
               </div>
-              <a href="checkout.html" class="btn-full" style="display:block;text-align:center;text-decoration:none;margin-top:16px;">
+              <a href="checkout.html" style="display:block;text-align:center;text-decoration:none;margin-top:16px;padding:16px;background:var(--primary);color:var(--white);border-radius:12px;font-weight:700;font-size:0.9rem;">
                 Proceed to Checkout →
               </a>
               <div style="text-align:center;margin-top:12px;font-size:0.8rem;color:var(--text-muted);">
