@@ -191,10 +191,9 @@
       return `<span class="status-badge ${s.cls}">${s.icon} ${s.label}</span>`;
     }
 
-    function buildWhatsAppLink(order) {
-      const items = order.items.map(i => `• ${i.name} × ${i.qty} — ${formatCurrency(i.price * i.qty)}`).join('\n');
-      const msg = `Hi Mansi Store! 👋\n\nI want to track my order:\n\n*Order ID:* ${order.id}\n*Date:* ${formatDate(order.createdAt)}\n*Status:* ${order.status}\n\n*Items:*\n${items}\n\n*Total:* ${formatCurrency(order.grandTotal)}\n\nPlease update me on the delivery status. Thank you! 🙏`;
-      return `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(msg)}`;
+    function buildTelegramLink(order) {
+      const username = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
+      return `https://t.me/${username}`;
     }
 
     function renderOrders() {
@@ -263,8 +262,8 @@
 
             <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
               <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                <a href="${buildWhatsAppLink(order)}" target="_blank" class="order-wa-btn">
-                  📱 Track on WhatsApp
+                <a href="${buildTelegramLink(order)}" target="_blank" class="order-wa-btn" style="background:#0088cc;border-color:#0088cc;color:#fff;">
+                  ✈️ Telegram Support (@${(STORE.telegramUsername || "MansiJewellery").replace('@', '')})
                 </a>
                 ${order.status === 'delivered' ? '<span style="font-size:0.82rem;color:var(--success);font-weight:600;">✅ Order Delivered!</span>' : ''}
               </div>

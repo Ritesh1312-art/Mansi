@@ -140,14 +140,16 @@ const Payment = {
 // =============================================
 // NAVBAR & FOOTER — shared across all pages
 // =============================================
-function openWhatsAppChat(e) {
+function openTelegramChat(e) {
   if (e) e.preventDefault();
-  window.open(`https://wa.me/${STORE.whatsapp}`, "_blank");
+  const username = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
+  window.open(`https://t.me/${username}`, "_blank");
 }
 
 function callSupport(e) {
   if (e) e.preventDefault();
-  window.location.href = `tel:${STORE.phone}`;
+  const username = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
+  window.open(`https://t.me/${username}`, "_blank");
 }
 
 function logoutAdmin(e) {
@@ -169,9 +171,9 @@ function renderFooter() {
         <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 ${STORE.name}</div>
         <p>${STORE.tagline}</p>
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
-          <a href="#" onclick="openWhatsAppChat(event)"
-             style="background:#25D366;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
-            💬 WhatsApp Us
+          <a href="#" onclick="openTelegramChat(event)"
+             style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
+            ✈️ Telegram Support
           </a>
           <button onclick="openThemeModal()" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
             🎨 Theme Switcher

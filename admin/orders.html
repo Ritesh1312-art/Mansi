@@ -218,8 +218,8 @@
                   <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
                   <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>Cancelled</option>
                 </select>
-                <a href="https://wa.me/91${o.phone}?text=${statusMsg}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#25D366;color:#25D366;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
-                  💬 Chat
+                <a href="https://t.me/${(STORE.telegramUsername || 'MansiJewellery').replace('@', '')}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#0088cc;color:#0088cc;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
+                  ✈️ Telegram
                 </a>
                 ${o.status.toLowerCase() === "delivered" ? `
                   <button onclick="deleteDeliveredOrder('${o.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);border-radius:10px;font-weight:700;cursor:pointer;" title="Delete Delivered Order Record">

@@ -24,6 +24,7 @@ const defaultStore = {
   },
   telegramBotToken: "", 
   telegramChatId: "",
+  telegramUsername: "MansiJewellery",
   gpayUpi: "",
   phonepeUpi: "",
   paytmUpi: "",
