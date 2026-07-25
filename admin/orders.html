@@ -210,7 +210,7 @@
             </td>
             <td style="font-size:0.78rem;color:var(--text-muted);">${new Date(o.createdAt).toLocaleDateString()} ${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
             <td>
-              <div style="display:flex;gap:6px;align-items:center;">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                 <select onchange="updateStatus('${o.id}', this.value)" class="form-input" style="padding:6px 10px;font-size:0.78rem;width:auto;">
                   <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
                   <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>Confirmed</option>
@@ -221,8 +221,8 @@
                 <a href="https://wa.me/91${o.phone}?text=${statusMsg}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#25D366;color:#25D366;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
                   💬 Chat
                 </a>
-                ${o.status === 'delivered' ? `
-                  <button onclick="confirmDeleteOrder('${o.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);border-radius:10px;font-weight:600;cursor:pointer;" title="Delete Delivered Order">
+                ${o.status.toLowerCase() === "delivered" ? `
+                  <button onclick="deleteDeliveredOrder('${o.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);border-radius:10px;font-weight:700;cursor:pointer;" title="Delete Delivered Order Record">
                     🗑️ Delete
                   </button>
                 ` : ''}
@@ -239,15 +239,11 @@
       Cart.showToast("Order status updated!");
     }
 
-    function confirmDeleteOrder(orderId) {
-      if (confirm(`⚠️ Are you sure you want to permanently delete delivered order #${orderId}?`)) {
-        const success = DB.deleteOrder(orderId);
-        if (success) {
-          renderOrdersTable();
-          Cart.showToast("Delivered order deleted permanently!");
-        } else {
-          alert("⚠️ Only delivered orders can be deleted!");
-        }
+    function deleteDeliveredOrder(orderId) {
+      if (confirm(`⚠️ Are you sure you want to delete delivered order #${orderId}? This record will be permanently deleted.`)) {
+        DB.deleteOrder(orderId);
+        renderOrdersTable();
+        Cart.showToast(`🗑️ Delivered Order #${orderId} deleted successfully!`);
       }
     }
 

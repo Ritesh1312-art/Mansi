@@ -307,19 +307,14 @@ const DB = {
     }
     return null;
   },
-  deleteOrder(orderId) {
+  deleteOrder(id) {
     let orders = this.getOrders();
-    const target = orders.find(o => o.id === orderId);
-    // Allow deleting ONLY if order is delivered
-    if (target && target.status === "delivered") {
-      orders = orders.filter(o => o.id !== orderId);
-      this.saveOrders(orders);
-      if (isFirebaseActive) {
-        fbDb.collection("orders").doc(orderId).delete().catch(e => console.error("Firebase delete order error:", e));
-      }
-      return true;
+    orders = orders.filter(o => o.id !== id);
+    this.saveOrders(orders);
+    if (isFirebaseActive) {
+      fbDb.collection("orders").doc(id).delete().catch(e => console.error("Firebase order delete error:", e));
     }
-    return false;
+    return true;
   },
   getOrdersByUser(userIdOrUser) {
     const orders = this.getOrders();

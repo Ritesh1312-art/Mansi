@@ -733,3 +733,27 @@ function initKineticGrid() {
 
   raf = requestAnimationFrame(frame);
 }
+
+// Global TempMail & Extension Overlay Blocker
+function initTempMailBlocker() {
+  function cleanInputs() {
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      el.style.setProperty("background-image", "none", "important");
+      if (el.getAttribute("type") === "email") {
+        el.setAttribute("type", "text");
+        el.setAttribute("inputmode", "email");
+      }
+    });
+    document.querySelectorAll("[class*='tempmail'], [id*='tempmail'], [class*='temp-mail']").forEach(el => el.remove());
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cleanInputs);
+  } else {
+    cleanInputs();
+  }
+  window.addEventListener("load", cleanInputs);
+  setTimeout(cleanInputs, 500);
+  setTimeout(cleanInputs, 1500);
+}
+initTempMailBlocker();

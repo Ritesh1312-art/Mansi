@@ -861,107 +861,78 @@ select.form-input { appearance: none; cursor: pointer; }
 /* =============================================
    ADMIN LAYOUT
    ============================================= */
-/* =============================================
-   GLOBAL FIX FOR TEMPMAIL & EXTENSION OVERLAYS
-   ============================================= */
-input, input[type="email"], input[type="text"], input[type="password"], textarea, select, .form-input {
-  background-image: none !important;
-  background-repeat: no-repeat !important;
-}
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-background-clip: text !important;
-  background-image: none !important;
-}
-
-/* =============================================
-   ADMIN LAYOUT & SIDEBAR HIGH CONTRAST
-   ============================================= */
 .admin-layout, .admin-container { display: flex; min-height: 100vh; width: 100%; position: relative; z-index: 2; }
 .admin-sidebar {
   width: 240px; min-height: 100vh; flex-shrink: 0;
-  background: var(--bg-card) !important;
-  border-right: 1.5px solid var(--border) !important;
-  padding: 28px 18px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  padding: 28px 16px;
   position: sticky; top: 0;
-  color: #1E1E2F !important;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.06);
 }
-.admin-sidebar h2, .admin-sidebar .brand {
-  color: #1E1E2F !important;
-  font-weight: 800 !important;
+.admin-sidebar .brand, .admin-sidebar .brand-title {
+  color: var(--text) !important;
+  font-size: 1.15rem;
+  font-weight: 800;
 }
 .admin-nav-item {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   padding: 12px 14px; border-radius: 12px;
   font-size: 0.88rem; font-weight: 700;
-  color: #1E1E2F !important; /* Bold Black font for legibility */
-  cursor: pointer;
+  color: var(--text) !important;
+  opacity: 0.9; cursor: pointer;
   transition: all 0.2s ease; margin-bottom: 6px;
-  text-decoration: none;
-  border: 1px solid transparent;
+  text-decoration: none; letter-spacing: 0.4px;
 }
 .admin-nav-item:hover {
-  background: var(--bg-input) !important;
-  color: #000000 !important;
-  border-color: var(--border);
-  transform: translateX(3px);
+  background: var(--bg-input);
+  color: var(--text) !important;
+  opacity: 1;
+  transform: translateX(4px);
 }
 .admin-nav-item.active {
-  background: #1E1E2F !important;
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  font-weight: 900 !important;
+  opacity: 1;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+}
+[data-theme="obsidian"] .admin-nav-item.active,
+[data-theme="dracula"] .admin-nav-item.active,
+[data-theme="cyber"] .admin-nav-item.active {
+  background: var(--primary) !important;
   color: #FFFFFF !important;
-  font-weight: 800 !important;
-  border-color: #1E1E2F !important;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.15) !important;
-}
-
-/* Specific Theme Overrides for Golden Classic, Rose Blush, Royal Blue, Royal Violet, Sunset Orange, Lavender Dream, Warm Mocha, Retro Wave */
-[data-theme="default"] .admin-sidebar,
-[data-theme="neongold"] .admin-sidebar,
-[data-theme="rose"] .admin-sidebar,
-[data-theme="royal"] .admin-sidebar,
-[data-theme="sapphire"] .admin-sidebar,
-[data-theme="emerald"] .admin-sidebar,
-[data-theme="sunset"] .admin-sidebar,
-[data-theme="lavender"] .admin-sidebar,
-[data-theme="coffee"] .admin-sidebar,
-[data-theme="retro"] .admin-sidebar {
-  background: var(--bg-card) !important;
-  color: #1E1E2F !important;
-}
-
-[data-theme="default"] .admin-nav-item,
-[data-theme="neongold"] .admin-nav-item,
-[data-theme="rose"] .admin-nav-item,
-[data-theme="royal"] .admin-nav-item,
-[data-theme="sapphire"] .admin-nav-item,
-[data-theme="emerald"] .admin-nav-item,
-[data-theme="sunset"] .admin-nav-item,
-[data-theme="lavender"] .admin-nav-item,
-[data-theme="coffee"] .admin-nav-item,
-[data-theme="retro"] .admin-nav-item {
-  color: #1E1E2F !important;
-}
-
-[data-theme="default"] .admin-nav-item.active,
-[data-theme="neongold"] .admin-nav-item.active,
-[data-theme="rose"] .admin-nav-item.active,
-[data-theme="royal"] .admin-nav-item.active,
-[data-theme="sapphire"] .admin-nav-item.active,
-[data-theme="emerald"] .admin-nav-item.active,
-[data-theme="sunset"] .admin-nav-item.active,
-[data-theme="lavender"] .admin-nav-item.active,
-[data-theme="coffee"] .admin-nav-item.active,
-[data-theme="retro"] .admin-nav-item.active {
-  background: #1E1E2F !important;
-  color: #FFFFFF !important;
-  border-color: #1E1E2F !important;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.18) !important;
 }
 .admin-main { flex: 1; padding: 32px; overflow-x: auto; }
 .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-.admin-header h1 { font-size: 1.5rem; font-weight: 800; }
+.admin-header h1 { font-size: 1.8rem; font-weight: 800; color: var(--text) !important; }
+.admin-header p { color: var(--text-muted) !important; font-size: 0.88rem; }
+.settings-section h2 { color: var(--text) !important; font-weight: 800; font-size: 1.2rem; margin-bottom: 20px; }
+
+/* =============================================
+   ANTI-TEMPMAIL & EXTENSION OVERLAY BLOCKER
+   ============================================= */
+input, select, textarea, .form-input {
+  background-image: none !important;
+}
+.form-group {
+  position: relative;
+  z-index: 1;
+}
+.form-input {
+  position: relative;
+  z-index: 2;
+  background-color: var(--bg-input) !important;
+  color: var(--text) !important;
+}
+div[class*="tempmail"], span[class*="tempmail"],
+div[id*="tempmail"], span[id*="tempmail"],
+div[class*="temp-mail"], iframe[src*="tempmail"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
 .stat-card {
   background: var(--bg-card); border: 1px solid var(--border);
