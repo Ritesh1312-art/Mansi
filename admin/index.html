@@ -103,8 +103,8 @@
   </div>
 
   <!-- ADMIN MAIN CONTENT -->
-  <div id="admin-content" style="display: none;">
-    <div class="admin-container">
+  <div id="admin-content" class="admin-layout" style="display: none;">
+    <div class="admin-container" style="display:flex;width:100%;">
       
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
@@ -211,9 +211,12 @@
     loadTheme();
 
     function checkAdminAuth() {
+      if (window.location.pathname.endsWith("/admin")) {
+        window.history.replaceState(null, "", window.location.pathname + "/");
+      }
       if (localStorage.getItem("adminAuth") === "true") {
         document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
+        document.getElementById("admin-content").style.display = "flex";
         initDashboard();
       } else {
         document.getElementById("admin-auth").style.display = "flex";
@@ -231,7 +234,7 @@
     }
 
     function verifyAdminPassword(e) {
-      if (e) e.preventDefault();
+      e.preventDefault();
       const typed = document.getElementById("admin-pass-input").value.trim();
       const err = document.getElementById("admin-auth-err");
 
@@ -247,7 +250,7 @@
       if (typed === correctPass) {
         localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
+        document.getElementById("admin-content").style.display = "flex";
         initDashboard();
       } else {
         err.textContent = "❌ Incorrect password! Default is: mansi@admin123";

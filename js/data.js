@@ -346,36 +346,10 @@ const DB = {
 
   // ---- SEED SAMPLE DATA ----
   seedSampleProducts() {
-    const existing = this.getProducts();
-    // Check if we have old/bad data (tea-sets, paintings categories) — replace them
-    const hasOldData = existing.some(p => ['tea-sets', 'paintings'].includes(p.category));
-    const hasValidData = existing.some(p => ['jewellery', 'cosmetics', 'gifts'].includes(p.category));
-    
-    // If products exist and are valid (jewellery/cosmetics/gifts), don't re-seed
-    if (existing.length > 0 && hasValidData && !hasOldData) return;
-    
-    // Clear old/bad data from Firebase too
-    if (hasOldData && isFirebaseActive) {
-      existing.filter(p => ['tea-sets', 'paintings'].includes(p.category)).forEach(p => {
-        fbDb.collection("products").doc(p.id).delete();
-      });
-    }
-    
-    const samples = [
-      { id: "p1", name: "Gold Plated Necklace Set", price: 299, mrp: 599, category: "jewellery", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400", description: "Elegant gold plated necklace with matching earrings. Perfect for weddings and parties.", stock: 8 },
-      { id: "p2", name: "Diamond Studded Earrings", price: 399, mrp: 799, category: "jewellery", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400", description: "Stunning diamond studded earrings. Lightweight and comfortable for daily wear.", stock: 12 },
-      { id: "p3", name: "Pearl Bangles Set (4 Pcs)", price: 249, mrp: 499, category: "jewellery", image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400", description: "Beautiful pearl bangles set of 4. Classic and elegant design for all occasions.", stock: 15 },
-      { id: "p4", name: "Silver Anklet (Payal)", price: 199, mrp: 399, category: "jewellery", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400", description: "Traditional silver anklet with ghungroo. Handcrafted with love and precision.", stock: 20 },
-      { id: "p5", name: "Luxury Lipstick Set (6 Shades)", price: 199, mrp: 350, category: "cosmetics", image: "https://images.unsplash.com/photo-1586495777744-4e6232bf2b18?w=400", description: "Long-lasting matte lipstick set in 6 beautiful shades. Paraben free.", stock: 30 },
-      { id: "p6", name: "Premium Face Serum", price: 349, mrp: 599, category: "cosmetics", image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400", description: "Vitamin C brightening face serum. Reduces dark spots and gives glowing skin.", stock: 25 },
-      { id: "p7", name: "Kajal & Eyeliner Combo", price: 149, mrp: 299, category: "cosmetics", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400", description: "Smudge-proof kajal and eyeliner combo. Long-lasting and water resistant.", stock: 40 },
-      { id: "p8", name: "Gift Hamper Box", price: 499, mrp: 899, category: "gifts", image: "https://images.unsplash.com/photo-1549465220-1a8b9238f760?w=400", description: "Beautifully wrapped gift hamper with jewellery and cosmetics. Perfect for festivals.", stock: 10 },
-    ];
-    samples.forEach(p => this.addProduct(p));
+    // Only real products added by Admin via Admin Panel or Firebase real-time database are used.
+    // Zero hardcoded sample products injected.
   }
 };
 
-// Seed sample data FIRST (before Firebase sync)
-DB.seedSampleProducts();
-// Then start Firebase sync if configured
+// Start Firebase sync if configured
 DB.initFirebase();

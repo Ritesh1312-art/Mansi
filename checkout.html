@@ -493,16 +493,21 @@
   function showSuccess(order) {
     document.getElementById("modal-order-id").textContent = order.id;
     const msg = encodeURIComponent(
-      `🛍️ New Order!\nOrder ID: ${order.id}\nCustomer: ${order.customerName}\nPhone: ${order.phone}\nAddress: ${order.address.house}, ${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}\nItems: ${order.items.map(i => `${i.name} x${i.qty}`).join(", ")}\nTotal: ₹${order.grandTotal}\nPayment: ${order.paymentMode.toUpperCase()}`
+      `🛍️ *NEW ORDER RECEIVED! #${order.id}*\n\n👤 *Customer Name:* ${order.customerName}\n📞 *Phone:* ${order.phone}\n📍 *Delivery Address:* ${order.address.house ? order.address.house + ', ' : ''}${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}\n\n📦 *Order Items:*\n${order.items.map(i => `• ${i.name} (x${i.qty}) — ₹${i.price * i.qty}`).join("\n")}\n\n💰 *Grand Total:* ₹${order.grandTotal}\n💳 *Payment Method:* ${order.paymentMode.toUpperCase()}\n\nThank you for shopping with Mansi Jewellery & Cosmetics!`
     );
     const waUrl = `https://wa.me/${STORE.whatsapp}?text=${msg}`;
     document.getElementById("whatsapp-order-btn").href = waUrl;
     document.getElementById("success-modal").classList.add("open");
     
+    // AUTOMATIC INSTANT WHATSAPP TRIGGER: No button press required by customer
+    setTimeout(() => {
+      window.open(waUrl, "_blank");
+    }, 400);
+    
     // Background Auto-Notification to Admin's WhatsApp via CallMeBot
     if (STORE.callMeBotApiKey) {
       const adminMsg = encodeURIComponent(
-        `🛍️ *Mansi Jewellery — New Order!*\n\n*Order ID:* ${order.id}\n*Customer:* ${order.customerName}\n*Phone:* ${order.phone}\n*Items:* ${order.items.map(i => `${i.name} (x${i.qty})`).join(", ")}\n*Total:* ₹${order.grandTotal}\n*Payment:* ${order.paymentMode.toUpperCase()}\n*Address:* ${order.address.house}, ${order.address.street}, ${order.address.city}, ${order.address.pincode}`
+        `🛍️ *Mansi Store Alert — New Order!*\n\n*Order ID:* ${order.id}\n*Customer:* ${order.customerName}\n*Phone:* ${order.phone}\n*Items:* ${order.items.map(i => `${i.name} (x${i.qty})`).join(", ")}\n*Total:* ₹${order.grandTotal}\n*Payment:* ${order.paymentMode.toUpperCase()}\n*Address:* ${order.address.house ? order.address.house + ', ' : ''}${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}`
       );
       const callMeBotUrl = `https://api.callmebot.com/whatsapp.php?phone=${STORE.whatsapp}&text=${adminMsg}&apikey=${STORE.callMeBotApiKey}`;
       
