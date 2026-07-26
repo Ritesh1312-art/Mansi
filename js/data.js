@@ -117,7 +117,24 @@ const DB = {
     }
   },
   getProductById(id) {
-    return this.getProducts().find(p => p.id === id) || null;
+    if (!id && id !== 0) return null;
+    const cleanId = decodeURIComponent(String(id)).trim();
+    const products = this.getProducts();
+    if (!products || products.length === 0) return null;
+
+    // 1. Direct ID match (string/numeric)
+    let found = products.find(p => p && String(p.id).trim() === cleanId);
+    if (found) return found;
+
+    // 2. Case-insensitive ID match
+    found = products.find(p => p && String(p.id).trim().toLowerCase() === cleanId.toLowerCase());
+    if (found) return found;
+
+    // 3. Match by name or name slug
+    found = products.find(p => p && p.name && p.name.trim().toLowerCase() === cleanId.toLowerCase());
+    if (found) return found;
+
+    return null;
   },
 
   // ---- USERS ----

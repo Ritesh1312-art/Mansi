@@ -208,7 +208,7 @@
     function productCard(p) {
       const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
       return `
-        <div class="product-card" onclick="location.href='product-detail.html?id=${p.id}'">
+        <div class="product-card" onclick="location.href='product-detail.html?id=${encodeURIComponent(p.id)}'">
           <div class="product-card-img">
             <img src="${p.image || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}

@@ -52,15 +52,32 @@
       initNavbar();
     });
 
+    window.addEventListener("productsSynced", renderProduct);
+
     function renderProduct() {
       const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      const p = DB.getProductById(id);
+      let id = urlParams.get('id');
+      if (!id) {
+        const raw = window.location.search.replace('?id=', '').replace('?', '');
+        if (raw) id = decodeURIComponent(raw);
+      }
+
+      let p = DB.getProductById(id);
+
       if (!p) {
-        document.getElementById('product-detail').innerHTML = '<div style="text-align:center;padding:80px;"><h2>Product Not Found</h2><p style="color:var(--text-muted);margin-top:10px;">The product you are looking for does not exist.</p><a href="products.html" style="color:var(--primary);font-weight:600;margin-top:20px;display:inline-block;">Browse Collections →</a></div>';
+        setTimeout(() => {
+          const retryProduct = DB.getProductById(id);
+          if (retryProduct) drawProduct(retryProduct);
+        }, 400);
+
+        drawNotFound();
         return;
       }
 
+      drawProduct(p);
+    }
+
+    function drawProduct(p) {
       document.getElementById('product-detail').innerHTML = `
         <div class="detail-img-container">
           <img src="${p.image || 'https://via.placeholder.com/600x800'}" alt="${p.name}" />
@@ -85,6 +102,10 @@
           </div>
         </div>
       `;
+    }
+
+    function drawNotFound() {
+      document.getElementById('product-detail').innerHTML = '<div style="text-align:center;padding:80px;grid-column:1/-1;"><h2>Product Not Found</h2><p style="color:var(--text-muted);margin-top:10px;">The product you are looking for does not exist.</p><a href="products.html" style="color:var(--primary);font-weight:600;margin-top:20px;display:inline-block;">Browse Collections →</a></div>';
     }
   </script>
 </body>
