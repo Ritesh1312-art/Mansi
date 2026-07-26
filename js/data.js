@@ -129,7 +129,10 @@ const DB = {
     const products = this.getProducts();
     if (!products || products.length === 0) return null;
 
-    // 1. Direct ID match (string/numeric)
+    const norm = str => String(str || "").toLowerCase().replace(/^p_/, '').replace(/[^a-z0-9]/g, "");
+    const targetNorm = norm(cleanId);
+
+    // 1. Direct ID match
     let found = products.find(p => p && p.id && String(p.id).trim() === cleanId);
     if (found) return found;
 
@@ -137,22 +140,38 @@ const DB = {
     found = products.find(p => p && p.id && String(p.id).trim().toLowerCase() === cleanId.toLowerCase());
     if (found) return found;
 
-    // 3. Match by name or name slug
-    found = products.find(p => p && p.name && p.name.trim().toLowerCase() === cleanId.toLowerCase());
+    // 3. Normalized ID match
+    found = products.find(p => p && p.id && norm(p.id) === targetNorm);
     if (found) return found;
 
-    // 4. Match by fuzzy name
-    found = products.find(p => p && p.name && (
-      p.name.toLowerCase().includes(cleanId.toLowerCase()) || 
-      cleanId.toLowerCase().includes(p.name.toLowerCase())
-    ));
+    // 4. Normalized Name match
+    found = products.find(p => p && p.name && norm(p.name) === targetNorm);
     if (found) return found;
+
+    // 5. Fuzzy Substring match on name or ID
+    found = products.find(p => {
+      if (!p) return false;
+      const pNameNorm = norm(p.name);
+      const pIdNorm = norm(p.id);
+      return (
+        (pNameNorm && targetNorm && (pNameNorm.includes(targetNorm) || targetNorm.includes(pNameNorm))) ||
+        (pIdNorm && targetNorm && (pIdNorm.includes(targetNorm) || targetNorm.includes(pIdNorm)))
+      );
+    });
+    if (found) return found;
+
+    // 6. Index fallback if cleanId is a numeric index
+    if (!isNaN(cleanId) && products[parseInt(cleanId)]) {
+      return products[parseInt(cleanId)];
+    }
 
     return null;
   },
   async fetchProductById(id) {
     if (!id && id !== 0) return null;
     const cleanId = decodeURIComponent(String(id)).trim();
+    const norm = str => String(str || "").toLowerCase().replace(/^p_/, '').replace(/[^a-z0-9]/g, "");
+    const targetNorm = norm(cleanId);
     
     // 1. Local storage lookup
     let product = this.getProductById(cleanId);
@@ -178,11 +197,14 @@ const DB = {
         snap.forEach(d => {
           const data = d.data() || {};
           data.id = data.id || d.id;
+          const pNameNorm = norm(data.name);
+          const pIdNorm = norm(data.id);
+
           if (
             String(data.id).trim() === cleanId || 
-            String(data.id).trim().toLowerCase() === cleanId.toLowerCase() ||
-            (data.name && data.name.trim().toLowerCase() === cleanId.toLowerCase()) ||
-            (data.name && cleanId.toLowerCase().includes(data.name.trim().toLowerCase()))
+            pIdNorm === targetNorm ||
+            pNameNorm === targetNorm ||
+            (pNameNorm && targetNorm && (pNameNorm.includes(targetNorm) || targetNorm.includes(pNameNorm)))
           ) {
             match = data;
           }
