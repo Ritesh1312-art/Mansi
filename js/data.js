@@ -52,11 +52,14 @@ const DB = {
     // Sync Products
     fbDb.collection("products").onSnapshot(snapshot => {
       const products = [];
-      snapshot.forEach(doc => products.push(doc.data()));
+      snapshot.forEach(doc => {
+        const data = doc.data() || {};
+        data.id = data.id || doc.id;
+        products.push(data);
+      });
       // Sort by creation date
       products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       localStorage.setItem("products", JSON.stringify(products));
-      // Dispatch event to update UI dynamically if page supports it
       window.dispatchEvent(new Event("productsSynced"));
     });
 
@@ -72,7 +75,11 @@ const DB = {
 
   // ---- PRODUCTS ----
   getProducts() {
-    return JSON.parse(localStorage.getItem("products") || "[]");
+    const raw = JSON.parse(localStorage.getItem("products") || "[]");
+    return raw.map((p, idx) => {
+      if (!p.id) p.id = "p_" + (p.name ? p.name.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase() : idx);
+      return p;
+    });
   },
   saveProducts(products) {
     localStorage.setItem("products", JSON.stringify(products));
@@ -123,15 +130,22 @@ const DB = {
     if (!products || products.length === 0) return null;
 
     // 1. Direct ID match (string/numeric)
-    let found = products.find(p => p && String(p.id).trim() === cleanId);
+    let found = products.find(p => p && p.id && String(p.id).trim() === cleanId);
     if (found) return found;
 
     // 2. Case-insensitive ID match
-    found = products.find(p => p && String(p.id).trim().toLowerCase() === cleanId.toLowerCase());
+    found = products.find(p => p && p.id && String(p.id).trim().toLowerCase() === cleanId.toLowerCase());
     if (found) return found;
 
     // 3. Match by name or name slug
     found = products.find(p => p && p.name && p.name.trim().toLowerCase() === cleanId.toLowerCase());
+    if (found) return found;
+
+    // 4. Match by fuzzy name
+    found = products.find(p => p && p.name && (
+      p.name.toLowerCase().includes(cleanId.toLowerCase()) || 
+      cleanId.toLowerCase().includes(p.name.toLowerCase())
+    ));
     if (found) return found;
 
     return null;
@@ -149,7 +163,8 @@ const DB = {
       try {
         const doc = await fbDb.collection("products").doc(cleanId).get();
         if (doc.exists) {
-          const pData = doc.data();
+          const pData = doc.data() || {};
+          pData.id = pData.id || doc.id;
           const products = this.getProducts();
           const idx = products.findIndex(p => p.id === pData.id);
           if (idx !== -1) products[idx] = pData;
@@ -161,12 +176,14 @@ const DB = {
         const snap = await fbDb.collection("products").get();
         let match = null;
         snap.forEach(d => {
-          const data = d.data();
-          if (data && (
+          const data = d.data() || {};
+          data.id = data.id || d.id;
+          if (
             String(data.id).trim() === cleanId || 
             String(data.id).trim().toLowerCase() === cleanId.toLowerCase() ||
-            (data.name && data.name.trim().toLowerCase() === cleanId.toLowerCase())
-          )) {
+            (data.name && data.name.trim().toLowerCase() === cleanId.toLowerCase()) ||
+            (data.name && cleanId.toLowerCase().includes(data.name.trim().toLowerCase()))
+          ) {
             match = data;
           }
         });
