@@ -477,6 +477,14 @@
 
     function saveStoreInfo(e) {
       e.preventDefault();
+      const adminPass = document.getElementById("s-password").value.trim();
+      if (adminPass && adminPass !== STORE.adminPassword) {
+        const val = validatePassword(adminPass, { name: "Admin", email: document.getElementById("s-email").value.trim() });
+        if (!val.valid) {
+          alert("❌ Admin Password Rule Error:\n" + val.error);
+          return;
+        }
+      }
       const updatedStore = {
         ...STORE,
         name: document.getElementById("s-name").value.trim(),
@@ -486,7 +494,7 @@
         address: document.getElementById("s-address").value.trim(),
         offerBanner: document.getElementById("s-banner").value.trim(),
         razorpayKey: document.getElementById("s-razorpay").value.trim(),
-        adminPassword: document.getElementById("s-password").value.trim(),
+        adminPassword: adminPass || STORE.adminPassword,
       };
 
       localStorage.setItem("storeSettings", JSON.stringify(updatedStore));

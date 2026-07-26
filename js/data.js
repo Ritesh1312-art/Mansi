@@ -204,9 +204,36 @@ const DB = {
   updateUserAddress(userId, address) {
     return this.updateUserProfile(userId, { address });
   },
-  updateUserPassword(userId, oldPassword, newPassword) {
+  async updateUserPassword(userId, oldPassword, newPassword) {
+    const session = this.getSession();
+    const userInfo = session || {};
+    
+    // Strict password validation
+    const val = validatePassword(newPassword, userInfo);
+    if (!val.valid) {
+      return { error: val.error };
+    }
+
     const users = this.getUsers();
-    const idx = users.findIndex(u => u.id === userId);
+    let idx = users.findIndex(u => 
+      u.id === userId || 
+      (u.email && session && u.email === session.email) ||
+      (session && u.id === session.id)
+    );
+
+    if (idx === -1 && session) {
+      const newUser = {
+        id: session.id || userId || "u_" + Date.now(),
+        name: session.name || "Customer",
+        email: session.email || "",
+        password: btoa(newPassword),
+        createdAt: new Date().toISOString()
+      };
+      users.push(newUser);
+      this.saveUsers(users);
+      return { success: true };
+    }
+
     if (idx !== -1) {
       if (users[idx].password && users[idx].password !== btoa(oldPassword)) {
         return { error: "Current password does not match!" };
@@ -214,9 +241,19 @@ const DB = {
       users[idx].password = btoa(newPassword);
       users[idx].updatedAt = new Date().toISOString();
       this.saveUsers(users);
+
+      if (isFirebaseActive && typeof fbAuth !== 'undefined' && fbAuth.currentUser) {
+        try {
+          await fbAuth.currentUser.updatePassword(newPassword);
+        } catch (e) {
+          console.warn("Firebase password update note:", e);
+        }
+      }
+
       return { success: true };
     }
-    return { error: "User not found!" };
+
+    return { error: "User profile not found. Please log in again." };
   },
   async sendPasswordReset(email) {
     if (isFirebaseActive) {
@@ -362,3 +399,76 @@ const DB = {
 
 // Start Firebase sync if configured
 DB.initFirebase();
+
+// Global Strict Password Validator Function (Requirement 3)
+function validatePassword(password, userInfo = {}) {
+  if (!password) {
+    return { valid: false, error: "Password is required." };
+  }
+
+  // 1. Length: 8 to 12 characters
+  if (password.length < 8 || password.length > 12) {
+    return { valid: false, error: "Password must be between 8 and 12 characters long." };
+  }
+
+  // 2. Prohibited Item: No Spaces
+  if (/\s/.test(password)) {
+    return { valid: false, error: "Password cannot contain spaces." };
+  }
+
+  // 3. Uppercase (A-Z)
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, error: "Password must contain at least one uppercase letter (A-Z)." };
+  }
+
+  // 4. Lowercase (a-z)
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, error: "Password must contain at least one lowercase letter (a-z)." };
+  }
+
+  // 5. Numbers (0-9)
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, error: "Password must contain at least one digit (0-9)." };
+  }
+
+  // 6. Special Characters (!@#$%^&* etc.)
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return { valid: false, error: "Password must contain at least one special character (e.g. !, @, #, $, %, ^, *)." };
+  }
+
+  const lower = password.toLowerCase();
+
+  // 7. Prohibited Item: No Sequences (1234, abcd, qwer, etc.)
+  const sequences = ["1234", "2345", "3456", "4567", "5678", "6789", "abcd", "bcde", "cdef", "defg", "qwer", "asdf", "zxcv"];
+  for (const seq of sequences) {
+    if (lower.includes(seq)) {
+      return { valid: false, error: "Password cannot contain predictable sequences (e.g. '1234' or 'abcd')." };
+    }
+  }
+
+  // 8. Prohibited Item: No Common Words (password, qwerty, admin, welcome)
+  const commonWords = ["password", "qwerty", "admin", "welcome", "123456"];
+  for (const word of commonWords) {
+    if (lower.includes(word)) {
+      return { valid: false, error: `Password cannot contain common words like '${word}'.` };
+    }
+  }
+
+  // 9. Prohibited Item: No Personal Info (name, email prefix)
+  if (userInfo.name && userInfo.name.trim().length >= 3) {
+    const nameParts = userInfo.name.trim().toLowerCase().split(/\s+/);
+    for (const part of nameParts) {
+      if (part.length >= 3 && lower.includes(part)) {
+        return { valid: false, error: "Password cannot contain parts of your name." };
+      }
+    }
+  }
+  if (userInfo.email) {
+    const emailPrefix = userInfo.email.split('@')[0].toLowerCase();
+    if (emailPrefix.length >= 3 && lower.includes(emailPrefix)) {
+      return { valid: false, error: "Password cannot contain parts of your email address." };
+    }
+  }
+
+  return { valid: true, error: null };
+}

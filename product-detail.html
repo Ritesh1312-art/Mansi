@@ -68,12 +68,15 @@
         <div class="detail-info">
           <div class="detail-category">${p.category}</div>
           <h1 class="detail-title">${p.name}</h1>
-          <div class="detail-price">₹${p.price}${p.mrp && p.mrp > p.price ? ' <span style="font-size:1rem;color:var(--text-muted);text-decoration:line-through;margin-left:8px;">₹${p.mrp}</span>' : ''}</div>
+          <div class="detail-price">
+            ₹${p.price}
+            ${p.mrp && Number(p.mrp) > Number(p.price) ? `<span style="font-size:1.1rem;color:var(--text-muted);text-decoration:line-through;margin-left:10px;font-weight:400;">₹${p.mrp}</span>` : ''}
+          </div>
           <p class="detail-desc">${p.description || 'A timeless piece crafted with precision and elegance, designed to elevate your sophisticated style.'}</p>
           
           <div style="display: flex; gap: 16px; flex-wrap: wrap;">
             <button onclick="Cart.add('${p.id}')" style="padding:14px 32px;background:var(--primary);color:var(--white);border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">Add to Bag</button>
-            <button onclick="window.open('https://wa.me/${STORE.whatsapp}?text=Hi! I am interested in ${encodeURIComponent(p.name)} (₹${p.price}). Please share more details.', '_blank')" style="padding:14px 32px;background:#25D366;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">💬 Ask on WhatsApp</button>
+            <button onclick="window.open('https://t.me/${(STORE.telegramUsername || 'MansiJewellery').replace('@','')}', '_blank')" style="padding:14px 32px;background:#0088cc;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;">✈️ Ask on Telegram</button>
           </div>
           <div style="margin-top:24px;display:flex;gap:24px;font-size:0.82rem;color:var(--text-muted);">
             <span>📦 Free delivery available</span>
