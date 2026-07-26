@@ -136,6 +136,55 @@ const DB = {
 
     return null;
   },
+  async fetchProductById(id) {
+    if (!id && id !== 0) return null;
+    const cleanId = decodeURIComponent(String(id)).trim();
+    
+    // 1. Local storage lookup
+    let product = this.getProductById(cleanId);
+    if (product) return product;
+
+    // 2. Direct Firebase lookup if active
+    if (isFirebaseActive) {
+      try {
+        const doc = await fbDb.collection("products").doc(cleanId).get();
+        if (doc.exists) {
+          const pData = doc.data();
+          const products = this.getProducts();
+          const idx = products.findIndex(p => p.id === pData.id);
+          if (idx !== -1) products[idx] = pData;
+          else products.unshift(pData);
+          this.saveProducts(products);
+          return pData;
+        }
+
+        const snap = await fbDb.collection("products").get();
+        let match = null;
+        snap.forEach(d => {
+          const data = d.data();
+          if (data && (
+            String(data.id).trim() === cleanId || 
+            String(data.id).trim().toLowerCase() === cleanId.toLowerCase() ||
+            (data.name && data.name.trim().toLowerCase() === cleanId.toLowerCase())
+          )) {
+            match = data;
+          }
+        });
+        if (match) {
+          const products = this.getProducts();
+          if (!products.some(p => p.id === match.id)) {
+            products.unshift(match);
+            this.saveProducts(products);
+          }
+          return match;
+        }
+      } catch (e) {
+        console.error("Firebase product fetch error:", e);
+      }
+    }
+
+    return null;
+  },
 
   // ---- USERS ----
   getUsers() {

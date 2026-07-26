@@ -52,9 +52,10 @@
       initNavbar();
     });
 
-    window.addEventListener("productsSynced", renderProduct);
+    window.addEventListener("productsSynced", () => renderProduct(true));
 
-    function renderProduct() {
+    async function renderProduct(isSyncEvent = false) {
+      const container = document.getElementById('product-detail');
       const urlParams = new URLSearchParams(window.location.search);
       let id = urlParams.get('id');
       if (!id) {
@@ -62,14 +63,24 @@
         if (raw) id = decodeURIComponent(raw);
       }
 
-      let p = DB.getProductById(id);
+      if (!id) {
+        drawNotFound();
+        return;
+      }
+
+      if (!isSyncEvent && (!container.innerHTML.trim() || container.innerHTML.includes('Product Not Found'))) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 100px 20px;">
+            <div style="font-size: 2.5rem; animation: pulse 1.5s infinite;">💎</div>
+            <h3 style="margin-top: 16px; font-weight: 600;">Loading product details...</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">Fetching latest collection info</p>
+          </div>
+        `;
+      }
+
+      const p = await DB.fetchProductById(id);
 
       if (!p) {
-        setTimeout(() => {
-          const retryProduct = DB.getProductById(id);
-          if (retryProduct) drawProduct(retryProduct);
-        }, 400);
-
         drawNotFound();
         return;
       }
