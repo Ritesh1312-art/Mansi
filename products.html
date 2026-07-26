@@ -396,15 +396,17 @@
       return arr;
     }
 
+    // All rendered products stored for click navigation
+    let _renderedProducts = [];
+
     // ============================================================
     // PRODUCT CARD HTML
     // ============================================================
-    function productCard(p) {
-      const pId = p.id || p.name;
+    function productCard(p, index) {
       const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
       const img  = p.image || 'https://via.placeholder.com/300x300?text=No+Image';
       return `
-        <div class="product-card" onclick="location.href='product-detail.html?id=${encodeURIComponent(pId)}'">
+        <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
           <div class="product-card-img">
             <img src="${img}" alt="${p.name}" loading="lazy" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
@@ -426,6 +428,18 @@
           </div>
         </div>`;
     }
+
+    // Global click handler — saves product to sessionStorage before navigating
+    document.addEventListener('click', function(e) {
+      const card = e.target.closest('[data-pindex]');
+      if (!card) return;
+      const idx = parseInt(card.getAttribute('data-pindex'));
+      const product = _renderedProducts[idx];
+      if (product) {
+        try { sessionStorage.setItem('viewingProduct', JSON.stringify(product)); } catch(err) {}
+        location.href = 'product-detail.html?id=' + encodeURIComponent(product.id || product.name || idx);
+      }
+    });
 
     // ============================================================
     // RENDER PRODUCTS
@@ -480,7 +494,8 @@
         return;
       }
 
-      grid.innerHTML = products.map(productCard).join('');
+      grid.innerHTML = products.map((p, i) => productCard(p, i)).join('');
+      _renderedProducts = products;
     }
 
     // ============================================================

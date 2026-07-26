@@ -204,12 +204,14 @@
         </a>`).join("");
     }
 
-    // Product card HTML
-    function productCard(p) {
-      const pId = p.id || p.name;
+    // All products stored for click navigation
+    let _allProducts = [];
+
+    // Product card HTML — use data-index for reliable click
+    function productCard(p, index) {
       const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
       return `
-        <div class="product-card" onclick="location.href='product-detail.html?id=${encodeURIComponent(pId)}'">
+        <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
           <div class="product-card-img">
             <img src="${p.image || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
@@ -232,19 +234,36 @@
         </div>`;
     }
 
+    // Global click handler — reliably saves product before navigation
+    document.addEventListener('click', function(e) {
+      const card = e.target.closest('[data-pindex]');
+      if (!card) return;
+      const idx = parseInt(card.getAttribute('data-pindex'));
+      const product = _allProducts[idx];
+      if (product) {
+        try { sessionStorage.setItem('viewingProduct', JSON.stringify(product)); } catch(err) {}
+        location.href = 'product-detail.html?id=' + encodeURIComponent(product.id || product.name || idx);
+      }
+    });
+
     // Featured Products (first 8)
     function renderFeatured() {
       const products = DB.getProducts().slice(0, 8);
+      _allProducts = products;
       const grid = document.getElementById("featured-grid");
-      grid.innerHTML = products.length ? products.map(productCard).join("") :
+      grid.innerHTML = products.length ? products.map((p, i) => productCard(p, i)).join("") :
         `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">No products yet. <a href="admin/products.html" style="color:var(--primary);">Add from Admin Panel →</a></div>`;
     }
 
     // New Arrivals (latest 4)
     function renderNewArrivals() {
       const products = DB.getProducts().slice(0, 4);
+      products.forEach((p, i) => { if (!_allProducts.find(x => x.id === p.id)) _allProducts.push(p); });
       const grid = document.getElementById("new-arrivals-grid");
-      grid.innerHTML = products.map(productCard).join("");
+      grid.innerHTML = products.map((p) => {
+        const idx = _allProducts.findIndex(x => x.id === p.id);
+        return productCard(p, idx);
+      }).join("");
     }
 
     // Search

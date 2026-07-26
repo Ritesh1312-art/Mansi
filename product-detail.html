@@ -56,51 +56,46 @@
 
     async function renderProduct(isSyncEvent = false) {
       const container = document.getElementById('product-detail');
-      const urlParams = new URLSearchParams(window.location.search);
-      let id = urlParams.get('id');
 
-      // Debug: log exactly what URL we have
-      console.log("🔍 product-detail URL:", window.location.href);
-      console.log("🔍 ?id param:", id);
-      console.log("🔍 All products in localStorage:", JSON.parse(localStorage.getItem("products") || "[]").map(p => ({id: p.id, name: p.name})));
+      // ✅ PRIMARY: Read product directly from sessionStorage (set by product card click)
+      let p = null;
+      try {
+        const stored = sessionStorage.getItem('viewingProduct');
+        if (stored) p = JSON.parse(stored);
+      } catch(e) {}
 
-      if (!id || id === 'undefined' || id === 'null') {
-        drawNotFound("No product ID in URL. Please go back and click a product.");
-        return;
-      }
-
-      if (!isSyncEvent) {
-        container.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 100px 20px;">
-            <div style="font-size: 2.5rem;">💎</div>
-            <h3 style="margin-top: 16px; font-weight: 600;">Loading product details...</h3>
-          </div>
-        `;
-      }
-
-      let p = await DB.fetchProductById(id);
-
-      // Fallback: search directly in raw localStorage if DB method fails
+      // ✅ FALLBACK: Try DB lookup by URL id if sessionStorage is empty
       if (!p) {
-        const rawProducts = JSON.parse(localStorage.getItem("products") || "[]");
-        const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-        const targetNorm = norm(id);
-        p = rawProducts.find(prod => {
-          if (!prod) return false;
-          return norm(prod.id) === targetNorm || norm(prod.name) === targetNorm ||
-                 (norm(prod.name) && norm(prod.name).includes(targetNorm)) ||
-                 (targetNorm && targetNorm.includes(norm(prod.name)));
-        }) || null;
-        if (p) console.log("✅ Found via raw fallback:", p.name);
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (id && id !== 'undefined' && id !== 'null') {
+          // Show loading
+          container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 100px 20px;">
+              <div style="font-size: 2.5rem;">💎</div>
+              <h3 style="margin-top: 16px; font-weight: 600;">Loading product details...</h3>
+            </div>
+          `;
+          // Try DB
+          p = await DB.fetchProductById(id);
+          // If still not found, search raw localStorage by name
+          if (!p) {
+            const rawProducts = JSON.parse(localStorage.getItem("products") || "[]");
+            const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            const tid = norm(id);
+            p = rawProducts.find(prod => prod && (norm(prod.id) === tid || norm(prod.name) === tid)) || null;
+          }
+        }
       }
 
       if (!p) {
-        console.warn("❌ Product not found for id:", id);
         drawNotFound();
         return;
       }
 
-      console.log("✅ Rendering product:", p.name, "ID:", p.id);
+      // Refresh sessionStorage with latest product data
+      try { sessionStorage.setItem('viewingProduct', JSON.stringify(p)); } catch(e) {}
+
       drawProduct(p);
     }
 
