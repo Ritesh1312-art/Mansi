@@ -76,24 +76,39 @@ const DB = {
   // ---- PRODUCTS ----
   getProducts() {
     const raw = JSON.parse(localStorage.getItem("products") || "[]");
-    return raw.map((p, idx) => {
-      if (!p.id) p.id = "p_" + (p.name ? p.name.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase() : idx);
+    let needsResave = false;
+    const products = raw.map((p, idx) => {
+      if (!p || typeof p !== 'object') return null;
+      if (!p.id) {
+        p.id = "p_" + Date.now() + "_" + idx;
+        needsResave = true;
+      }
       return p;
-    });
+    }).filter(Boolean);
+    // Auto-repair: re-save products that had missing IDs
+    if (needsResave) {
+      localStorage.setItem("products", JSON.stringify(products));
+    }
+    return products;
   },
   saveProducts(products) {
     localStorage.setItem("products", JSON.stringify(products));
   },
   addProduct(product) {
-    const products = this.getProducts();
-    product.id = product.id || "p_" + Date.now();
+    // Always generate a fresh unique ID when adding
+    if (!product.id) {
+      product.id = "p_" + Date.now();
+    }
     product.createdAt = product.createdAt || new Date().toISOString();
     product.rating = product.rating || 0;
     product.reviews = product.reviews || 0;
     product.sales = product.sales || 0;
 
-    products.unshift(product);
-    this.saveProducts(products);
+    const products = this.getProducts();
+    // Remove any duplicate with same id before adding
+    const filtered = products.filter(p => p.id !== product.id);
+    filtered.unshift(product);
+    this.saveProducts(filtered);
 
     if (isFirebaseActive) {
       fbDb.collection("products").doc(product.id).set(product);
