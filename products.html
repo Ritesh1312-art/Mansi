@@ -410,8 +410,8 @@
       const starsHtml = '★'.repeat(fullStars) + (rating - fullStars >= 0.5 ? '½' : '');
       return `
         <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
-          <div class="product-card-img" style="background:transparent;">
-            <img src="${img}" alt="${p.name}" loading="lazy" style="object-fit:contain;background:transparent;mix-blend-mode:multiply;" />
+          <div class="product-card-img">
+            <img src="${img}" alt="${p.name}" loading="lazy" style="object-fit:contain;" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
             <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? 'active' : ''}" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? '❤️' : '🤍'}</button>
           </div>
