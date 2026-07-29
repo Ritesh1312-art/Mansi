@@ -307,6 +307,44 @@
 
     let uploadedImageBase64 = "";
 
+    // ✅ Remove near-white / near-light background from uploaded image
+    function removeBackground(ctx, width, height) {
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      // Sample background color from 4 corners
+      function getCornerColor(x, y) {
+        const i = (y * width + x) * 4;
+        return [data[i], data[i+1], data[i+2]];
+      }
+      const corners = [
+        getCornerColor(0, 0),
+        getCornerColor(width-1, 0),
+        getCornerColor(0, height-1),
+        getCornerColor(width-1, height-1)
+      ];
+      // Average corner colors to estimate background
+      const bgR = Math.round(corners.reduce((s,c) => s+c[0], 0) / 4);
+      const bgG = Math.round(corners.reduce((s,c) => s+c[1], 0) / 4);
+      const bgB = Math.round(corners.reduce((s,c) => s+c[2], 0) / 4);
+
+      // Tolerance: how similar to background = transparent
+      const TOLERANCE = 40;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        const diffR = Math.abs(r - bgR);
+        const diffG = Math.abs(g - bgG);
+        const diffB = Math.abs(b - bgB);
+
+        if (diffR < TOLERANCE && diffG < TOLERANCE && diffB < TOLERANCE) {
+          // Make pixel transparent
+          data[i+3] = 0;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
     function handleImageUpload(input) {
       const file = input.files[0];
       const status = document.getElementById("p-image-status");
@@ -314,7 +352,7 @@
 
       if (!file) return;
 
-      status.textContent = "Compressing image...";
+      status.textContent = "🔄 Removing background...";
       status.style.color = "var(--primary)";
 
       const reader = new FileReader();
@@ -322,34 +360,37 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement("canvas");
-          const max_size = 500; // max size limit
+          const max_size = 600;
           let width = img.width;
           let height = img.height;
 
           if (width > height) {
-            if (width > max_size) {
-              height *= max_size / width;
-              width = max_size;
-            }
+            if (width > max_size) { height = Math.round(height * max_size / width); width = max_size; }
           } else {
-            if (height > max_size) {
-              width *= max_size / height;
-              height = max_size;
-            }
+            if (height > max_size) { width = Math.round(width * max_size / height); height = max_size; }
           }
 
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
+
+          // Fill with transparent (not white)
+          ctx.clearRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
 
-          uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.75);
+          // Remove background pixels
+          removeBackground(ctx, width, height);
+
+          // Save as PNG (preserves transparency)
+          uploadedImageBase64 = canvas.toDataURL("image/png");
 
           preview.src = uploadedImageBase64;
           preview.style.display = "block";
-          status.textContent = "Image ready! ✅";
+          preview.style.background = "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 10px 10px";
+          preview.style.borderRadius = "8px";
+          status.textContent = "✅ Background removed!";
           status.style.color = "var(--success)";
-          document.getElementById("p-image").value = ""; // clear URL
+          document.getElementById("p-image").value = "";
         };
         img.src = e.target.result;
       };

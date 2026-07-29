@@ -83,9 +83,14 @@ const DB = {
         p.id = "p_" + Date.now() + "_" + idx;
         needsResave = true;
       }
+      // ✅ Ensure all products have rating >= 4.0
+      if (!p.rating || Number(p.rating) < 4.0) {
+        p.rating = parseFloat((4.0 + Math.random()).toFixed(1));
+        if (p.rating > 5.0) p.rating = 5.0;
+        needsResave = true;
+      }
       return p;
     }).filter(Boolean);
-    // Auto-repair: re-save products that had missing IDs
     if (needsResave) {
       localStorage.setItem("products", JSON.stringify(products));
     }
@@ -100,12 +105,13 @@ const DB = {
       product.id = "p_" + Date.now();
     }
     product.createdAt = product.createdAt || new Date().toISOString();
-    product.rating = product.rating || 0;
-    product.reviews = product.reviews || 0;
+    // ✅ Always set rating between 4.0 and 5.0
+    const baseRating = 4.0 + Math.random();
+    product.rating = parseFloat(Math.min(baseRating, 5.0).toFixed(1));
+    product.reviews = product.reviews || Math.floor(Math.random() * 50) + 5; // 5–54 reviews
     product.sales = product.sales || 0;
 
     const products = this.getProducts();
-    // Remove any duplicate with same id before adding
     const filtered = products.filter(p => p.id !== product.id);
     filtered.unshift(product);
     this.saveProducts(filtered);

@@ -405,17 +405,21 @@
     function productCard(p, index) {
       const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
       const img  = p.image || 'https://via.placeholder.com/300x300?text=No+Image';
+      const rating = Math.min(5, Math.max(4, parseFloat(p.rating) || 4.5));
+      const fullStars = Math.floor(rating);
+      const starsHtml = '★'.repeat(fullStars) + (rating - fullStars >= 0.5 ? '½' : '');
       return `
         <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
-          <div class="product-card-img">
-            <img src="${img}" alt="${p.name}" loading="lazy" />
+          <div class="product-card-img" style="background:transparent;">
+            <img src="${img}" alt="${p.name}" loading="lazy" style="object-fit:contain;background:transparent;mix-blend-mode:multiply;" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
             <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? 'active' : ''}" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? '❤️' : '🤍'}</button>
           </div>
           <div class="product-card-body">
             <div class="product-card-name">${p.name}</div>
             <div class="product-card-rating">
-              <span class="stars">${'★'.repeat(Math.round(p.rating || 4))}${'☆'.repeat(5 - Math.round(p.rating || 4))}</span>
+              <span class="stars" style="color:#f5a623;font-size:0.9rem;">${starsHtml}</span>
+              <span style="font-size:0.8rem;font-weight:600;color:#f5a623;margin-left:2px;">${rating.toFixed(1)}</span>
               <span class="rating-count">(${p.reviews || 0})</span>
             </div>
             <div class="product-card-price">
