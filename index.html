@@ -21,16 +21,25 @@
     </a>
   </div>
 
-  <!-- OFFER MARQUEE BANNER -->
-  <div class="offer-banner">
-    <div class="offer-banner-inner">
-      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
-      <span>💍 New Jewellery Collection Arrived!</span>
-      <span>📦 COD Available All Over India</span>
-      <span>⭐ Trusted by 500+ Customers in Raipur</span>
-      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
-    </div>
+  <!-- OFFER MARQUEE BANNER — Dynamic from Admin Settings -->
+  <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
+    <div class="offer-banner-inner" id="offer-banner-inner"></div>
   </div>
+  <script>
+    (function() {
+      try {
+        var store = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+        var banner = (store.offerBanner || "").trim();
+        if (banner) {
+          var wrap = document.getElementById("offer-banner-wrap");
+          var inner = document.getElementById("offer-banner-inner");
+          // Repeat text 3x for smooth marquee loop
+          inner.innerHTML = [banner, banner, banner].map(t => '<span>' + t + '</span>').join('');
+          wrap.style.display = "";
+        }
+      } catch(e) {}
+    })();
+  </script>
 
   <!-- NAVBAR -->
   <nav class="navbar">

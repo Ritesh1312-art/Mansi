@@ -17,15 +17,24 @@
   </a>
 </div>
 
-<!-- OFFER MARQUEE -->
-<div class="offer-banner">
-  <div class="offer-banner-inner">
-    <span>🎉 Use code WELCOME — Free delivery on first order!</span>
-    <span>📦 COD Available All Over India</span>
-    <span>🔒 Secure Payment via Razorpay</span>
-    <span>🎉 Use code WELCOME — Free delivery on first order!</span>
-  </div>
+<!-- OFFER MARQUEE — Dynamic from Admin Settings -->
+<div class="offer-banner" id="offer-banner-wrap" style="display:none;">
+  <div class="offer-banner-inner" id="offer-banner-inner"></div>
 </div>
+<script>
+  (function() {
+    try {
+      var store = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      var banner = (store.offerBanner || "").trim();
+      if (banner) {
+        var wrap = document.getElementById("offer-banner-wrap");
+        var inner = document.getElementById("offer-banner-inner");
+        inner.innerHTML = [banner, banner, banner].map(t => '<span>' + t + '</span>').join('');
+        wrap.style.display = "";
+      }
+    } catch(e) {}
+  })();
+</script>
 
 <!-- NAVBAR -->
 <nav class="navbar">
