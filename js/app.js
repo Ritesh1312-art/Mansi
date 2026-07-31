@@ -283,9 +283,12 @@ function initNavbar() {
   const userArea = document.getElementById("user-area");
   const mobileMenu = document.getElementById("mobile-menu");
 
+  const themeBtnHTML = `<button onclick="openThemeModal()" class="cart-btn theme-nav-btn" style="background:var(--primary-light);color:var(--primary);margin-right:4px;padding:8px 12px;cursor:pointer;" title="Change App Theme">🎨 Theme</button>`;
+
   if (userArea) {
     if (isAdmin) {
       userArea.innerHTML = `
+        ${themeBtnHTML}
         <a href="wishlist.html" class="cart-btn wishlist-nav-btn" style="background:var(--primary-light);color:var(--primary);margin-right:4px;">
           ❤️ Wishlist
           <span class="cart-count wishlist-count" id="wishlist-badge">0</span>
@@ -294,6 +297,7 @@ function initNavbar() {
         <button class="nav-btn outline-btn" onclick="logoutAdmin(event)" style="color:var(--error);">🚪 Admin Logout</button>`;
     } else if (session) {
       userArea.innerHTML = `
+        ${themeBtnHTML}
         <a href="wishlist.html" class="cart-btn wishlist-nav-btn" style="background:var(--primary-light);color:var(--primary);margin-right:4px;">
           ❤️ Wishlist
           <span class="cart-count wishlist-count" id="wishlist-badge">0</span>
@@ -304,11 +308,13 @@ function initNavbar() {
             <a href="profile.html">👤 My Profile & Address</a>
             <a href="orders.html">📦 My Orders</a>
             <a href="wishlist.html">❤️ My Wishlist</a>
+            <a href="javascript:void(0)" onclick="openThemeModal()">🎨 Change App Theme</a>
             <a href="javascript:void(0)" onclick="logoutUser(event)" style="color:var(--error);">🚪 Logout</a>
           </div>
         </div>`;
     } else {
       userArea.innerHTML = `
+        ${themeBtnHTML}
         <a href="wishlist.html" class="cart-btn wishlist-nav-btn" style="background:var(--primary-light);color:var(--primary);margin-right:4px;">
           ❤️ Wishlist
           <span class="cart-count wishlist-count" id="wishlist-badge">0</span>
@@ -319,11 +325,13 @@ function initNavbar() {
   }
 
   if (mobileMenu) {
+    const themeMobileLink = `<a href="javascript:void(0)" onclick="openThemeModal();document.getElementById('mobile-menu').style.display='none';" style="font-weight:600;color:var(--primary);">🎨 Change Theme (15 Colors)</a>`;
     if (isAdmin) {
       mobileMenu.innerHTML = `
         <a href="products.html" style="font-weight:600;color:var(--text);">🛍️ Products</a>
         <a href="wishlist.html" style="font-weight:600;color:var(--text);">❤️ Wishlist</a>
         <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+        ${themeMobileLink}
         <a href="admin/index.html" style="font-weight:600;color:var(--primary);">⚙️ Admin Dashboard</a>
         <a href="javascript:void(0)" onclick="logoutAdmin(event)" style="font-weight:600;color:var(--error);">🚪 Admin Logout</a>`;
     } else if (session) {
@@ -333,12 +341,14 @@ function initNavbar() {
         <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
         <a href="profile.html" style="font-weight:600;color:var(--text);">👤 My Profile & Address</a>
         <a href="orders.html" style="font-weight:600;color:var(--text);">📦 My Orders</a>
+        ${themeMobileLink}
         <a href="javascript:void(0)" onclick="logoutUser(event)" style="font-weight:600;color:var(--error);">🚪 Logout</a>`;
     } else {
       mobileMenu.innerHTML = `
         <a href="products.html" style="font-weight:600;color:var(--text);">🛍️ Products</a>
         <a href="wishlist.html" style="font-weight:600;color:var(--text);">❤️ Wishlist</a>
         <a href="cart.html" style="font-weight:600;color:var(--text);">🛒 Cart</a>
+        ${themeMobileLink}
         <a href="login.html" style="font-weight:600;color:var(--text);">👤 Login</a>
         <a href="signup.html" style="font-weight:600;color:var(--text);">✨ Sign Up</a>`;
     }
