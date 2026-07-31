@@ -608,20 +608,6 @@ select option {
   color: #fff;
   transform: translateY(-3px);
   box-shadow: 0 8px 20px var(--primary-glow);
-}
-
-/* =============================================
-   PRODUCT CARDS
-   ============================================= */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 24px;
-}
-.product-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  overflow: hidden;
   border: 1px solid var(--border);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
@@ -968,10 +954,13 @@ div[class*="temp-mail"], iframe[src*="tempmail"] {
 .modal {
   background: var(--bg-card); border-radius: 20px;
   width: 100%; max-width: 520px;
-  max-height: 90vh; overflow-y: auto;
+  max-height: 85vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 28px;
   animation: modalIn 0.3s ease;
   border: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
 }
 @keyframes modalIn { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }

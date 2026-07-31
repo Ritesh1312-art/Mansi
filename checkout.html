@@ -507,47 +507,61 @@
   }
 
   function sendTelegramOrderAlert(order) {
-    const token = STORE.telegramBotToken;
-    const chatId = STORE.telegramChatId;
-    
+    const token = (STORE.telegramBotToken || "").trim();
+    const chatId = (STORE.telegramChatId || "").trim();
+
     if (!token || !chatId) {
-      console.log("ℹ️ Telegram notifications not configured by admin.");
+      console.log("ℹ️ Telegram not configured. Skipping alert.");
       return;
     }
 
-    const messageText = 
-`🛍️ *NEW ORDER RECEIVED! #${order.id}*
+    const itemsList = (order.items || []).map(i => `• ${i.name} (x${i.qty}) — ₹${i.price * i.qty}`).join('\n');
+    const addr = order.address || {};
+    const fullAddr = [addr.house, addr.street, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
 
-👤 *Customer Name:* ${order.customerName}
+    const messageText =
+`🛍️ *NEW ORDER! #${order.id}*
+
+👤 *Name:* ${order.customerName}
 📞 *Phone:* ${order.phone}
-📍 *Delivery Address:* ${order.address.house ? order.address.house + ', ' : ''}${order.address.street}, ${order.address.city}, ${order.address.state} - ${order.address.pincode}
+📍 *Address:* ${fullAddr}
 
-📦 *Items Ordered:*
-${order.items.map(i => `• ${i.name} (x${i.qty}) - ₹${i.price * i.qty}`).join('\n')}
+📦 *Items:*
+${itemsList}
 
 💰 *Subtotal:* ₹${order.subtotal}
-🚚 *Delivery Charge:* ₹${order.deliveryCharge}
-💵 *Grand Total:* ₹${order.grandTotal}
-💳 *Payment Mode:* ${order.paymentMode.toUpperCase()}`;
+🚚 *Delivery:* ₹${order.deliveryCharge}
+💵 *Total:* ₹${order.grandTotal}
+💳 *Payment:* ${(order.paymentMode || '').toUpperCase()}`;
 
-    const tgUrl = `https://api.telegram.org/bot${token.trim()}/sendMessage`;
+    const tgUrl = `https://api.telegram.org/bot${token}/sendMessage`;
+
+    // Use AbortController for timeout — order flow must NEVER hang
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     fetch(tgUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId.trim(),
-        text: messageText,
-        parse_mode: "Markdown"
-      })
-    }).then(res => res.json()).then(data => {
+      body: JSON.stringify({ chat_id: chatId, text: messageText, parse_mode: "Markdown" }),
+      signal: controller.signal
+    })
+    .then(res => res.json())
+    .then(data => {
+      clearTimeout(timeoutId);
       if (data.ok) {
-        console.log("✈️ Telegram Order Notification sent to Admin successfully!");
+        console.log("✅ Telegram alert sent!");
       } else {
-        console.error("❌ Telegram Bot Error:", data);
+        console.warn("⚠️ Telegram error:", JSON.stringify(data));
       }
-    }).catch(err => {
-      console.error("❌ Telegram Network Error:", err);
+    })
+    .catch(err => {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        console.warn("⚠️ Telegram alert timed out (order still saved).");
+      } else {
+        console.warn("⚠️ Telegram network error:", err.message);
+      }
     });
   }
 

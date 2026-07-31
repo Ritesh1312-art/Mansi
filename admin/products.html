@@ -443,22 +443,34 @@
     function saveProduct(e) {
       e.preventDefault();
       const id = document.getElementById("p-id").value;
+
+      // Get image — uploaded base64 takes priority, then URL field
+      const urlImage = document.getElementById("p-image").value.trim();
+      const finalImage = uploadedImageBase64 || urlImage || "";
+
+      const name = document.getElementById("p-name").value.trim();
+      const price = parseFloat(document.getElementById("p-price").value);
+      const mrp = parseFloat(document.getElementById("p-mrp").value);
+
+      if (!name) { alert("⚠️ Product name is required!"); return; }
+      if (!price || price <= 0) { alert("⚠️ Selling price is required!"); return; }
+
       const data = {
-        name: document.getElementById("p-name").value,
+        name,
         category: document.getElementById("p-category").value,
-        stock: parseInt(document.getElementById("p-stock").value),
-        price: parseFloat(document.getElementById("p-price").value),
-        mrp: parseFloat(document.getElementById("p-mrp").value),
-        image: document.getElementById("p-image").value.trim() || uploadedImageBase64,
-        description: document.getElementById("p-desc").value
+        stock: parseInt(document.getElementById("p-stock").value) || 0,
+        price,
+        mrp: mrp || price,
+        image: finalImage,
+        description: document.getElementById("p-desc").value.trim()
       };
 
       if (id) {
         DB.updateProduct(id, data);
-        Cart.showToast("Product updated successfully!");
+        Cart.showToast("✅ Product updated successfully!");
       } else {
         DB.addProduct(data);
-        Cart.showToast("Product added successfully!");
+        Cart.showToast("✅ Product added successfully!");
       }
 
       closeProductModal();
