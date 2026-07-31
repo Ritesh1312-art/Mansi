@@ -8,7 +8,7 @@ const defaultStore = {
   address: "Ward No 47, Near Gurudwara, Raipur, Chhattisgarh",
   city: "Raipur",
   pincode: "492001",
-  email: "mansi@example.com",
+  email: "mansialwani5@gmail.com",
   phone: "+91 98765 43210",
   offerBanner: "🎉 Use code WELCOME | Free delivery on first order!",
   razorpayKey: "rzp_test_XXXXXXXXXX", 
