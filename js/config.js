@@ -129,6 +129,9 @@ function loadTheme() {
   applyTheme(saved);
 }
 
+// Auto-run loadTheme so every page applies theme immediately
+try { loadTheme(); } catch(e) {}
+
 // =============================================
 // CATEGORIES
 // =============================================

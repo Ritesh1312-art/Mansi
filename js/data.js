@@ -310,25 +310,73 @@ const DB = {
     }
   },
   getUserById(id) {
-    return this.getUsers().find(u => u.id === id) || null;
+    if (!id) return null;
+    const users = this.getUsers();
+    return users.find(u => u.id === id || u.email === id) || null;
   },
   updateUserProfile(userId, updates) {
+    const session = this.getSession();
     const users = this.getUsers();
-    const idx = users.findIndex(u => u.id === userId);
+    
+    // Flexible user lookup: by id, or by session id, or by session email
+    let idx = users.findIndex(u => 
+      (userId && u.id === userId) ||
+      (session && session.id && u.id === session.id) ||
+      (session && session.email && u.email === session.email) ||
+      (updates.email && u.email === updates.email)
+    );
+
+    let updatedUser = null;
     if (idx !== -1) {
       users[idx] = { ...users[idx], ...updates, updatedAt: new Date().toISOString() };
-      this.saveUsers(users);
-
-      const currentSession = this.getSession();
-      if (currentSession && currentSession.id === userId) {
-        this.setSession({ ...currentSession, ...users[idx] });
-      }
-      return users[idx];
+      updatedUser = users[idx];
+    } else {
+      updatedUser = {
+        id: userId || (session ? session.id : "u_" + Date.now()),
+        name: updates.name || (session ? session.name : ""),
+        email: updates.email || (session ? session.email : ""),
+        phone: updates.phone || (session ? session.phone : ""),
+        ...updates,
+        createdAt: new Date().toISOString()
+      };
+      users.unshift(updatedUser);
     }
-    return null;
+    this.saveUsers(users);
+
+    // Sync session in localStorage
+    if (session) {
+      const newSession = { ...session, ...updatedUser };
+      this.setSession(newSession);
+    }
+
+    if (isFirebaseActive && updatedUser.id) {
+      try {
+        fbDb.collection("users").doc(updatedUser.id).set(updatedUser, { merge: true });
+      } catch(e) {}
+    }
+    return updatedUser;
   },
   updateUserAddress(userId, address) {
-    return this.updateUserProfile(userId, { address });
+    const session = this.getSession();
+    const targetId = userId || (session ? session.id : null);
+    const user = (targetId ? this.getUserById(targetId) : null) || session || {};
+    
+    let savedAddresses = Array.isArray(user.savedAddresses) ? [...user.savedAddresses] : [];
+    
+    // Add to savedAddresses if not duplicate
+    const isDup = savedAddresses.some(a => 
+      a && a.house === address.house && a.street === address.street && a.pincode === address.pincode
+    );
+
+    if (!isDup) {
+      savedAddresses.unshift({
+        id: "addr_" + Date.now(),
+        ...address,
+        isDefault: savedAddresses.length === 0
+      });
+    }
+
+    return this.updateUserProfile(targetId, { address, savedAddresses });
   },
   async updateUserPassword(userId, oldPassword, newPassword) {
     const session = this.getSession();

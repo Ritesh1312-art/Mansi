@@ -59,6 +59,17 @@
       <!-- Section 1: Delivery Address -->
       <div class="checkout-section">
         <h3>📍 Delivery Address</h3>
+
+        <!-- SAVED ADDRESS SELECTOR FOR LOGGED-IN USERS -->
+        <div id="saved-address-selector-wrap" style="display:none;margin-bottom:16px;background:var(--bg-input);padding:14px;border-radius:12px;border:1px solid var(--border);">
+          <label class="form-label" style="font-weight:700;color:var(--primary);display:flex;align-items:center;gap:6px;">
+            🏡 Select Saved Address
+          </label>
+          <select id="saved-address-select" class="form-input" onchange="onSavedAddressSelect(this.value)" style="margin-top:6px;background:var(--bg-card);font-size:0.9rem;font-weight:600;">
+            <!-- Dynamic options -->
+          </select>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div class="form-group">
             <label class="form-label">Full Name *</label>
@@ -280,20 +291,62 @@
       INDIAN_STATES.map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
+  let userSavedAddressesList = [];
+
   // Pre-fill name, phone, and saved address from user profile
   if (session) {
     const fullUser = DB.getUserById(session.id) || session;
     document.getElementById("c-name").value = fullUser.name || session.name || "";
     document.getElementById("c-phone").value = fullUser.phone || "";
 
-    if (fullUser.address) {
-      document.getElementById("c-house").value = fullUser.address.house || "";
-      document.getElementById("c-street").value = fullUser.address.street || "";
-      document.getElementById("c-city").value = fullUser.address.city || "";
-      if (fullUser.address.state) document.getElementById("c-state").value = fullUser.address.state;
-      if (fullUser.address.pincode) {
-        document.getElementById("c-pin").value = fullUser.address.pincode;
-        setTimeout(() => checkPincode(fullUser.address.pincode), 200);
+    // Gather all saved addresses from profile
+    userSavedAddressesList = Array.isArray(fullUser.savedAddresses) ? [...fullUser.savedAddresses] : [];
+    if (fullUser.address && fullUser.address.house && fullUser.address.pincode) {
+      const exists = userSavedAddressesList.some(a => a.house === fullUser.address.house && a.pincode === fullUser.address.pincode);
+      if (!exists) {
+        userSavedAddressesList.unshift({ id: "def_addr", ...fullUser.address, label: "Default Address" });
+      }
+    }
+
+    const selectWrap = document.getElementById("saved-address-selector-wrap");
+    const selectElem = document.getElementById("saved-address-select");
+
+    if (userSavedAddressesList.length > 0 && selectWrap && selectElem) {
+      selectWrap.style.display = "block";
+      selectElem.innerHTML = userSavedAddressesList.map((addr, idx) => `
+        <option value="${idx}">🏡 ${addr.isDefault ? 'Default' : 'Saved'} Address: ${addr.house}, ${addr.street}, ${addr.city} (${addr.pincode})</option>
+      `).join("") + '<option value="new">➕ Enter a New Address</option>';
+
+      fillAddressFields(userSavedAddressesList[0]);
+    } else if (fullUser.address) {
+      fillAddressFields(fullUser.address);
+    }
+  }
+
+  function fillAddressFields(addr) {
+    if (!addr) return;
+    document.getElementById("c-house").value = addr.house || "";
+    document.getElementById("c-street").value = addr.street || "";
+    document.getElementById("c-city").value = addr.city || "";
+    if (addr.state) document.getElementById("c-state").value = addr.state;
+    if (addr.pincode) {
+      document.getElementById("c-pin").value = addr.pincode;
+      setTimeout(() => checkPincode(addr.pincode), 150);
+    }
+  }
+
+  function onSavedAddressSelect(val) {
+    if (val === "new") {
+      document.getElementById("c-house").value = "";
+      document.getElementById("c-street").value = "";
+      document.getElementById("c-city").value = "";
+      document.getElementById("c-state").value = "";
+      document.getElementById("c-pin").value = "";
+      document.getElementById("c-house").focus();
+    } else {
+      const idx = parseInt(val);
+      if (!isNaN(idx) && userSavedAddressesList[idx]) {
+        fillAddressFields(userSavedAddressesList[idx]);
       }
     }
   }
@@ -414,6 +467,15 @@
     }
     if (!cartItems.length) {
       alert("Your cart is empty!"); location.href = "cart.html"; return;
+    }
+
+    // Auto-save address to user profile
+    if (session) {
+      DB.updateUserAddress(session.id, {
+        house: document.getElementById("c-house").value.trim(),
+        street, city, state, pincode: pin
+      });
+      DB.updateUserProfile(session.id, { name, phone });
     }
 
     const deliveryMode = currentPayment === "upi" ? "prepaid" : currentPayment;

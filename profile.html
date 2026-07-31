@@ -116,12 +116,17 @@
       </button>
     </div>
 
-    <!-- SAVED DEFAULT ADDRESS -->
+    <!-- SAVED DELIVERY ADDRESSES -->
     <div class="profile-card">
-      <h2>📍 Saved Default Delivery Address</h2>
+      <h2>📍 Saved Delivery Addresses</h2>
       <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:16px;">
-        Save your delivery address once so you don't have to re-enter it every time during checkout!
+        Manage your delivery addresses so you can select them effortlessly during checkout!
       </p>
+
+      <!-- Saved Addresses List -->
+      <div id="saved-addresses-list" style="margin-bottom:20px;display:flex;flex-direction:column;gap:12px;"></div>
+
+      <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:12px;color:var(--primary);">➕ Add / Update Address</h3>
       <form onsubmit="saveAddress(event)">
         <div class="form-group">
           <label class="form-label">House / Flat / Building No / Landmark</label>
@@ -148,7 +153,7 @@
           <input type="text" id="a-pin" class="form-input" placeholder="Enter 6-digit Pincode" maxlength="6" required />
         </div>
         <button type="submit" class="btn-primary" style="margin-top:14px;padding:12px 28px;">
-          🏡 Save Default Address
+          🏡 Save Address to Profile
         </button>
       </form>
     </div>
@@ -226,25 +231,52 @@
       window.location.href = 'login.html';
     }
 
-    // Load user data
+    // Load user data and addresses
     function loadProfile() {
       const user = DB.getUserById(session.id) || session;
       document.getElementById('u-name').value = user.name || '';
       document.getElementById('u-phone').value = user.phone || '';
       document.getElementById('profile-user-identifier').value = user.email || '';
 
-      if (user.address) {
-        document.getElementById('a-house').value = user.address.house || '';
-        document.getElementById('a-street').value = user.address.street || '';
-        document.getElementById('a-city').value = user.address.city || '';
-        document.getElementById('a-state').value = user.address.state || '';
-        document.getElementById('a-pin').value = user.address.pincode || '';
+      // Gather addresses
+      let addrs = Array.isArray(user.savedAddresses) ? [...user.savedAddresses] : [];
+      if (user.address && user.address.house && user.address.pincode) {
+        const dup = addrs.some(a => a.house === user.address.house && a.pincode === user.address.pincode);
+        if (!dup) {
+          addrs.unshift({ id: "def_addr", ...user.address, isDefault: true });
+        }
+      }
+
+      const listElem = document.getElementById("saved-addresses-list");
+      if (addrs.length === 0) {
+        listElem.innerHTML = '<div style="color:var(--text-muted);font-size:0.88rem;padding:12px;background:var(--bg-input);border-radius:10px;">No saved addresses yet. Fill the form below to save your first address!</div>';
       } else {
-        document.getElementById('a-house').value = '';
-        document.getElementById('a-street').value = '';
-        document.getElementById('a-city').value = '';
-        document.getElementById('a-state').value = '';
-        document.getElementById('a-pin').value = '';
+        listElem.innerHTML = addrs.map((a, idx) => `
+          <div style="background:var(--bg-input);border:1px solid ${a.isDefault ? 'var(--primary)' : 'var(--border)'};border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;display:flex;align-items:center;gap:6px;">
+                🏡 Address #${idx + 1}
+                ${a.isDefault ? '<span style="background:var(--primary);color:#fff;font-size:0.7rem;padding:2px 8px;border-radius:12px;font-weight:700;">DEFAULT</span>' : ''}
+              </div>
+              <div style="font-size:0.88rem;color:var(--text);margin-top:4px;">${a.house}, ${a.street}</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">${a.city}, ${a.state} - <strong>${a.pincode}</strong></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              ${!a.isDefault ? `<button onclick="setDefaultAddress(${idx})" style="padding:6px 12px;font-size:0.78rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-weight:600;">⭐ Set Default</button>` : ''}
+              <button onclick="deleteSavedAddress(${idx})" style="padding:6px 12px;font-size:0.78rem;background:var(--bg-card);color:var(--error);border:1px solid var(--error);border-radius:8px;font-weight:600;">🗑️ Delete</button>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      // Pre-fill input form with default or first address
+      const def = addrs.find(a => a.isDefault) || addrs[0];
+      if (def) {
+        document.getElementById('a-house').value = def.house || '';
+        document.getElementById('a-street').value = def.street || '';
+        document.getElementById('a-city').value = def.city || '';
+        document.getElementById('a-state').value = def.state || '';
+        document.getElementById('a-pin').value = def.pincode || '';
       }
     }
 
@@ -254,7 +286,7 @@
       if (!name || !phone) { alert("Please enter your name and phone number!"); return; }
 
       DB.updateUserProfile(session.id, { name, phone });
-      Cart.showToast("Account details updated!");
+      Cart.showToast("✅ Account details updated!");
       setTimeout(() => location.reload(), 800);
     }
 
@@ -276,7 +308,36 @@
       }
 
       DB.updateUserAddress(session.id, { house, street, city, state, pincode });
-      Cart.showToast("🏡 Default address saved successfully!");
+      Cart.showToast("🏡 Address saved successfully!");
+      loadProfile();
+    }
+
+    function deleteSavedAddress(idx) {
+      const user = DB.getUserById(session.id) || session;
+      let addrs = Array.isArray(user.savedAddresses) ? [...user.savedAddresses] : [];
+      if (user.address) {
+        const dup = addrs.some(a => a.house === user.address.house && a.pincode === user.address.pincode);
+        if (!dup) addrs.unshift({ ...user.address });
+      }
+      addrs.splice(idx, 1);
+      const newDef = addrs.length > 0 ? addrs[0] : null;
+      DB.updateUserProfile(session.id, { savedAddresses: addrs, address: newDef });
+      Cart.showToast("🗑️ Address deleted!");
+      loadProfile();
+    }
+
+    function setDefaultAddress(idx) {
+      const user = DB.getUserById(session.id) || session;
+      let addrs = Array.isArray(user.savedAddresses) ? [...user.savedAddresses] : [];
+      if (user.address) {
+        const dup = addrs.some(a => a.house === user.address.house && a.pincode === user.address.pincode);
+        if (!dup) addrs.unshift({ ...user.address });
+      }
+      addrs.forEach((a, i) => a.isDefault = (i === idx));
+      const chosen = addrs[idx];
+      DB.updateUserProfile(session.id, { savedAddresses: addrs, address: chosen });
+      Cart.showToast("⭐ Default address updated!");
+      loadProfile();
     }
 
     function changePassword(e) {
