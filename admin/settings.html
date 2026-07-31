@@ -248,7 +248,11 @@
               <input type="text" id="s-telegram-chat" class="form-input" placeholder="e.g. 987654321"/>
             </div>
           </div>
-          <button onclick="saveTelegramConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save All Telegram Settings</button>
+          <div style="display:flex;gap:10px;margin-top:12px;">
+            <button onclick="saveTelegramConfig()" class="btn-full" style="flex:2;padding:12px 24px;">Save All Telegram Settings</button>
+            <button onclick="testTelegramBot()" class="btn-outline" style="flex:1;padding:12px 20px;border-color:var(--primary);color:var(--primary);font-weight:700;">🧪 Send Test Alert</button>
+          </div>
+          <div id="tg-test-status" style="margin-top:10px;font-size:0.85rem;display:none;"></div>
         </div>
 
         <!-- SECTION 7: UPI PAYMENTS -->
@@ -439,6 +443,45 @@
       localStorage.setItem("storeSettings", JSON.stringify(STORE));
       Cart.showToast("✈️ Telegram Support & Bot Alert settings updated successfully!");
       setTimeout(() => location.reload(), 1000);
+    }
+
+    function testTelegramBot() {
+      const token = document.getElementById("s-telegram-token").value.trim();
+      const chatId = document.getElementById("s-telegram-chat").value.trim();
+      const status = document.getElementById("tg-test-status");
+
+      if (!token || !chatId) {
+        alert("⚠️ Please enter both Telegram Bot Token and Chat ID first!");
+        return;
+      }
+
+      status.style.display = "block";
+      status.style.color = "var(--primary)";
+      status.innerHTML = "🔄 Sending test message to Telegram...";
+
+      const msg = `🎉 <b>TEST ALERT — Mansi Jewellery & Cosmetics</b>\n\nYour Telegram Bot is configured and working perfectly! 🚀\n\n<i>Time: ${new Date().toLocaleString()}</i>`;
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "HTML" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          status.style.color = "var(--success)";
+          status.innerHTML = "✅ <strong>SUCCESS!</strong> Test message sent to your Telegram app!";
+          Cart.showToast("✅ Telegram Test Message Sent!");
+        } else {
+          status.style.color = "var(--error)";
+          status.innerHTML = `❌ <strong>Telegram Error:</strong> ${data.description || 'Failed to send message.'}`;
+        }
+      })
+      .catch(err => {
+        status.style.color = "var(--error)";
+        status.innerHTML = `❌ <strong>Network Error:</strong> ${err.message}`;
+      });
     }
 
     function saveUpiConfig() {

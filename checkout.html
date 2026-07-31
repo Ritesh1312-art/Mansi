@@ -586,53 +586,61 @@
       return;
     }
 
-    const itemsList = (order.items || []).map(i => `• ${i.name} (x${i.qty}) — ₹${i.price * i.qty}`).join('\n');
+    const esc = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const itemsList = (order.items || []).map(i => `• ${esc(i.name)} (x${i.qty}) — ₹${i.price * i.qty}`).join('\n');
     const addr = order.address || {};
-    const fullAddr = [addr.house, addr.street, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
+    const fullAddr = [addr.house, addr.street, addr.city, addr.state, addr.pincode].filter(Boolean).map(esc).join(', ');
 
-    const messageText =
-`🛍️ *NEW ORDER! #${order.id}*
+    const htmlMessage =
+`🛍️ <b>NEW ORDER RECEIVED! #${esc(order.id)}</b>
 
-👤 *Name:* ${order.customerName}
-📞 *Phone:* ${order.phone}
-📍 *Address:* ${fullAddr}
+👤 <b>Customer Name:</b> ${esc(order.customerName)}
+📞 <b>Phone:</b> ${esc(order.phone)}
+📍 <b>Address:</b> ${fullAddr}
 
-📦 *Items:*
+📦 <b>Items Ordered:</b>
 ${itemsList}
 
-💰 *Subtotal:* ₹${order.subtotal}
-🚚 *Delivery:* ₹${order.deliveryCharge}
-💵 *Total:* ₹${order.grandTotal}
-💳 *Payment:* ${(order.paymentMode || '').toUpperCase()}`;
+💰 <b>Subtotal:</b> ₹${order.subtotal}
+🚚 <b>Delivery Charge:</b> ₹${order.deliveryCharge}
+💵 <b>Grand Total:</b> ₹${order.grandTotal}
+💳 <b>Payment Mode:</b> ${esc((order.paymentMode || '').toUpperCase())}`;
 
     const tgUrl = `https://api.telegram.org/bot${token}/sendMessage`;
-
-    // Use AbortController for timeout — order flow must NEVER hang
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     fetch(tgUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text: messageText, parse_mode: "Markdown" }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: htmlMessage,
+        parse_mode: "HTML"
+      }),
       signal: controller.signal
     })
     .then(res => res.json())
     .then(data => {
       clearTimeout(timeoutId);
       if (data.ok) {
-        console.log("✅ Telegram alert sent!");
+        console.log("✅ Telegram order alert sent successfully!");
       } else {
-        console.warn("⚠️ Telegram error:", JSON.stringify(data));
+        console.warn("⚠️ Telegram HTML format rejected:", data.description);
+        // Fallback: send as plain text without HTML tags
+        fetch(tgUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: htmlMessage.replace(/<[^>]*>/g, '')
+          })
+        });
       }
     })
     .catch(err => {
       clearTimeout(timeoutId);
-      if (err.name === 'AbortError') {
-        console.warn("⚠️ Telegram alert timed out (order still saved).");
-      } else {
-        console.warn("⚠️ Telegram network error:", err.message);
-      }
+      console.warn("⚠️ Telegram notification fetch error:", err.message);
     });
   }
 
