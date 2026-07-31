@@ -417,8 +417,21 @@ function updateCustomThemeFromPicker() {
   applyTheme("custom", { primary, primaryDark: primary, primaryLight: bg, bg, card, text, textMuted: text, border: "#2A2A38" });
 }
 
-// Automatically add mobile admin navigation bar and Click Burst animation
+// Global Quick Buy — Add to cart and redirect straight to Checkout
+function quickBuy(productId) {
+  if (typeof Cart !== 'undefined') {
+    Cart.add(productId);
+  }
+  setTimeout(() => {
+    window.location.href = "checkout.html";
+  }, 150);
+}
+
+// Automatically initialize Navbar, Wishlist, Admin mobile nav, and Click Burst animation
 document.addEventListener("DOMContentLoaded", () => {
+  if (typeof initNavbar === "function") {
+    initNavbar();
+  }
   if (window.location.pathname.includes("/admin/")) {
     initAdminMobileNav();
   }

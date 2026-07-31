@@ -432,9 +432,14 @@
               <span class="price-current">₹${p.price}</span>
               ${p.mrp > p.price ? `<span class="price-mrp">₹${p.mrp}</span><span class="price-off">Save ₹${p.mrp - p.price}</span>` : ''}
             </div>
-            <button class="btn-add-cart" onclick="event.stopPropagation();Cart.add('${p.id}')">
-              🛒 Add to Cart
-            </button>
+            <div style="display:flex;gap:8px;margin-top:auto;">
+              <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${p.id}')">
+                🛒 Add
+              </button>
+              <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${p.id}')">
+                ⚡ Buy Now
+              </button>
+            </div>
           </div>
         </div>`;
     }
