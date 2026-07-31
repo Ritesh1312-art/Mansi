@@ -155,8 +155,12 @@ function callSupport(e) {
 function logoutAdmin(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
   localStorage.removeItem("adminAuth");
-  alert("🚪 Admin logged out!");
-  window.location.href = "index.html";
+  alert("🚪 Logged out from Admin Panel!");
+  if (window.location.pathname.includes("/admin/")) {
+    window.location.href = "../index.html";
+  } else {
+    window.location.href = "index.html";
+  }
 }
 
 function renderFooter() {
