@@ -25,10 +25,7 @@ const WatchdogAgent = {
     // 3. Run Instant DB & Storage Self-Healing
     this.healDatabase();
 
-    // 4. Dispatch Instant Live Telegram Health Audit Report
-    this.sendTelegramHealthReport();
-
-    // 5. Continuous Watchdog Loop (Runs every 30 seconds perpetually)
+    // 4. Continuous Watchdog Loop (Runs every 30 seconds perpetually online to fix issues)
     setInterval(() => {
       this.healDatabase();
       this.verifyDOMHealth();

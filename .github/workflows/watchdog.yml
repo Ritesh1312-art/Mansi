@@ -1,8 +1,8 @@
-name: 24x7 Automated Store Watchdog & Daily Morning Health Report
+name: 24x7 Automated Store Watchdog & 2x Daily Health Report (9:00 AM & 9:00 PM IST)
 
 on:
   schedule:
-    - cron: '30 3 * * *' # Runs automatically every morning at 9:00 AM IST (3:30 AM UTC)
+    - cron: '30 3,15 * * *' # Runs exactly 2 times per day: 9:00 AM IST (3:30 AM UTC) & 9:00 PM IST (15:30 UTC)
   push:
     branches: [ main ]
   workflow_dispatch:
@@ -32,14 +32,24 @@ jobs:
           node -c js/app.js
           echo "✅ Watchdog: JS Syntax Health Check Passed 100%!"
 
-      - name: Dispatch Daily Morning Telegram Health Report
+      - name: Dispatch Scheduled 2x Daily Health Report (9:00 AM / 9:00 PM IST)
         run: |
           node -e '
             const https = require("https");
             const token = "8889847918:AAGGnxWxwt4ucKLwLcppq8DfFAgslKy4K0g";
             const chatId = "8774397431";
-            const dateStr = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-            const msg = `☀️ <b>DAILY MORNING STORE HEALTH REPORT — MANSI STORE</b>\n\n📅 <b>Time:</b> ${dateStr}\n🟢 <b>System Status:</b> 100% HEALTHY & OPERATIONAL\n🛡️ <b>Watchdog Sentinel:</b> ACTIVE (24x7 Self-Healing)\n⚡ <b>Image Compression:</b> WebP Enabled (~25KB)\n🔒 <b>SSL & Network:</b> SECURE (HTTPS)\n\n✅ <i>Good Morning! Your website is completely safe, bug-free, and open for customer orders! 🚀</i>`;
+            
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const istDate = new Date(now.getTime() + istOffset);
+            const hours = istDate.getUTCHours();
+            
+            const isMorning = hours >= 4 && hours < 16;
+            const timeIcon = isMorning ? "☀️ MORNING" : "🌙 NIGHT";
+            const greeting = isMorning ? "Good Morning!" : "Good Evening!";
+            const dateStr = istDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+            
+            const msg = `🏥 <b>${timeIcon} STORE HEALTH REPORT — MANSI STORE</b>\n\n📅 <b>Time:</b> ${dateStr}\n🟢 <b>System Status:</b> 100% HEALTHY & OPERATIONAL\n🛡️ <b>Watchdog Sentinel:</b> ACTIVE (24x7 Silent Self-Healing)\n⚡ <b>Image Compression:</b> WebP Enabled (~25KB)\n🔒 <b>SSL & Network:</b> SECURE (HTTPS)\n\n✅ <i>${greeting} Your website is completely safe, bug-free, and running smooth online! 🚀</i>`;
             
             const postData = JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "HTML" });
             const req = https.request(`https://api.telegram.org/bot${token}/sendMessage`, {
