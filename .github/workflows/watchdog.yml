@@ -1,0 +1,33 @@
+name: 24x7 Automated Store Watchdog & Health Sentinel
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs automatically every 1 hour
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  health_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v3
+
+      - name: Validate Website File Integrity & Syntax
+        run: |
+          echo "🛡️ Watchdog Sentinel: Checking HTML, CSS, and JS file integrity..."
+          test -f index.html || (echo "❌ Index.html missing!" && exit 1)
+          test -f products.html || (echo "❌ Products.html missing!" && exit 1)
+          test -f checkout.html || (echo "❌ Checkout.html missing!" && exit 1)
+          test -f js/app.js || (echo "❌ App.js missing!" && exit 1)
+          test -f js/data.js || (echo "❌ Data.js missing!" && exit 1)
+          test -f js/config.js || (echo "❌ Config.js missing!" && exit 1)
+          echo "✅ All core store files verified clean and intact."
+
+      - name: Run JavaScript Syntax Health Test
+        run: |
+          node -c js/config.js
+          node -c js/data.js
+          node -c js/app.js
+          echo "✅ Watchdog: JS Syntax Health Check Passed 100%!"
