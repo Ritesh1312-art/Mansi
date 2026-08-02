@@ -574,3 +574,148 @@ function initTempMailBlocker() {
   setInterval(cleanInputs, 300);
 }
 initTempMailBlocker();
+
+// =============================================
+// SMART AI CHATBOT ASSISTANT
+// =============================================
+function initChatbotWidget() {
+  if (document.getElementById("ai-chat-btn")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "ai-chat-btn";
+  btn.className = "ai-chat-btn";
+  btn.innerHTML = `💬 <span>Chat Assistant</span> <span class="ai-chat-badge">AI</span>`;
+  btn.onclick = toggleChatbot;
+
+  const box = document.createElement("div");
+  box.id = "ai-chat-box";
+  box.className = "ai-chat-box";
+  box.style.display = "none";
+
+  const tgUser = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
+
+  box.innerHTML = `
+    <div class="ai-chat-header">
+      <h4>🤖 Mansi AI Assistant</h4>
+      <button class="ai-chat-close" onclick="toggleChatbot()">✕</button>
+    </div>
+    <div class="ai-chat-body" id="ai-chat-messages">
+      <div class="ai-msg bot">
+        👋 Hello! Welcome to <strong>${STORE.name}</strong>.<br/>
+        How can I help you today? Ask me anything about products, delivery, orders or discounts!
+      </div>
+      <div class="ai-chips">
+        <button class="ai-chip" onclick="sendChatQuery('🚚 Delivery & COD Info')">🚚 Delivery & COD</button>
+        <button class="ai-chip" onclick="sendChatQuery('📦 Track My Order')">📦 Track Order</button>
+        <button class="ai-chip" onclick="sendChatQuery('💰 Active Offers & Coupons')">💰 Offers & Codes</button>
+        <button class="ai-chip" onclick="sendChatQuery('💎 Product Price Range')">💎 Price Range</button>
+        <button class="ai-chip" onclick="sendChatQuery('✈️ Talk to Store Owner')">✈️ Live Telegram</button>
+      </div>
+    </div>
+    <div class="ai-chat-input-row">
+      <input type="text" id="ai-chat-input" class="ai-chat-input" placeholder="Type your query here..." onkeydown="if(event.key==='Enter') handleUserChatSubmit()" />
+      <button class="ai-chat-send" onclick="handleUserChatSubmit()">➤</button>
+    </div>
+  `;
+
+  document.body.appendChild(btn);
+  document.body.appendChild(box);
+}
+
+function toggleChatbot() {
+  const box = document.getElementById("ai-chat-box");
+  if (!box) return;
+  const isHidden = box.style.display === "none";
+  box.style.display = isHidden ? "flex" : "none";
+  if (isHidden) {
+    const input = document.getElementById("ai-chat-input");
+    if (input) input.focus();
+  }
+}
+
+function sendChatQuery(text) {
+  const input = document.getElementById("ai-chat-input");
+  if (input) {
+    input.value = text;
+    handleUserChatSubmit();
+  }
+}
+
+function handleUserChatSubmit() {
+  const input = document.getElementById("ai-chat-input");
+  const messages = document.getElementById("ai-chat-messages");
+  if (!input || !messages) return;
+
+  const query = input.value.trim();
+  if (!query) return;
+
+  // Append user message
+  const userMsg = document.createElement("div");
+  userMsg.className = "ai-msg user";
+  userMsg.textContent = query;
+  messages.appendChild(userMsg);
+  input.value = "";
+  messages.scrollTop = messages.scrollHeight;
+
+  // Generate Smart Bot Response
+  setTimeout(() => {
+    const botMsg = document.createElement("div");
+    botMsg.className = "ai-msg bot";
+    botMsg.innerHTML = getSmartBotResponse(query);
+    messages.appendChild(botMsg);
+    messages.scrollTop = messages.scrollHeight;
+  }, 350);
+}
+
+function getSmartBotResponse(q) {
+  const lower = q.toLowerCase();
+  const tgUser = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
+
+  if (lower.includes("delivery") || lower.includes("cod") || lower.includes("ship") || lower.includes("time") || lower.includes("raipur")) {
+    return `🚚 <strong>Delivery & COD Information:</strong><br/>
+    • <strong>Raipur City:</strong> Fast Express Delivery in 1-2 Days!<br/>
+    • <strong>Rest of India:</strong> 3-5 Days nationwide shipping.<br/>
+    • <strong>Cash on Delivery (COD):</strong> Available across all pincodes in India.<br/>
+    • Free delivery available on orders using code <strong>WELCOME</strong>.`;
+  }
+
+  if (lower.includes("track") || lower.includes("order") || lower.includes("status") || lower.includes("where")) {
+    return `📦 <strong>Order Tracking & Status:</strong><br/>
+    You can view and track all your orders anytime from your <a href="orders.html" style="color:var(--primary);font-weight:700;">📦 My Orders Page</a>.<br/>
+    You can also track instantly on Telegram by messaging <a href="https://t.me/${tgUser}" target="_blank" style="color:#0088cc;font-weight:700;">@${tgUser}</a>.`;
+  }
+
+  if (lower.includes("offer") || lower.includes("coupon") || lower.includes("discount") || lower.includes("code") || lower.includes("deal")) {
+    return `🎉 <strong>Active Store Offers:</strong><br/>
+    • Use Code <strong>WELCOME</strong> for <strong>Free Delivery</strong> on your order!<br/>
+    • Products starting at budget rates from ₹99.<br/>
+    • Extra deals on Jewellery Sets & Cosmetics Collections.`;
+  }
+
+  if (lower.includes("price") || lower.includes("product") || lower.includes("jewel") || lower.includes("cosmetic") || lower.includes("item")) {
+    return `💎 <strong>Our Collections & Price Range:</strong><br/>
+    We offer handcrafted Jewellery, Premium Cosmetics, Tea Sets, Paintings & Gifts starting from <strong>₹99 to ₹2,499+</strong>.<br/>
+    👉 Browse all collections on our <a href="products.html" style="color:var(--primary);font-weight:700;">🛍️ Collections Page</a>.`;
+  }
+
+  if (lower.includes("owner") || lower.includes("human") || lower.includes("contact") || lower.includes("talk") || lower.includes("telegram") || lower.includes("whatsapp") || lower.includes("phone")) {
+    return `✈️ <strong>Direct Live Support:</strong><br/>
+    Connect directly with the store owner for live product photos or custom queries:<br/><br/>
+    <a href="https://t.me/${tgUser}" target="_blank" style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:10px;display:inline-block;font-weight:700;text-decoration:none;">
+      ✈️ Chat on Telegram (@${tgUser})
+    </a>`;
+  }
+
+  return `😊 Thank you for asking! I can help you with:<br/>
+  • 🚚 Delivery & Shipping Times<br/>
+  • 📦 Order Tracking & Status<br/>
+  • 💰 Coupon Codes & Discounts<br/>
+  • 💎 Product Prices & Stock<br/><br/>
+  Or chat directly with our store team on <a href="https://t.me/${tgUser}" target="_blank" style="color:#0088cc;font-weight:700;">Telegram @${tgUser}</a>!`;
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initChatbotWidget);
+} else {
+  initChatbotWidget();
+}
