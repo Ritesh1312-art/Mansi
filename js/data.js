@@ -97,7 +97,25 @@ const DB = {
     return products;
   },
   saveProducts(products) {
-    localStorage.setItem("products", JSON.stringify(products));
+    try {
+      localStorage.setItem("products", JSON.stringify(products));
+    } catch (e) {
+      console.warn("⚠️ LocalStorage quota warning! Pruning heavy local image caches to free memory...", e);
+      try {
+        // Strip heavy base64 strings from older products in local cache to guarantee new product saves
+        const lightweight = products.map((p, idx) => {
+          if (idx > 3 && p.image && p.image.length > 30000) {
+            const copy = { ...p };
+            delete copy.image; // strip heavy base64 from local cache (Firebase DB still keeps it)
+            return copy;
+          }
+          return p;
+        });
+        localStorage.setItem("products", JSON.stringify(lightweight));
+      } catch (e2) {
+        console.error("❌ LocalStorage save error:", e2.message);
+      }
+    }
   },
   addProduct(product) {
     // Always generate a fresh unique ID when adding

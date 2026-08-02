@@ -355,7 +355,7 @@
 
       if (!file) return;
 
-      status.textContent = "🔄 Removing background...";
+      status.textContent = "🔄 Processing & compressing image...";
       status.style.color = "var(--primary)";
 
       const reader = new FileReader();
@@ -363,7 +363,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement("canvas");
-          const max_size = 600;
+          const max_size = 450;
           let width = img.width;
           let height = img.height;
 
@@ -377,23 +377,29 @@
           canvas.height = height;
           const ctx = canvas.getContext("2d");
 
-          // Fill with transparent (not white)
           ctx.clearRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Remove background pixels
-          removeBackground(ctx, width, height);
+          try { removeBackground(ctx, width, height); } catch(err){}
 
-          // Save as PNG (preserves transparency)
-          uploadedImageBase64 = canvas.toDataURL("image/png");
+          // Try WebP compression first (supports transparency + ultra lightweight ~25KB), fallback to PNG
+          try {
+            uploadedImageBase64 = canvas.toDataURL("image/webp", 0.75);
+          } catch(err) {
+            uploadedImageBase64 = canvas.toDataURL("image/png");
+          }
 
           preview.src = uploadedImageBase64;
           preview.style.display = "block";
           preview.style.background = "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 10px 10px";
           preview.style.borderRadius = "8px";
-          status.textContent = "✅ Background removed!";
+          status.textContent = "✅ Image compressed & ready!";
           status.style.color = "var(--success)";
           document.getElementById("p-image").value = "";
+        };
+        img.onerror = function() {
+          status.textContent = "❌ Failed to read image file.";
+          status.style.color = "var(--error)";
         };
         img.src = e.target.result;
       };
@@ -445,39 +451,47 @@
 
     function saveProduct(e) {
       e.preventDefault();
-      const id = document.getElementById("p-id").value;
+      const saveBtn = document.querySelector("#product-modal button[type='submit']");
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "⏳ Saving..."; }
 
-      // Get image — uploaded base64 takes priority, then URL field
-      const urlImage = document.getElementById("p-image").value.trim();
-      const finalImage = uploadedImageBase64 || urlImage || "";
+      try {
+        const id = document.getElementById("p-id").value;
+        const urlImage = document.getElementById("p-image").value.trim();
+        const finalImage = uploadedImageBase64 || urlImage || "";
 
-      const name = document.getElementById("p-name").value.trim();
-      const price = parseFloat(document.getElementById("p-price").value);
-      const mrp = parseFloat(document.getElementById("p-mrp").value);
+        const name = document.getElementById("p-name").value.trim();
+        const price = parseFloat(document.getElementById("p-price").value);
+        const mrp = parseFloat(document.getElementById("p-mrp").value);
 
-      if (!name) { alert("⚠️ Product name is required!"); return; }
-      if (!price || price <= 0) { alert("⚠️ Selling price is required!"); return; }
+        if (!name) { alert("⚠️ Product name is required!"); return; }
+        if (!price || price <= 0) { alert("⚠️ Selling price is required!"); return; }
 
-      const data = {
-        name,
-        category: document.getElementById("p-category").value,
-        stock: parseInt(document.getElementById("p-stock").value) || 0,
-        price,
-        mrp: mrp || price,
-        image: finalImage,
-        description: document.getElementById("p-desc").value.trim()
-      };
+        const data = {
+          name,
+          category: document.getElementById("p-category").value,
+          stock: parseInt(document.getElementById("p-stock").value) || 0,
+          price,
+          mrp: mrp || price,
+          image: finalImage,
+          description: document.getElementById("p-desc").value.trim()
+        };
 
-      if (id) {
-        DB.updateProduct(id, data);
-        Cart.showToast("✅ Product updated successfully!");
-      } else {
-        DB.addProduct(data);
-        Cart.showToast("✅ Product added successfully!");
+        if (id) {
+          DB.updateProduct(id, data);
+          Cart.showToast("✅ Product updated successfully!");
+        } else {
+          DB.addProduct(data);
+          Cart.showToast("✅ Product added successfully!");
+        }
+
+        closeProductModal();
+        renderProductsTable();
+      } catch (err) {
+        console.error("Error saving product:", err);
+        alert("⚠️ Save error: " + (err.message || err));
+      } finally {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "💾 Save Product"; }
       }
-
-      closeProductModal();
-      renderProductsTable();
     }
 
     function deleteProduct(id) {
