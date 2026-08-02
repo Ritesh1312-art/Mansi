@@ -1,0 +1,23 @@
+name: 24x7 Interactive Telegram Watchdog Listener Service
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Keeps service alive every 30 minutes perpetually
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  interactive_watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Run Interactive Telegram Watchdog Listener
+        run: |
+          node scripts/telegram_watchdog_interactive.js &
+          PID=$!
+          sleep 1800 # Runs continuously for 30 minutes until next cron refresh
+          kill $PID || true
