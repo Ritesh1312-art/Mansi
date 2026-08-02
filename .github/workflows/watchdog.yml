@@ -2,9 +2,7 @@ name: 24x7 Automated Store Watchdog & 2x Daily Health Report (9:00 AM & 9:00 PM 
 
 on:
   schedule:
-    - cron: '30 3,15 * * *' # Runs exactly 2 times per day: 9:00 AM IST (3:30 AM UTC) & 9:00 PM IST (15:30 UTC)
-  push:
-    branches: [ main ]
+    - cron: '30 3,15 * * *' # Strictly runs ONLY 2 times per day: 9:00 AM IST & 9:00 PM IST
   workflow_dispatch:
 
 jobs:
