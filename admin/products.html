@@ -482,10 +482,10 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
 
         if (id) {
           DB.updateProduct(id, data);
-          Cart.showToast("✅ Product updated successfully!");
+          Cart.showToast("✅ Product updated! Backup updated for Google Sheet.");
         } else {
           DB.addProduct(data);
-          Cart.showToast("✅ Product added successfully!");
+          Cart.showToast("✅ Product added! Backup updated for Google Sheet.");
         }
 
         closeProductModal();
