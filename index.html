@@ -199,10 +199,12 @@
   <script src="js/config.js?v=3.0"></script>
   <script src="js/data.js?v=3.0"></script>
   <script src="js/app.js?v=3.0"></script>
+  <script src="js/watchdog-core.js?v=3.0"></script>
   <script>
     // Init
     loadTheme();
     initNavbar();
+    try { Watchdog.runHealthCheck(); } catch(e) {}
 
     // Categories
     function renderCategories() {

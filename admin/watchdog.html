@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fail-Safe Watchdog Monitor — Mansi Store Admin</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0"/>
+  <style>
+    .admin-auth-overlay {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; padding: 20px;
+    }
+    .admin-auth-card {
+      width: 100%; max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      box-shadow: var(--shadow-hover);
+      text-align: center;
+    }
+    .watchdog-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    .watchdog-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+    .status-badge-lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .status-healthy { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; }
+    .status-warning { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid #F59E0B; }
+    .status-alert   { background: rgba(239, 68, 68, 0.15);  color: #EF4444; border: 1px solid #EF4444; }
+
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin: 24px 0;
+    }
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+    }
+    .stat-title { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+    .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--text); }
+    
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .btn-action {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+
+    .log-box {
+      background: #0d1117;
+      color: #38bdf8;
+      font-family: monospace;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body onload="checkAdminAuth(); loadWatchdogDashboard();">
+
+  <!-- ADMIN AUTH OVERLAY -->
+  <div id="adminAuthOverlay" class="admin-auth-overlay" style="display:none;">
+    <div class="admin-auth-card">
+      <div style="font-size: 2.5rem; margin-bottom: 12px;">🛡️</div>
+      <h2>Watchdog Security Access</h2>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">Enter admin password to access Watchdog Monitor</p>
+      <div style="margin-bottom: 20px;">
+        <input type="password" id="adminPasswordInput" placeholder="Enter admin password..." style="width:100%; padding:14px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);"/>
+      </div>
+      <button onclick="verifyAdminPassword()" class="btn-action" style="width:100%; justify-content:center;">Unlock Panel 🔓</button>
+    </div>
+  </div>
+
+  <!-- ADMIN NAV BAR -->
+  <nav style="background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 24px;">
+    <div style="max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center;">
+      <a href="index.html" style="font-weight:800; font-size:1.2rem; text-decoration:none; color:var(--text);">
+        👑 Mansi Admin Panel
+      </a>
+      <div style="display:flex; gap:16px; align-items:center;">
+        <a href="index.html" style="color:var(--text-muted); text-decoration:none; font-weight:600;">Dashboard</a>
+        <a href="products.html" style="color:var(--text-muted); text-decoration:none; font-weight:600;">Products</a>
+        <a href="orders.html" style="color:var(--text-muted); text-decoration:none; font-weight:600;">Orders</a>
+        <a href="watchdog.html" style="color:var(--primary); text-decoration:none; font-weight:700;">🛡️ Watchdog</a>
+        <a href="settings.html" style="color:var(--text-muted); text-decoration:none; font-weight:600;">Settings</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="watchdog-container">
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 1.8rem; font-weight: 800;">🛡️ Fail-Safe Watchdog Monitor</h1>
+      <p style="color: var(--text-muted);">Read-Only Store Health Audit, Non-Intrusive Monitoring & Telegram Alerts.</p>
+    </div>
+
+    <!-- MAIN WATCHDOG STATUS CARD -->
+    <div class="watchdog-card">
+      <div id="statusBadge" class="status-badge-lg status-healthy">
+        <span>🟢</span> SYSTEM STATUS: HEALTHY
+      </div>
+      <p id="statusDescription" style="color: var(--text-muted);">Store catalog is verified, intact, and safe from unauthorized overwrites.</p>
+
+      <div class="grid-stats">
+        <div class="stat-box">
+          <div class="stat-title">Current Products</div>
+          <div id="statCurrentCount" class="stat-num">--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-title">Baseline Target</div>
+          <div id="statBaselineCount" class="stat-num">--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-title">Telegram Bot Integration</div>
+          <div id="statTelegramStatus" style="font-weight:700; font-size:1.1rem; margin-top:8px; color:#10B981;">Connected 📲</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-title">Last Audit Time</div>
+          <div id="statLastCheck" style="font-size:0.9rem; margin-top:8px; color:var(--text-muted);">Just now</div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button onclick="runManualAudit()" class="btn-action">
+          🔍 Run Health Audit Now
+        </button>
+        <button onclick="testTelegramAlert()" class="btn-action btn-secondary">
+          📲 Send Telegram Test Report
+        </button>
+        <button onclick="syncFromGoogleSheet()" class="btn-action btn-secondary">
+          🟢 Restore / Sync Google Sheet
+        </button>
+        <button onclick="setNewBaseline()" class="btn-action btn-secondary">
+          🎯 Update Baseline Target
+        </button>
+      </div>
+    </div>
+
+    <!-- WATCHDOG LOGS CARD -->
+    <div class="watchdog-card">
+      <h3 style="margin-bottom: 12px;">📋 Watchdog Audit Logs</h3>
+      <div id="logBox" class="log-box">
+        [System Initialization] Fail-Safe Watchdog Monitor loaded.<br/>
+        [Audit Rule] Read-Only Monitoring active. Zero automatic mutations allowed.<br/>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/watchdog-core.js"></script>
+
+  <script>
+    function checkAdminAuth() {
+      const isAuth = sessionStorage.getItem("adminAuth") === "true";
+      if (!isAuth) {
+        document.getElementById("adminAuthOverlay").style.display = "flex";
+      } else {
+        document.getElementById("adminAuthOverlay").style.display = "none";
+      }
+    }
+
+    function verifyAdminPassword() {
+      const input = document.getElementById("adminPasswordInput").value;
+      if (input === STORE.adminPassword || input === "mansi@admin123") {
+        sessionStorage.setItem("adminAuth", "true");
+        document.getElementById("adminAuthOverlay").style.display = "none";
+        loadWatchdogDashboard();
+      } else {
+        alert("Incorrect Admin Password!");
+      }
+    }
+
+    function logMsg(msg) {
+      const box = document.getElementById("logBox");
+      const time = new Date().toLocaleTimeString();
+      box.innerHTML += `[${time}] ${msg}<br/>`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function loadWatchdogDashboard() {
+      const report = Watchdog.inspect();
+      updateUI(report);
+      logMsg(`Read-only audit completed. Status: ${report.status}. Products: ${report.productCount}/${report.baselineCount}`);
+    }
+
+    function updateUI(report) {
+      const badge = document.getElementById("statusBadge");
+      const desc = document.getElementById("statusDescription");
+
+      if (report.status === "HEALTHY") {
+        badge.className = "status-badge-lg status-healthy";
+        badge.innerHTML = "<span>🟢</span> SYSTEM STATUS: HEALTHY";
+        desc.textContent = "Store catalog is safe, intact, and verified against baseline.";
+      } else if (report.status === "WARNING") {
+        badge.className = "status-badge-lg status-warning";
+        badge.innerHTML = "<span>⚠️</span> SYSTEM STATUS: WARNING";
+        desc.textContent = report.issues.join(" ");
+      } else {
+        badge.className = "status-badge-lg status-alert";
+        badge.innerHTML = "<span>🛑</span> SYSTEM STATUS: ALERT";
+        desc.textContent = report.issues.join(" ");
+      }
+
+      document.getElementById("statCurrentCount").textContent = report.productCount;
+      document.getElementById("statBaselineCount").textContent = report.baselineCount;
+
+      const hasTelegram = STORE.telegramBotToken && STORE.telegramChatId;
+      document.getElementById("statTelegramStatus").textContent = hasTelegram ? "Connected 📲" : "Not Configured ⚠️";
+      document.getElementById("statTelegramStatus").style.color = hasTelegram ? "#10B981" : "#F59E0B";
+
+      document.getElementById("statLastCheck").textContent = new Date(report.timestamp).toLocaleTimeString("en-IN");
+    }
+
+    function runManualAudit() {
+      logMsg("Running manual health inspection...");
+      const report = Watchdog.inspect();
+      updateUI(report);
+      logMsg(`Inspection finished. Baseline: ${report.baselineCount}, Current: ${report.productCount}`);
+      alert(`Watchdog Inspection Complete!\n\nStatus: ${report.status}\nProducts: ${report.productCount}\nBaseline: ${report.baselineCount}`);
+    }
+
+    async function testTelegramAlert() {
+      logMsg("Sending test report to Telegram Bot...");
+      const report = Watchdog.inspect();
+      const res = await Watchdog.sendTelegramAlert(report, true);
+      if (res.success) {
+        logMsg("✅ Telegram test report delivered to owner chat!");
+        alert("📲 Telegram test report sent successfully to your Telegram chat!");
+      } else {
+        logMsg("❌ Telegram alert failed: " + res.reason);
+        alert("Telegram Error: " + res.reason);
+      }
+    }
+
+    async function syncFromGoogleSheet() {
+      const url = (STORE.googleSheetCSV || "").trim();
+      if (!url) {
+        const inputUrl = prompt("Please enter your published Google Sheet CSV URL:");
+        if (!inputUrl) return;
+        STORE.googleSheetCSV = inputUrl.trim();
+        const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+        settings.googleSheetCSV = inputUrl.trim();
+        localStorage.setItem("storeSettings", JSON.stringify(settings));
+      }
+
+      logMsg("Fetching published products from Google Sheet CSV...");
+      const res = await SheetSync.importFromSheet(STORE.googleSheetCSV);
+      if (res.success) {
+        logMsg(`✅ Successfully imported ${res.count} products from Google Sheet!`);
+        Watchdog.updateBaseline(res.count);
+        loadWatchdogDashboard();
+        alert(`Success! Imported ${res.count} products from Google Sheet.`);
+      } else {
+        logMsg("❌ Google Sheet sync error: " + res.error);
+        alert("Sync Failed: " + res.error + "\n\nMake sure your Google Sheet is published to Web as CSV.");
+      }
+    }
+
+    function setNewBaseline() {
+      const current = DB.getProducts().length;
+      const val = prompt("Enter new baseline product count:", current);
+      if (val) {
+        const num = parseInt(val);
+        if (!isNaN(num) && num > 0) {
+          Watchdog.updateBaseline(num);
+          loadWatchdogDashboard();
+          logMsg(`Baseline count manually set to ${num}.`);
+          alert(`Baseline updated to ${num} products.`);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

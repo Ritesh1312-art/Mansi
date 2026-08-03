@@ -22,8 +22,8 @@ const defaultStore = {
     messagingSenderId: "399147392144",
     appId: "1:399147392144:web:00166d6c57b146914f8c15"
   },
-  telegramBotToken: "", 
-  telegramChatId: "",
+  telegramBotToken: "8889847918:AAGGnxWxwt4ucKLwLcppq8DfFAgslKy4K0g", 
+  telegramChatId: "8774397431",
   telegramUsername: "MansiJewellery",
   gpayUpi: "",
   phonepeUpi: "",
