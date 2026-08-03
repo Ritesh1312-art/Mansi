@@ -90,10 +90,21 @@ const WatchdogAgent = {
 
   healDatabase() {
     try {
-      const raw = localStorage.getItem("products");
-      if (!raw) return;
-      let products = JSON.parse(raw);
-      if (!Array.isArray(products)) return;
+      let raw = localStorage.getItem("products") || localStorage.getItem("products_backup");
+      if (!raw || raw === "[]") {
+        if (typeof DB !== "undefined" && typeof DB.getProducts === "function") {
+          DB.getProducts(); // Auto-restore seed products if store is empty!
+        }
+        return;
+      }
+      let products = [];
+      try { products = JSON.parse(raw); } catch(e){}
+      if (!Array.isArray(products) || products.length === 0) {
+        if (typeof DB !== "undefined" && typeof DB.getProducts === "function") {
+          DB.getProducts();
+        }
+        return;
+      }
 
       let modified = false;
       products = products.map((p, idx) => {
@@ -107,6 +118,7 @@ const WatchdogAgent = {
 
       if (modified) {
         localStorage.setItem("products", JSON.stringify(products));
+        localStorage.setItem("products_backup", JSON.stringify(products));
         console.log("✅ Watchdog: Database auto-healed and sanitized.");
       }
     } catch(e) {
