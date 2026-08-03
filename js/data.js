@@ -102,11 +102,18 @@ const DB = {
     } catch (e) {
       console.warn("⚠️ LocalStorage quota warning! Pruning heavy local image caches to free memory...", e);
       try {
-        // Strip heavy base64 strings from older products in local cache to guarantee new product saves
+        const categoryFallbacks = {
+          jewellery: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500",
+          cosmetics: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500",
+          "tea-sets": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500",
+          paintings: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500",
+          gifts: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500"
+        };
         const lightweight = products.map((p, idx) => {
-          if (idx > 3 && p.image && p.image.length > 30000) {
+          if (idx > 3 && p.image && p.image.length > 50000) {
             const copy = { ...p };
-            delete copy.image; // strip heavy base64 from local cache (Firebase DB still keeps it)
+            const cat = (copy.category || "").toLowerCase();
+            copy.image = categoryFallbacks[cat] || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500";
             return copy;
           }
           return p;

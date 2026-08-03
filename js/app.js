@@ -4,7 +4,7 @@
 // =============================================
 const WatchdogAgent = {
   isInitialized: false,
-  fallbackImg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500",
+  fallbackImg: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500", // Premium Gold Jewellery Placeholder
 
   init() {
     if (this.isInitialized) return;
@@ -35,6 +35,13 @@ const WatchdogAgent = {
   healImage(img) {
     if (!img || img.dataset.healed) return;
     img.dataset.healed = "true";
+
+    // If it's an advertisement banner or top ad, hide the container gracefully
+    if (img.alt === "Advertisement" || (img.src && img.src.includes("hilltopads"))) {
+      if (img.parentElement) img.parentElement.style.display = "none";
+      return;
+    }
+
     console.warn("⚠️ Watchdog: Broken image detected & auto-healed:", img.src);
     img.src = this.fallbackImg;
   },
@@ -60,10 +67,18 @@ const WatchdogAgent = {
       const rawProds = localStorage.getItem("products");
       if (rawProds) {
         const prods = JSON.parse(rawProds);
+        const categoryFallbacks = {
+          jewellery: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500",
+          cosmetics: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500",
+          "tea-sets": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500",
+          paintings: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500",
+          gifts: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500"
+        };
         const cleaned = prods.map((p, idx) => {
-          if (idx > 3 && p.image && p.image.length > 20000) {
+          if (idx > 3 && p.image && p.image.length > 50000) {
             const copy = { ...p };
-            delete copy.image; // prune heavy base64 strings from local cache
+            const cat = (copy.category || "").toLowerCase();
+            copy.image = categoryFallbacks[cat] || this.fallbackImg; // assign clean image URL instead of deleting!
             return copy;
           }
           return p;
