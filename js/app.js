@@ -68,42 +68,109 @@ const Cart = {
 // SHEET SYNC — Google Sheet CSV
 // =============================================
 const SheetSync = {
+  parseCSVLine(line) {
+    const result = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        inQuotes = !inQuotes;
+      } else if (c === ',' && !inQuotes) {
+        result.push(cur.trim().replace(/^"|"$/g, ""));
+        cur = "";
+      } else {
+        cur += c;
+      }
+    }
+    result.push(cur.trim().replace(/^"|"$/g, ""));
+    return result;
+  },
+
   async importFromSheet(csvUrl) {
+    if (!csvUrl) return { success: false, error: "No CSV URL provided" };
     try {
       const response = await fetch(csvUrl);
       const text = await response.text();
-      const rows = text.split("\n").slice(1); // skip header
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length <= 1) return { success: false, error: "Empty or invalid sheet" };
+
+      const rows = lines.slice(1); // skip header
       let imported = 0;
+      const sheetProducts = [];
+
       rows.forEach(row => {
-        const cols = row.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
-        if (cols.length < 4 || !cols[0]) return;
-        const [name, price, mrp, category, image, description, stock] = cols;
-        if (name && price) {
-          DB.addProduct({ name, price: +price, mrp: +(mrp || price), category: category || "all", image: image || "", description: description || "", stock: +(stock || 10) });
+        const cols = this.parseCSVLine(row);
+        if (cols.length >= 2 && cols[0]) {
+          const name = cols[0];
+          const price = parseFloat(cols[1]) || 299;
+          const mrp = parseFloat(cols[2]) || Math.round(price * 1.3);
+          const category = (cols[3] || "jewellery").toLowerCase();
+          const image = cols[4] || "";
+          const description = cols[5] || name;
+          const stock = parseInt(cols[6]) || 10;
+
+          sheetProducts.push({
+            id: "sp_" + Math.abs(name.split("").reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)),
+            name,
+            price,
+            mrp,
+            category,
+            image,
+            description,
+            stock,
+            inStock: stock > 0,
+            rating: 4.8,
+            createdAt: new Date().toISOString()
+          });
           imported++;
         }
       });
-      return { success: true, count: imported };
+
+      if (sheetProducts.length > 0) {
+        // Save imported products in DB
+        localStorage.setItem("products", JSON.stringify(sheetProducts));
+        localStorage.setItem("products_backup", JSON.stringify(sheetProducts));
+        window.dispatchEvent(new Event("productsSynced"));
+        return { success: true, count: imported };
+      }
+      return { success: false, error: "No products found in sheet" };
     } catch (e) {
       return { success: false, error: e.message };
     }
   },
+
+  async autoSyncFromSheet() {
+    const url = (STORE.googleSheetCSV || "").trim();
+    if (url && url.startsWith("http")) {
+      console.log("🌐 Auto-syncing products from Google Sheet CSV...");
+      await this.importFromSheet(url);
+    }
+  },
+
   exportToCSV() {
     const products = DB.getProducts();
     const header = "Name,Price,MRP,Category,Image,Description,Stock";
     const rows = products.map(p =>
-      `"${p.name}",${p.price},${p.mrp},"${p.category}","${p.image}","${p.description}",${p.stock}`
+      `"${p.name || ''}",${p.price || 0},${p.mrp || 0},"${p.category || 'jewellery'}","${p.image || ''}","${(p.description || '').replace(/"/g, '""')}",${p.stock || 10}`
     );
     const csv = [header, ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "mansi-products.csv";
+    a.download = "mansi-store-products-backup.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
 };
+
+// Trigger Auto-Sync on load if Google Sheet CSV URL is set
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => SheetSync.autoSyncFromSheet());
+} else {
+  SheetSync.autoSyncFromSheet();
+}
 
 // =============================================
 // PAYMENT — Razorpay Integration
