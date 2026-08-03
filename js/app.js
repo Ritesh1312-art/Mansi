@@ -172,6 +172,24 @@ if (document.readyState === "loading") {
   SheetSync.autoSyncFromSheet();
 }
 
+// Re-render whichever catalog view is open after Firestore returns products.
+window.addEventListener("productsSynced", () => {
+  [
+    "renderProducts",
+    "renderProductsTable",
+    "renderFeatured",
+    "renderNewArrivals",
+    "renderWishlist",
+    "initDashboard"
+  ].forEach(functionName => {
+    if (typeof window[functionName] === "function") {
+      try { window[functionName](); } catch (e) {
+        console.warn("Could not refresh " + functionName, e);
+      }
+    }
+  });
+});
+
 // =============================================
 // PAYMENT — Razorpay Integration
 // =============================================

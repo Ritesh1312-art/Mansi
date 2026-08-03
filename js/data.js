@@ -5,94 +5,7 @@
 let isFirebaseActive = false;
 let fbAuth = null;
 let fbDb = null;
-
-// Default Seed Products (Guarantees store is NEVER empty)
-const DEFAULT_STORE_PRODUCTS = [
-  {
-    id: "p_seed_1",
-    name: "Royal Kundan Gold Necklace Set",
-    category: "jewellery",
-    price: 1299,
-    mrp: 1999,
-    description: "Handcrafted traditional Royal Kundan Necklace set with matching earrings. Perfect for weddings, festivals & special occasions.",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600",
-    inStock: true,
-    rating: 4.8,
-    reviews: 42,
-    sales: 128,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "p_seed_2",
-    name: "Matte Elegance Luxury Lipstick Combo",
-    category: "cosmetics",
-    price: 499,
-    mrp: 899,
-    description: "Long-lasting 12-hour stay velvet matte lipstick set in 4 viral shades. Non-drying, lightweight formula.",
-    image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600",
-    inStock: true,
-    rating: 4.9,
-    reviews: 65,
-    sales: 210,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "p_seed_3",
-    name: "Vintage Ceramic Royal Tea Cup Set (Set of 6)",
-    category: "tea-sets",
-    price: 899,
-    mrp: 1499,
-    description: "Premium gold-trimmed ceramic tea cup & saucer set. Adds a touch of luxury to your tea breaks.",
-    image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600",
-    inStock: true,
-    rating: 4.7,
-    reviews: 38,
-    sales: 95,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "p_seed_4",
-    name: "Handmade Radha Krishna Canvas Painting",
-    category: "paintings",
-    price: 1499,
-    mrp: 2499,
-    description: "Exquisite hand-painted Radha Krishna artwork on premium canvas. Comes with gold-finish floating wooden frame.",
-    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600",
-    inStock: true,
-    rating: 4.9,
-    reviews: 29,
-    sales: 64,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "p_seed_5",
-    name: "Bridal Diamond-Style Zircon Bangles",
-    category: "jewellery",
-    price: 799,
-    mrp: 1299,
-    description: "Sparkling American Diamond cubic zircon bangles set of 4. High shine, anti-tarnish gold plating.",
-    image: "https://images.unsplash.com/photo-1611591475281-8d9954a2be31?w=600",
-    inStock: true,
-    rating: 4.8,
-    reviews: 51,
-    sales: 140,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "p_seed_6",
-    name: "Glow & Shine Herbal Skincare Gift Box",
-    category: "gifts",
-    price: 699,
-    mrp: 1199,
-    description: "Natural herbal face serum, vitamin C moisturizer & rose water mist gift hamper box.",
-    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600",
-    inStock: true,
-    rating: 4.6,
-    reviews: 33,
-    sales: 82,
-    createdAt: new Date().toISOString()
-  }
-];
+let firebaseProductsCache = null;
 
 const DB = {
   // ---- DYNAMIC FIREBASE LOADER ----
@@ -146,24 +59,13 @@ const DB = {
         products.push(data);
       });
 
-      // CRITICAL: Only overwrite localStorage if Firebase snapshot actually has products!
-      if (products.length > 0) {
-        products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-        localStorage.setItem("products", JSON.stringify(products));
-        localStorage.setItem("products_backup", JSON.stringify(products));
-        window.dispatchEvent(new Event("productsSynced"));
-      } else {
-        // If Firebase DB is empty, sync local products up to Firebase so they are never lost!
-        const localRaw = localStorage.getItem("products") || localStorage.getItem("products_backup");
-        if (localRaw) {
-          try {
-            const localList = JSON.parse(localRaw);
-            if (Array.isArray(localList) && localList.length > 0) {
-              localList.forEach(p => fbDb.collection("products").doc(p.id).set(p));
-            }
-          } catch(e) {}
-        }
-      }
+      products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Firestore is the source of truth. Full product images remain in memory
+      // so they do not overflow browser localStorage.
+      firebaseProductsCache = products;
+      this.saveLocalProductCache(products);
+      window.dispatchEvent(new Event("productsSynced"));
     });
 
     // Sync Orders
@@ -178,6 +80,10 @@ const DB = {
 
   // ---- PRODUCTS ----
   getProducts() {
+    if (Array.isArray(firebaseProductsCache)) {
+      return firebaseProductsCache;
+    }
+
     let rawStr = localStorage.getItem("products");
     if (!rawStr || rawStr === "[]") {
       rawStr = localStorage.getItem("products_backup");
@@ -185,12 +91,10 @@ const DB = {
     let raw = [];
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
 
-    // Auto-seed if empty so store is NEVER empty!
-    if (!Array.isArray(raw) || raw.length === 0) {
-      raw = DEFAULT_STORE_PRODUCTS;
-      localStorage.setItem("products", JSON.stringify(raw));
-      localStorage.setItem("products_backup", JSON.stringify(raw));
-    }
+    if (!Array.isArray(raw)) raw = [];
+
+    // Remove the obsolete demo catalog from browsers that cached it.
+    raw = raw.filter(p => p && !String(p.id || "").startsWith("p_seed_"));
 
     let needsResave = false;
     const products = raw.map((p, idx) => {
@@ -208,40 +112,31 @@ const DB = {
     }).filter(Boolean);
 
     if (needsResave) {
-      localStorage.setItem("products", JSON.stringify(products));
-      localStorage.setItem("products_backup", JSON.stringify(products));
+      this.saveLocalProductCache(products);
     }
     return products;
   },
-  saveProducts(products) {
-    try {
-      localStorage.setItem("products", JSON.stringify(products));
-      localStorage.setItem("products_backup", JSON.stringify(products));
-    } catch (e) {
-      console.warn("⚠️ LocalStorage quota warning! Pruning heavy local image caches to free memory...", e);
-      try {
-        const categoryFallbacks = {
-          jewellery: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500",
-          cosmetics: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500",
-          "tea-sets": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500",
-          paintings: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500",
-          gifts: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500"
-        };
-        const lightweight = products.map((p, idx) => {
-          if (idx > 3 && p.image && p.image.length > 50000) {
-            const copy = { ...p };
-            const cat = (copy.category || "").toLowerCase();
-            copy.image = categoryFallbacks[cat] || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500";
-            return copy;
-          }
-          return p;
-        });
-        localStorage.setItem("products", JSON.stringify(lightweight));
-        localStorage.setItem("products_backup", JSON.stringify(lightweight));
-      } catch (e2) {
-        console.error("❌ LocalStorage save error:", e2.message);
+  saveLocalProductCache(products) {
+    const lightweight = products.map(product => {
+      const copy = { ...product };
+      if (copy.image && (copy.image.startsWith("data:") || copy.image.length > 50000)) {
+        copy.image = "";
       }
+      return copy;
+    });
+
+    try {
+      localStorage.removeItem("products_backup");
+      localStorage.setItem("products", JSON.stringify(lightweight));
+    } catch (e) {
+      console.warn("Local product cache skipped because browser storage is full.", e);
+      localStorage.removeItem("products");
+      localStorage.removeItem("products_backup");
     }
+  },
+  saveProducts(products) {
+    firebaseProductsCache = products;
+    this.saveLocalProductCache(products);
   },
   addProduct(product) {
     // Always generate a fresh unique ID when adding
