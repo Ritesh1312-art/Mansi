@@ -186,22 +186,26 @@
 
   <!-- IMPORT MODAL -->
   <div class="modal-overlay" id="import-modal">
-    <div class="modal">
+    <div class="modal" style="max-width:600px;">
       <div class="modal-header">
-        <h3>📥 Import from Google Sheet</h3>
+        <h3>📥 Import / Bulk Upload Products</h3>
         <button class="modal-close" onclick="closeImportModal()">×</button>
       </div>
       <div class="form-group">
-        <label class="form-label">Google Sheet CSV URL *</label>
+        <label class="form-label">Option 1: Google Sheet CSV URL</label>
         <input type="url" id="sheet-csv-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv" />
-        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
-          <strong>Steps to share Google Sheet as CSV:</strong><br/>
-          1. Open your sheet & click <strong>File</strong> > <strong>Share</strong> > <strong>Publish to web</strong>.<br/>
-          2. Select <strong>Entire Document</strong> and format as <strong>Comma-separated values (.csv)</strong>.<br/>
-          3. Click Publish, copy the link, and paste it here.
-        </p>
+        <button class="btn-primary" style="margin-top:8px; width:100%;" onclick="importFromSheet()">Import From Google Sheet</button>
       </div>
-      <button class="btn-full" onclick="importFromSheet()">Import Now</button>
+      <hr style="border:none; border-top:1px solid var(--border); margin: 20px 0;" />
+      <div class="form-group">
+        <label class="form-label">Option 2: Bulk Paste Products (JSON / CSV / Names)</label>
+        <textarea id="bulk-paste-text" class="form-input" rows="5" placeholder='Paste JSON array or line-by-line list:
+e.g. 
+Designer Gold Necklace, jewellery, 1299, 1999
+Rose Lip Gloss, cosmetics, 399, 699'></textarea>
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Supports JSON array or line format: Name, Category, SellingPrice, MRP</p>
+        <button class="btn-full" style="margin-top:8px;" onclick="importFromBulkPaste()">⚡ Bulk Upload All Products</button>
+      </div>
     </div>
   </div>
 
@@ -528,6 +532,79 @@
         renderProductsTable();
       } else {
         alert("❌ Import failed: " + result.error);
+      }
+    }
+
+    function importFromBulkPaste() {
+      const text = document.getElementById("bulk-paste-text").value.trim();
+      if (!text) { alert("⚠️ Please paste product JSON or list!"); return; }
+
+      let count = 0;
+      const categoryFallbacks = {
+        jewellery: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500",
+        cosmetics: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500",
+        "tea-sets": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500",
+        paintings: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500",
+        gifts: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500"
+      };
+
+      try {
+        // Try parsing JSON array
+        if (text.startsWith("[") && text.endsWith("]")) {
+          const list = JSON.parse(text);
+          if (Array.isArray(list)) {
+            list.forEach(p => {
+              if (p && p.name) {
+                const cat = (p.category || "jewellery").toLowerCase();
+                DB.addProduct({
+                  name: p.name,
+                  category: cat,
+                  price: parseFloat(p.price) || 499,
+                  mrp: parseFloat(p.mrp) || Math.round((parseFloat(p.price)||499) * 1.4),
+                  stock: parseInt(p.stock) || 10,
+                  image: p.image || categoryFallbacks[cat] || categoryFallbacks.jewellery,
+                  description: p.description || ""
+                });
+                count++;
+              }
+            });
+          }
+        } else {
+          // Line by line parsing
+          const lines = text.split("\n");
+          lines.forEach(line => {
+            const parts = line.split(",").map(s => s.trim());
+            if (parts.length >= 1 && parts[0]) {
+              const name = parts[0];
+              const cat = (parts[1] || "jewellery").toLowerCase();
+              const price = parseFloat(parts[2]) || 499;
+              const mrp = parseFloat(parts[3]) || Math.round(price * 1.4);
+              const img = parts[4] || categoryFallbacks[cat] || categoryFallbacks.jewellery;
+
+              DB.addProduct({
+                name,
+                category: cat,
+                price,
+                mrp,
+                stock: 10,
+                image: img,
+                description: name
+              });
+              count++;
+            }
+          });
+        }
+
+        if (count > 0) {
+          Cart.showToast(`✅ ${count} products imported successfully!`);
+          document.getElementById("bulk-paste-text").value = "";
+          closeImportModal();
+          renderProductsTable();
+        } else {
+          alert("⚠️ No valid products found in pasted text.");
+        }
+      } catch (err) {
+        alert("❌ Parse error: " + err.message);
       }
     }
 
