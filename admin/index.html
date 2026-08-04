@@ -86,7 +86,7 @@
       
       <form onsubmit="verifyAdminPassword(event)">
         <div class="admin-input-wrapper" style="position: relative; margin-bottom: 16px;">
-          <input type="password" id="admin-pass-input" placeholder="Enter Admin Password" required autofocus class="form-input" style="padding: 14px; font-size: 1rem; width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);" />
+          <input type="password" id="admin-pass-input" placeholder="Enter Admin Password" required autofocus autocomplete="off" value="" class="form-input" style="padding: 14px; font-size: 1rem; width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);" />
           <button type="button" class="admin-eye-toggle" onclick="togglePassVisibility()" style="position: absolute; right: 12px; top: 12px; background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
         </div>
         <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; font-weight: 800; font-size: 1rem; border-radius: 8px; border: none; background: var(--primary); color: #fff; cursor: pointer;">

@@ -25,27 +25,7 @@
 </head>
 <body>
 
-  <!-- ADMIN AUTH OVERLAY -->
-  <div id="admin-auth" class="admin-auth-overlay">
-    <div class="admin-auth-card">
-      <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
-      <h2 style="margin-bottom: 8px;">Admin Login</h2>
-      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Sign in with an authorized Firebase admin account.</p>
-      <div class="form-group" style="text-align: left;">
-        <label class="form-label">Admin Email</label>
-        <input type="email" id="admin-email-input" class="form-input" placeholder="admin@example.com" autocomplete="username"/>
-      </div>
-      <div class="form-group" style="text-align: left;">
-        <label class="form-label">Password</label>
-        <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
-      </div>
-      <button class="btn-full" onclick="verifyAdminPassword()" style="margin-top: 12px;">Login as Admin</button>
-      <p id="admin-auth-err" style="color: var(--error); font-size: 0.85rem; margin-top: 12px; display: none;">❌ Incorrect password!</p>
-      <a href="../index.html" class="btn-outline" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; padding: 12px; font-size: 0.9rem; font-weight: 700; border: 1.5px solid var(--border); color: var(--text); border-radius: var(--radius-sm); text-decoration: none;">
-        🛒 Exit Admin & Return to Store
-      </a>
-    </div>
-  </div>
+
 
   <div id="admin-content" style="display: none;">
     <div class="admin-layout">
