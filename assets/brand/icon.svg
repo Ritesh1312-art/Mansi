@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Mansi Jewellery and Cosmetics</title>
+  <defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8df88"/><stop offset=".5" stop-color="#c8912c"/><stop offset="1" stop-color="#fff0ae"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="#650d25"/>
+  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#gold)" stroke-width="12"/>
+  <path d="M160 345V168h32l64 104 64-104h32v177h-40V235l-56 89-56-89v110z" fill="url(#gold)"/>
+  <path d="M256 103l13 25 27 4-20 19 5 27-25-13-25 13 5-27-20-19 27-4z" fill="url(#gold)"/>
+</svg>

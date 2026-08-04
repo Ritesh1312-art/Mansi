@@ -45,10 +45,10 @@
   <!-- OFFER MARQUEE -->
   <div class="offer-banner">
     <div class="offer-banner-inner">
-      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>✨ Browse the latest jewellery and cosmetics collection</span>
       <span>💍 New Jewellery Collection Arrived!</span>
       <span>📦 COD Available All Over India</span>
-      <span>⭐ Trusted by 500+ Customers in Raipur</span>
+      <span>🛡️ Secure Firebase account and saved addresses</span>
     </div>
   </div>
 
@@ -92,6 +92,13 @@
         <a href="orders.html" class="btn-outline" style="padding:8px 16px;font-size:0.85rem;display:inline-flex;align-items:center;gap:6px;">📦 My Orders</a>
         <a href="wishlist.html" class="btn-primary" style="padding:8px 16px;font-size:0.85rem;display:inline-flex;align-items:center;gap:6px;">❤️ Wishlist</a>
       </div>
+    </div>
+
+    <div class="profile-card">
+      <h2>✈️ Telegram Order Updates</h2>
+      <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:16px;">Telegram cannot find an account from a phone number. Link your Telegram once and future order confirmations can arrive there automatically.</p>
+      <button id="telegram-link-btn" class="btn-primary" onclick="connectTelegram()">Connect Telegram</button>
+      <p id="telegram-link-status" style="font-size:.84rem;margin-top:10px;color:var(--text-muted)"></p>
     </div>
 
     <!-- USER INFO SUMMARY -->
@@ -200,7 +207,7 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
-        <p>Premium quality products at best prices. Serving Raipur and all of India.</p>
+        <p>Browse the current catalogue and manage your saved delivery addresses securely.</p>
       </div>
       <div class="footer-col">
         <h4>Quick Links</h4>
@@ -210,7 +217,7 @@
       </div>
       <div class="footer-col">
         <h4>Contact Us</h4>
-        <a href="https://wa.me/919876543210" target="_blank">💬 WhatsApp Us</a>
+        <a href="https://t.me/MansiJewellery" target="_blank" rel="noopener">✈️ Telegram Support</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -220,6 +227,7 @@
 
   <script src="js/config.js?v=3.0"></script>
   <script src="js/data.js?v=3.0"></script>
+  <script src="js/api-client.js?v=4.0"></script>
   <script src="js/app.js?v=3.0"></script>
   <script>
     loadTheme();
@@ -240,6 +248,22 @@
     if (!session) {
       alert("Please login to view your profile.");
       window.location.href = 'login.html';
+    }
+
+    async function connectTelegram() {
+      const button = document.getElementById("telegram-link-btn");
+      const status = document.getElementById("telegram-link-status");
+      button.disabled = true;
+      status.textContent = "Creating a secure one-time Telegram link…";
+      try {
+        const result = await StoreApi.createTelegramLink();
+        status.textContent = "Telegram opened. Tap Start there within 15 minutes to finish linking.";
+        window.open(result.url, "_blank", "noopener");
+      } catch (error) {
+        status.textContent = "Could not create link: " + error.message;
+      } finally {
+        button.disabled = false;
+      }
     }
 
     // Load user data and addresses
@@ -269,8 +293,8 @@
                 🏡 Address #${idx + 1}
                 ${a.isDefault ? '<span style="background:var(--primary);color:#fff;font-size:0.7rem;padding:2px 8px;border-radius:12px;font-weight:700;">DEFAULT</span>' : ''}
               </div>
-              <div style="font-size:0.88rem;color:var(--text);margin-top:4px;">${a.house}, ${a.street}</div>
-              <div style="font-size:0.82rem;color:var(--text-muted);">${a.city}, ${a.state} - <strong>${a.pincode}</strong></div>
+              <div style="font-size:0.88rem;color:var(--text);margin-top:4px;">${escapeHTML(a.house || "")}, ${escapeHTML(a.street || "")}</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">${escapeHTML(a.city || "")}, ${escapeHTML(a.state || "")} - <strong>${escapeHTML(a.pincode || "")}</strong></div>
             </div>
             <div style="display:flex;gap:8px;">
               ${!a.isDefault ? `<button onclick="setDefaultAddress(${idx})" style="padding:6px 12px;font-size:0.78rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-weight:600;">⭐ Set Default</button>` : ''}

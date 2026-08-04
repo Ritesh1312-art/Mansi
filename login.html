@@ -88,13 +88,6 @@
   </style>
 </head>
 <body>
-  <!-- AD1-TOP -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
-
   <!-- MINIMAL NAVBAR -->
   <nav class="minimal-nav">
     <a class="nav-logo" href="index.html">
@@ -105,13 +98,6 @@
   </nav>
 
   <div class="auth-page-wrap">
-    <!-- AD2-MIDDLE -->
-    <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-      </a>
-    </div>
-
     <div class="auth-page">
       <div class="auth-card">
         <div class="auth-logo">
@@ -148,12 +134,6 @@
       </div>
     </div>
 
-    <!-- AD3-BOTTOM -->
-    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-      </a>
-    </div>
   </div>
 
   <script src="js/config.js"></script>
@@ -245,7 +225,7 @@
         if (res.success) {
           alert('📧 Password reset link has been successfully sent to: ' + email + '!\n\nPlease check your inbox/spam folder.');
         } else {
-          alert('📩 (Demo Mode) Password reset link simulated for: ' + email + '.\n\nNote: ' + res.error);
+          showError(res.error || 'Password reset email could not be sent.');
         }
       } catch (e) {
         showError(e.message || 'Failed to send reset email.');

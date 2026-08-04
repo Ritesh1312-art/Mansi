@@ -7,7 +7,6 @@
   <meta name="description" content="Browse all products — jewellery, cosmetics, tea sets, paintings, gift items and more. Shop at best prices with fast delivery and COD available." />
   <meta name="keywords" content="jewellery, cosmetics, tea sets, paintings, gifts, Raipur, online shopping, mansi" />
   <link rel="stylesheet" href="css/style.css?v=3.0" />
-  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
   <style>
     /* ---- Products Page Specific Styles ---- */
     .products-page-hero {
@@ -128,16 +127,6 @@
 </head>
 <body>
 
-  <!-- ================================================
-       AD BANNER 1 — TOP
-       ================================================ -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851"
-           alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-    </a>
-  </div>
-
   <!-- OFFER MARQUEE BANNER — Dynamic from Admin Settings -->
   <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
     <div class="offer-banner-inner" id="offer-banner-inner"></div>
@@ -150,7 +139,11 @@
         if (banner) {
           var wrap = document.getElementById("offer-banner-wrap");
           var inner = document.getElementById("offer-banner-inner");
-          inner.innerHTML = [banner, banner, banner].map(t => '<span>' + t + '</span>').join('');
+          inner.replaceChildren(...[banner, banner, banner].map(function(text) {
+            var span = document.createElement("span");
+            span.textContent = text;
+            return span;
+          }));
           wrap.style.display = "";
         }
       } catch(e) {}
@@ -209,14 +202,6 @@
     <!-- ACTIVE FILTER TAG (shown when filtering) -->
     <div id="active-filter-area"></div>
 
-    <!-- AD BANNER 2 — MIDDLE (between category and grid) -->
-    <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:0 0 20px;overflow:hidden;border-radius:12px;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851"
-             alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-      </a>
-    </div>
-
     <!-- SEARCH BAR + SORT ROW -->
     <div class="search-bar-container" style="margin-bottom:16px;">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text-light);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -239,14 +224,6 @@
 
   </div>
 
-  <!-- AD BANNER 3 — BEFORE FOOTER -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851"
-           alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-    </a>
-  </div>
-
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-inner">
@@ -254,9 +231,9 @@
         <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 Mansi Jewellery &amp; Cosmetics</div>
         <p>Your trusted local market for jewellery, cosmetics, tea sets, and more. Serving Raipur and all of India.</p>
         <div style="margin-top:16px;display:flex;gap:10px;">
-          <a href="https://wa.me/919876543210" target="_blank"
-             style="background:#25D366;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
-            💬 WhatsApp Us
+          <a href="https://t.me/MansiJewellery" target="_blank" rel="noopener"
+             style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            ✈️ Telegram Support
           </a>
         </div>
       </div>
@@ -409,34 +386,39 @@
     // PRODUCT CARD HTML
     // ============================================================
     function productCard(p, index) {
-      const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
-      const img  = p.image || 'https://via.placeholder.com/300x300?text=No+Image';
-      const rating = Math.min(5, Math.max(4, parseFloat(p.rating) || 4.5));
+      const price = Math.max(0, Number(p.price) || 0);
+      const mrp = Math.max(price, Number(p.mrp) || price);
+      const reviews = Math.max(0, Number(p.reviews) || 0);
+      const disc = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
+      const img = escapeHTML(safeImageUrl(p.image));
+      const safeName = escapeHTML(p.name || "Product");
+      const safeId = safeProductId(p.id);
+      const rating = Math.min(5, Math.max(0, parseFloat(p.rating) || 0));
       const fullStars = Math.floor(rating);
       const starsHtml = '★'.repeat(fullStars) + (rating - fullStars >= 0.5 ? '½' : '');
       return `
         <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
           <div class="product-card-img">
-            <img src="${img}" alt="${p.name}" loading="lazy" style="object-fit:contain;" />
+            <img src="${img}" alt="${safeName}" loading="lazy" style="object-fit:contain;background:#fff;" onerror="this.src='assets/brand/icon.svg'" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
-            <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? 'active' : ''}" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? '❤️' : '🤍'}</button>
+            <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? 'active' : ''}" data-wishlist-id="${safeId}" onclick="event.stopPropagation();Wishlist.toggle('${safeId}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? '❤️' : '🤍'}</button>
           </div>
           <div class="product-card-body">
-            <div class="product-card-name">${p.name}</div>
+            <div class="product-card-name">${safeName}</div>
             <div class="product-card-rating">
               <span class="stars" style="color:#f5a623;font-size:0.9rem;">${starsHtml}</span>
-              <span style="font-size:0.8rem;font-weight:600;color:#f5a623;margin-left:2px;">${rating.toFixed(1)}</span>
-              <span class="rating-count">(${p.reviews || 0})</span>
+              <span style="font-size:0.8rem;font-weight:600;color:#f5a623;margin-left:2px;">${rating ? rating.toFixed(1) : "New"}</span>
+              <span class="rating-count">(${reviews})</span>
             </div>
             <div class="product-card-price">
-              <span class="price-current">₹${p.price}</span>
-              ${p.mrp > p.price ? `<span class="price-mrp">₹${p.mrp}</span><span class="price-off">Save ₹${p.mrp - p.price}</span>` : ''}
+              <span class="price-current">₹${price}</span>
+              ${mrp > price ? `<span class="price-mrp">₹${mrp}</span><span class="price-off">Save ₹${mrp - price}</span>` : ''}
             </div>
             <div style="display:flex;gap:8px;margin-top:auto;">
-              <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${p.id}')">
+              <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${safeId}')">
                 🛒 Add
               </button>
-              <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${p.id}')">
+              <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${safeId}')">
                 ⚡ Buy Now
               </button>
             </div>
@@ -488,7 +470,7 @@
         if (cat) tags.push(`<span class="active-filter-tag">${cat.icon} ${cat.name} <button onclick="selectCategory('all')" title="Clear">✕</button></span>`);
       }
       if (currentSearch) {
-        tags.push(`<span class="active-filter-tag">🔍 "${currentSearch}" <button onclick="clearSearch()" title="Clear">✕</button></span>`);
+        tags.push(`<span class="active-filter-tag">🔍 "${escapeHTML(currentSearch)}" <button onclick="clearSearch()" title="Clear">✕</button></span>`);
       }
       filterArea.innerHTML = tags.join(' ');
 
@@ -502,7 +484,7 @@
           <div class="no-products">
             <div class="no-icon">🔍</div>
             <h3>No products found</h3>
-            <p>${currentSearch ? `No results for "<strong>${currentSearch}</strong>". Try a different keyword.` : 'No products in this category yet.'}</p>
+            <p>${currentSearch ? `No results for "<strong>${escapeHTML(currentSearch)}</strong>". Try a different keyword.` : 'No products in this category yet.'}</p>
             <br/>
             <button class="btn-primary" onclick="selectCategory('all');clearSearch()">🛍️ View All Products</button>
           </div>`;

@@ -6,10 +6,13 @@ let isFirebaseActive = false;
 let fbAuth = null;
 let fbDb = null;
 let firebaseProductsCache = null;
+let firebaseInitPromise = null;
 
 const DB = {
   // ---- DYNAMIC FIREBASE LOADER ----
   async initFirebase() {
+    await this.loadFallbackCatalog();
+    await this.loadRemoteSettings();
     if (STORE.firebaseConfig && STORE.firebaseConfig.apiKey) {
       try {
         await this.loadSDKs();
@@ -18,12 +21,72 @@ const DB = {
         }
         fbAuth = firebase.auth();
         fbDb = firebase.firestore();
+        window.fbAuth = fbAuth;
+        window.fbDb = fbDb;
         isFirebaseActive = true;
         console.log("🔥 Firebase Hybrid Sync is active!");
         this.setupRealtimeSync();
+        return true;
       } catch (e) {
         console.error("❌ Failed to initialize Firebase:", e);
       }
+    }
+    return false;
+  },
+
+  waitForFirebase() {
+    return firebaseInitPromise || Promise.resolve(false);
+  },
+
+  async loadRemoteSettings() {
+    try {
+      const response = await fetch((STORE.apiBase || "") + "/api/settings", { cache: "no-cache" });
+      if (!response.ok) return false;
+      const result = await response.json();
+      if (result.ok) {
+        Object.assign(STORE, result.store || {});
+        Object.keys(result.delivery || {}).forEach(zone => {
+          DELIVERY[zone] = { ...(DELIVERY[zone] || {}), ...(result.delivery[zone] || {}) };
+        });
+        window.dispatchEvent(new Event("settingsSynced"));
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  },
+
+  async waitForAuthState() {
+    await this.waitForFirebase();
+    if (!fbAuth) return null;
+    return new Promise(resolve => {
+      const unsubscribe = fbAuth.onAuthStateChanged(user => {
+        unsubscribe();
+        resolve(user || null);
+      }, () => resolve(null));
+    });
+  },
+
+  async loadFallbackCatalog() {
+    try {
+      const dataScript = Array.from(document.scripts).find(script => /\/js\/data\.js(?:\?|$)/.test(script.src));
+      const siteRoot = dataScript ? new URL("../", dataScript.src) : new URL("./", document.baseURI);
+      const response = await fetch(new URL("data/catalog.json", siteRoot), { cache: "no-cache" });
+      if (!response.ok) throw new Error("Fallback catalog HTTP " + response.status);
+      const payload = await response.json();
+      const products = (Array.isArray(payload.products) ? payload.products : []).map(product => ({
+        ...product,
+        image: product.image && !/^(?:https?:|data:|blob:)/i.test(product.image)
+          ? new URL(product.image, siteRoot).href
+          : product.image
+      }));
+      if (products.length) {
+        firebaseProductsCache = products.filter(product => product && !product.archived && !product.isDeleted);
+        this.saveLocalProductCache(firebaseProductsCache);
+        window.dispatchEvent(new Event("productsSynced"));
+        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "versioned-backup", count: products.length } }));
+      }
+    } catch (error) {
+      console.warn("Versioned catalog fallback could not load:", error.message);
     }
   },
 
@@ -61,20 +124,20 @@ const DB = {
 
       products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      // Firestore is the source of truth. Full product images remain in memory
-      // so they do not overflow browser localStorage.
-      firebaseProductsCache = products;
-      this.saveLocalProductCache(products);
-      window.dispatchEvent(new Event("productsSynced"));
-    });
-
-    // Sync Orders
-    fbDb.collection("orders").onSnapshot(snapshot => {
-      const orders = [];
-      snapshot.forEach(doc => orders.push(doc.data()));
-      orders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-      localStorage.setItem("orders", JSON.stringify(orders));
-      window.dispatchEvent(new Event("ordersSynced"));
+      const active = products.filter(product => !product.archived && !product.isDeleted);
+      // Never replace a working catalog with a transient empty snapshot.
+      if (active.length > 0) {
+        firebaseProductsCache = active;
+        this.saveLocalProductCache(active);
+        window.dispatchEvent(new Event("productsSynced"));
+        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "firestore", count: active.length } }));
+      } else {
+        console.warn("Firestore returned no active products; preserving the last known good catalog.");
+        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "last-known-good", warning: "empty-firestore" } }));
+      }
+    }, error => {
+      console.error("Firestore product sync failed; keeping fallback catalog:", error);
+      window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "last-known-good", error: true } }));
     });
   },
 
@@ -96,24 +159,13 @@ const DB = {
     // Remove the obsolete demo catalog from browsers that cached it.
     raw = raw.filter(p => p && !String(p.id || "").startsWith("p_seed_"));
 
-    let needsResave = false;
     const products = raw.map((p, idx) => {
       if (!p || typeof p !== 'object') return null;
       if (!p.id) {
         p.id = "p_" + Date.now() + "_" + idx;
-        needsResave = true;
-      }
-      if (!p.rating || Number(p.rating) < 4.0) {
-        p.rating = parseFloat((4.0 + Math.random()).toFixed(1));
-        if (p.rating > 5.0) p.rating = 5.0;
-        needsResave = true;
       }
       return p;
-    }).filter(Boolean);
-
-    if (needsResave) {
-      this.saveLocalProductCache(products);
-    }
+    }).filter(p => p && !p.archived && !p.isDeleted);
     return products;
   },
   saveLocalProductCache(products) {
@@ -126,12 +178,11 @@ const DB = {
     });
 
     try {
-      localStorage.removeItem("products_backup");
+      const previous = localStorage.getItem("products");
+      if (previous && previous !== "[]") localStorage.setItem("products_last_good", previous);
       localStorage.setItem("products", JSON.stringify(lightweight));
     } catch (e) {
       console.warn("Local product cache skipped because browser storage is full.", e);
-      localStorage.removeItem("products");
-      localStorage.removeItem("products_backup");
     }
   },
   saveProducts(products) {
@@ -144,10 +195,8 @@ const DB = {
       product.id = "p_" + Date.now();
     }
     product.createdAt = product.createdAt || new Date().toISOString();
-    // ✅ Always set rating between 4.0 and 5.0
-    const baseRating = 4.0 + Math.random();
-    product.rating = parseFloat(Math.min(baseRating, 5.0).toFixed(1));
-    product.reviews = product.reviews || Math.floor(Math.random() * 50) + 5; // 5–54 reviews
+    product.rating = Math.max(0, Math.min(5, Number(product.rating) || 0));
+    product.reviews = Math.max(0, Number(product.reviews) || 0);
     product.sales = product.sales || 0;
 
     const products = this.getProducts();
@@ -155,9 +204,6 @@ const DB = {
     filtered.unshift(product);
     this.saveProducts(filtered);
 
-    if (isFirebaseActive) {
-      fbDb.collection("products").doc(product.id).set(product);
-    }
     return product;
   },
   updateProduct(id, updates) {
@@ -168,20 +214,30 @@ const DB = {
       products[idx] = updated;
       this.saveProducts(products);
 
-      if (isFirebaseActive) {
-        fbDb.collection("products").doc(id).update(updates);
-      }
       return updated;
     }
     return null;
   },
   deleteProduct(id) {
+    const product = this.getProductById(id);
+    if (!product) return null;
     const products = this.getProducts().filter(p => p.id !== id);
     this.saveProducts(products);
-
-    if (isFirebaseActive) {
-      fbDb.collection("products").doc(id).delete();
+    return { ...product, archived: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  },
+  async persistProduct(product) {
+    if (window.StoreApi) {
+      const result = await StoreApi.saveProduct(product);
+      return result.product;
     }
+    await this.waitForFirebase();
+    if (!isFirebaseActive) throw new Error("Secure product service is unavailable");
+    await fbDb.collection("products").doc(product.id).set(product, { merge: true });
+    return product;
+  },
+  async persistArchive(id) {
+    if (window.StoreApi) return StoreApi.archiveProduct(id);
+    throw new Error("Secure archive service is unavailable");
   },
   getProductById(id) {
     if (!id && id !== 0) return null;
@@ -293,10 +349,12 @@ const DB = {
     localStorage.setItem("users", JSON.stringify(users));
   },
   async registerUser(data) {
+    await this.waitForFirebase();
     if (isFirebaseActive) {
       try {
         // 1. Create in Firebase Auth
         const cred = await fbAuth.createUserWithEmailAndPassword(data.email, data.password);
+        cred.user.sendEmailVerification().catch(error => console.warn("Verification email could not be sent:", error.message));
         const user = {
           id: cred.user.uid,
           name: data.name,
@@ -310,24 +368,11 @@ const DB = {
       } catch (e) {
         return { error: e.message };
       }
-    } else {
-      // Local storage fallback
-      const users = this.getUsers();
-      if (users.find(u => u.email === data.email)) return { error: "Email already registered!" };
-      const user = {
-        id: "u_" + Date.now(),
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        password: btoa(data.password),
-        createdAt: new Date().toISOString(),
-      };
-      users.push(user);
-      this.saveUsers(users);
-      return { user };
     }
+    return { error: "Secure sign-up is temporarily unavailable. Please try again." };
   },
   async loginUser(email, password) {
+    await this.waitForFirebase();
     if (isFirebaseActive) {
       try {
         const cred = await fbAuth.signInWithEmailAndPassword(email, password);
@@ -340,13 +385,8 @@ const DB = {
       } catch (e) {
         return { error: e.message };
       }
-    } else {
-      // Local storage fallback
-      const users = this.getUsers();
-      const user = users.find(u => u.email === email && u.password === btoa(password));
-      if (!user) return { error: "Invalid email or password!" };
-      return { user };
     }
+    return { error: "Secure login is temporarily unavailable. Please try again." };
   },
   getUserById(id) {
     if (!id) return null;
@@ -420,53 +460,20 @@ const DB = {
   async updateUserPassword(userId, oldPassword, newPassword) {
     const session = this.getSession();
     const userInfo = session || {};
-    
-    // Strict password validation
     const val = validatePassword(newPassword, userInfo);
-    if (!val.valid) {
-      return { error: val.error };
+    if (!val.valid) return { error: val.error };
+    await this.waitForFirebase();
+    if (!fbAuth || !fbAuth.currentUser || !session || !session.email) {
+      return { error: "Please log in again before changing your password." };
     }
-
-    const users = this.getUsers();
-    let idx = users.findIndex(u => 
-      u.id === userId || 
-      (u.email && session && u.email === session.email) ||
-      (session && u.id === session.id)
-    );
-
-    if (idx === -1 && session) {
-      const newUser = {
-        id: session.id || userId || "u_" + Date.now(),
-        name: session.name || "Customer",
-        email: session.email || "",
-        password: btoa(newPassword),
-        createdAt: new Date().toISOString()
-      };
-      users.push(newUser);
-      this.saveUsers(users);
+    try {
+      const credential = firebase.auth.EmailAuthProvider.credential(session.email, oldPassword);
+      await fbAuth.currentUser.reauthenticateWithCredential(credential);
+      await fbAuth.currentUser.updatePassword(newPassword);
       return { success: true };
+    } catch (error) {
+      return { error: error.message || "Password update failed." };
     }
-
-    if (idx !== -1) {
-      if (users[idx].password && users[idx].password !== btoa(oldPassword)) {
-        return { error: "Current password does not match!" };
-      }
-      users[idx].password = btoa(newPassword);
-      users[idx].updatedAt = new Date().toISOString();
-      this.saveUsers(users);
-
-      if (isFirebaseActive && typeof fbAuth !== 'undefined' && fbAuth.currentUser) {
-        try {
-          await fbAuth.currentUser.updatePassword(newPassword);
-        } catch (e) {
-          console.warn("Firebase password update note:", e);
-        }
-      }
-
-      return { success: true };
-    }
-
-    return { error: "User profile not found. Please log in again." };
   },
   async sendPasswordReset(email) {
     if (isFirebaseActive) {
@@ -479,7 +486,7 @@ const DB = {
 
   // ---- SESSION ----
   setSession(user) {
-    localStorage.setItem("session", JSON.stringify({ id: user.id, name: user.name, email: user.email }));
+    localStorage.setItem("session", JSON.stringify({ id: user.id, name: user.name, email: user.email, phone: user.phone || "" }));
   },
   getSession() {
     return JSON.parse(localStorage.getItem("session") || "null");
@@ -558,17 +565,18 @@ const DB = {
     return null;
   },
   deleteOrder(id) {
-    let orders = this.getOrders();
-    orders = orders.filter(o => o.id !== id);
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === id);
+    if (!order) return false;
+    order.archived = true;
+    order.archivedAt = new Date().toISOString();
+    order.updatedAt = order.archivedAt;
     this.saveOrders(orders);
-    if (isFirebaseActive) {
-      fbDb.collection("orders").doc(id).delete().catch(e => console.error("Firebase order delete error:", e));
-    }
     return true;
   },
   getOrdersByUser(userIdOrUser) {
     const orders = this.getOrders();
-    if (!userIdOrUser) return orders;
+    if (!userIdOrUser) return [];
 
     let targetId = typeof userIdOrUser === "object" ? userIdOrUser.id : userIdOrUser;
     let targetEmail = typeof userIdOrUser === "object" ? userIdOrUser.email : "";
@@ -581,8 +589,16 @@ const DB = {
       return false;
     });
 
-    // Fallback: If no strict user match found, return all orders in local storage so user can manage their orders!
-    return userOrders.length > 0 ? userOrders : orders;
+    return userOrders;
+  },
+
+  async createOrder(order) {
+    if (!window.StoreApi) throw new Error("Secure order service is unavailable");
+    const result = await StoreApi.createOrder(order);
+    const orders = this.getOrders().filter(existing => existing.id !== result.order.id);
+    orders.unshift(result.order);
+    this.saveOrders(orders);
+    return result;
   },
 
   // ---- REVENUE ----
@@ -611,7 +627,7 @@ const DB = {
 };
 
 // Start Firebase sync if configured
-DB.initFirebase();
+firebaseInitPromise = DB.initFirebase();
 
 // Global Strict Password Validator Function (Requirement 3)
 function validatePassword(password, userInfo = {}) {

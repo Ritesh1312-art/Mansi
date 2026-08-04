@@ -4,18 +4,10 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Checkout — Mansi Jewellery & Cosmetics</title>
-  <meta name="description" content="Complete your order with secure payment options. COD and online payment available."/>
+  <meta name="description" content="Complete your order with secure account validation, COD, and configured UPI options."/>
   <link rel="stylesheet" href="css/style.css"/>
-  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 </head>
 <body>
-
-<!-- AD 1 — SABSE UPAR -->
-<div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-  <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-    <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-  </a>
-</div>
 
 <!-- OFFER MARQUEE — Dynamic from Admin Settings -->
 <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
@@ -29,7 +21,11 @@
       if (banner) {
         var wrap = document.getElementById("offer-banner-wrap");
         var inner = document.getElementById("offer-banner-inner");
-        inner.innerHTML = [banner, banner, banner].map(t => '<span>' + t + '</span>').join('');
+        inner.replaceChildren(...[banner, banner, banner].map(function(text) {
+          var span = document.createElement("span");
+          span.textContent = text;
+          return span;
+        }));
         wrap.style.display = "";
       }
     } catch(e) {}
@@ -111,13 +107,6 @@
         </div>
       </div>
 
-      <!-- AD 2 — BICH MEIN -->
-      <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
-        <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-          <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-        </a>
-      </div>
-
       <!-- Section 2: Payment -->
       <div class="checkout-section">
         <h3>💳 Payment Method</h3>
@@ -173,13 +162,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<!-- AD 3 — SABSE LAST MEIN -->
-<div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-  <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-    <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-  </a>
 </div>
 
 <!-- FOOTER -->
@@ -261,6 +243,7 @@
 
 <script src="js/config.js"></script>
 <script src="js/data.js"></script>
+<script src="js/api-client.js"></script>
 <script src="js/app.js"></script>
 <script>
   loadTheme();
@@ -278,11 +261,7 @@
   const cartItems = Cart.get();
   const subtotal = Cart.total();
 
-  // Show UPI option if configured in settings
-  const hasUpi = STORE.gpayUpi || STORE.phonepeUpi || STORE.paytmUpi;
-  if (hasUpi) {
-    document.getElementById("opt-upi").style.display = "flex";
-  }
+  let hasUpi = false;
 
   // Populate states
   const stateSelect = document.getElementById("c-state");
@@ -313,9 +292,16 @@
 
     if (userSavedAddressesList.length > 0 && selectWrap && selectElem) {
       selectWrap.style.display = "block";
-      selectElem.innerHTML = userSavedAddressesList.map((addr, idx) => `
-        <option value="${idx}">🏡 ${addr.isDefault ? 'Default' : 'Saved'} Address: ${addr.house}, ${addr.street}, ${addr.city} (${addr.pincode})</option>
-      `).join("") + '<option value="new">➕ Enter a New Address</option>';
+      const options = userSavedAddressesList.map((addr, idx) => {
+        const option = document.createElement("option");
+        option.value = String(idx);
+        option.textContent = `🏡 ${addr.isDefault ? "Default" : "Saved"} Address: ${addr.house || ""}, ${addr.street || ""}, ${addr.city || ""} (${addr.pincode || ""})`;
+        return option;
+      });
+      const newOption = document.createElement("option");
+      newOption.value = "new";
+      newOption.textContent = "➕ Enter a New Address";
+      selectElem.replaceChildren(...options, newOption);
 
       fillAddressFields(userSavedAddressesList[0]);
     } else if (fullUser.address) {
@@ -355,12 +341,16 @@
   function renderSummary() {
     const el = document.getElementById("summary-items");
     if (!cartItems.length) { location.href = "cart.html"; return; }
-    el.innerHTML = cartItems.map(i => `
+    el.innerHTML = cartItems.map(i => {
+      const qty = Math.max(1, Number(i.qty) || 1);
+      const price = Math.max(0, Number(i.price) || 0);
+      return `
       <div class="mini-item">
-        <img src="${i.image || ''}" onerror="this.src='https://via.placeholder.com/50'" alt="${i.name}"/>
-        <div class="mini-item-name">${i.name} × ${i.qty}</div>
-        <div class="mini-item-price">₹${i.price * i.qty}</div>
-      </div>`).join("");
+        <img src="${escapeHTML(safeImageUrl(i.image))}" onerror="this.src='assets/brand/icon.svg'" alt="${escapeHTML(i.name || "Product")}"/>
+        <div class="mini-item-name">${escapeHTML(i.name || "Product")} × ${qty}</div>
+        <div class="mini-item-price">₹${(price * qty).toFixed(2)}</div>
+      </div>`;
+    }).join("");
     document.getElementById("s-subtotal").textContent = "₹" + subtotal;
     updateTotal();
   }
@@ -421,6 +411,7 @@
 
   function selectPayment(mode) {
     currentPayment = mode;
+    document.querySelectorAll('input[name="payment"]').forEach(input => { input.checked = input.value === mode; });
     document.getElementById("opt-online").classList.toggle("selected", mode === "online");
     document.getElementById("opt-cod").classList.toggle("selected", mode === "cod");
     if (hasUpi) {
@@ -429,25 +420,21 @@
     updateTotal();
   }
 
-  // Check if Razorpay is configured
-  const hasRazorpay = STORE.razorpayKey && STORE.razorpayKey !== "rzp_test_XXXXXXXXXX" && STORE.razorpayKey.trim() !== "";
-  if (!hasRazorpay) {
+  function refreshPaymentAvailability() {
+    hasUpi = Boolean(STORE.gpayUpi || STORE.phonepeUpi || STORE.paytmUpi);
     document.getElementById("opt-online").style.display = "none";
+    document.getElementById("opt-upi").style.display = hasUpi ? "flex" : "none";
+    if (currentPayment === "online" || (currentPayment === "upi" && !hasUpi)) {
+      currentPayment = hasUpi ? "upi" : "cod";
+    }
+    selectPayment(currentPayment);
   }
 
-  // Init selected state dynamically
-  if (hasRazorpay) {
-    currentPayment = "online";
-    document.getElementById("opt-online").classList.add("selected");
-  } else if (hasUpi) {
-    currentPayment = "upi";
-    document.getElementById("opt-upi").classList.add("selected");
-  } else {
-    currentPayment = "cod";
-    document.getElementById("opt-cod").classList.add("selected");
-  }
+  refreshPaymentAvailability();
+  window.addEventListener("settingsSynced", refreshPaymentAvailability);
+  DB.waitForFirebase().then(refreshPaymentAvailability).catch(() => {});
 
-  function placeOrder() {
+  async function placeOrder() {
     // Validate
     const name = document.getElementById("c-name").value.trim();
     const phone = document.getElementById("c-phone").value.trim();
@@ -497,9 +484,13 @@
     };
 
     if (currentPayment === "cod") {
-      const newOrder = DB.addOrder(order);
-      Cart.clear();
-      showSuccess(newOrder);
+      try {
+        const result = await DB.createOrder(order);
+        Cart.clear();
+        showSuccess(result.order);
+      } catch (error) {
+        alert("Order could not be placed. Nothing was charged. " + error.message);
+      }
     } else if (currentPayment === "upi") {
       const upiId = STORE.gpayUpi || STORE.phonepeUpi || STORE.paytmUpi;
       if (!upiId) {
@@ -524,36 +515,21 @@
       window.pendingUpiOrder.id = tempOrderId;
       document.getElementById("upi-modal").classList.add("open");
     } else {
-      // Online payment via Razorpay
-      if (typeof Razorpay === "undefined") {
-        alert("Payment gateway not loaded. Please try COD or refresh the page.");
-        return;
-      }
-      const newOrder = DB.addOrder(order);
-      const rzp = new Razorpay({
-        key: STORE.razorpayKey,
-        amount: order.grandTotal * 100,
-        currency: "INR",
-        name: STORE.name,
-        description: `Order — ${cartItems.length} item(s)`,
-        handler: function(response) {
-          DB.updateOrderStatus(newOrder.id, "confirmed");
-          Cart.clear();
-          showSuccess(newOrder);
-        },
-        prefill: { name, contact: phone },
-        theme: { color: "#F59E0B" }
-      });
-      rzp.open();
+      alert("Razorpay remains in test mode and will be enabled only after server-side signature verification is configured. Please use UPI or COD.");
     }
   }
 
-  function confirmUpiPayment() {
+  async function confirmUpiPayment() {
     if (!window.pendingUpiOrder) return;
-    const finalOrder = DB.addOrder(window.pendingUpiOrder);
-    Cart.clear();
-    closeUpiModal();
-    showSuccess(finalOrder);
+    try {
+      const result = await DB.createOrder(window.pendingUpiOrder);
+      Cart.clear();
+      closeUpiModal();
+      showSuccess(result.order);
+      window.pendingUpiOrder = null;
+    } catch (error) {
+      alert("Order could not be saved. Your UPI claim remains unverified. " + error.message);
+    }
   }
 
   function closeUpiModal() {
@@ -573,75 +549,7 @@
     
     document.getElementById("success-modal").classList.add("open");
     
-    // Background Telegram Notification to Store Owner
-    sendTelegramOrderAlert(order);
-  }
-
-  function sendTelegramOrderAlert(order) {
-    const token = (STORE.telegramBotToken || "").trim();
-    const chatId = (STORE.telegramChatId || "").trim();
-
-    if (!token || !chatId) {
-      console.log("ℹ️ Telegram not configured. Skipping alert.");
-      return;
-    }
-
-    const esc = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const itemsList = (order.items || []).map(i => `• ${esc(i.name)} (x${i.qty}) — ₹${i.price * i.qty}`).join('\n');
-    const addr = order.address || {};
-    const fullAddr = [addr.house, addr.street, addr.city, addr.state, addr.pincode].filter(Boolean).map(esc).join(', ');
-
-    const htmlMessage =
-`🛍️ <b>NEW ORDER RECEIVED! #${esc(order.id)}</b>
-
-👤 <b>Customer Name:</b> ${esc(order.customerName)}
-📞 <b>Phone:</b> ${esc(order.phone)}
-📍 <b>Address:</b> ${fullAddr}
-
-📦 <b>Items Ordered:</b>
-${itemsList}
-
-💰 <b>Subtotal:</b> ₹${order.subtotal}
-🚚 <b>Delivery Charge:</b> ₹${order.deliveryCharge}
-💵 <b>Grand Total:</b> ₹${order.grandTotal}
-💳 <b>Payment Mode:</b> ${esc((order.paymentMode || '').toUpperCase())}`;
-
-    const tgUrl = `https://api.telegram.org/bot${token}/sendMessage`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    fetch(tgUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: htmlMessage,
-        parse_mode: "HTML"
-      }),
-      signal: controller.signal
-    })
-    .then(res => res.json())
-    .then(data => {
-      clearTimeout(timeoutId);
-      if (data.ok) {
-        console.log("✅ Telegram order alert sent successfully!");
-      } else {
-        console.warn("⚠️ Telegram HTML format rejected:", data.description);
-        // Fallback: send as plain text without HTML tags
-        fetch(tgUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: htmlMessage.replace(/<[^>]*>/g, '')
-          })
-        });
-      }
-    })
-    .catch(err => {
-      clearTimeout(timeoutId);
-      console.warn("⚠️ Telegram notification fetch error:", err.message);
-    });
+    // Owner Telegram, linked-customer Telegram, and email are sent server-side.
   }
 
   renderSummary();

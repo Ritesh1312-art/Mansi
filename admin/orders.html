@@ -34,7 +34,11 @@
     <div class="admin-auth-card">
       <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
       <h2 style="margin-bottom: 8px;">Admin Login</h2>
-      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Enter password to access the panel</p>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Sign in with an authorized Firebase admin account.</p>
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Admin Email</label>
+        <input type="email" id="admin-email-input" class="form-input" placeholder="admin@example.com" autocomplete="username"/>
+      </div>
       <div class="form-group" style="text-align: left;">
         <label class="form-label">Password</label>
         <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
@@ -48,13 +52,6 @@
   </div>
 
   <div id="admin-content" style="display: none;">
-    <!-- AD 1 — SABSE UPAR -->
-    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-      </a>
-    </div>
-
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
@@ -90,13 +87,6 @@
           </div>
         </div>
 
-        <!-- AD 2 — BICH MEIN -->
-        <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-          </a>
-        </div>
-
         <!-- ORDERS TABLE -->
         <div style="background: var(--bg-card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto;">
           <table class="admin-table">
@@ -120,52 +110,58 @@
           </table>
         </div>
 
-        <!-- AD 3 — SABSE LAST MEIN -->
-        <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-          </a>
-        </div>
       </main>
     </div>
   </div>
 
   <script src="../js/config.js"></script>
   <script src="../js/data.js"></script>
+  <script src="../js/api-client.js"></script>
+  <script src="../js/admin-auth.js"></script>
   <script src="../js/app.js"></script>
   <script>
     loadTheme();
 
-    function checkAdminAuth() {
-      if (localStorage.getItem("adminAuth") === "true") {
+    async function checkAdminAuth() {
+      if (await AdminSession.authorizedUser()) {
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         renderOrdersTable();
       }
     }
 
-    function verifyAdminPassword() {
+    async function verifyAdminPassword() {
+      const email = document.getElementById("admin-email-input").value.trim();
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
-      if (typed === STORE.adminPassword) {
-        localStorage.setItem("adminAuth", "true");
+      try {
+        await AdminSession.login(email, typed);
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         err.style.display = "none";
         renderOrdersTable();
-      } else {
+      } catch (error) {
+        err.textContent = "❌ " + (error.message || "Admin login failed");
         err.style.display = "block";
       }
     }
 
-    function logoutAdmin() {
-      localStorage.removeItem("adminAuth");
+    async function logoutAdmin() {
+      await AdminSession.logout();
       location.reload();
     }
 
-    function renderOrdersTable() {
+    async function renderOrdersTable() {
       const filter = document.getElementById("status-filter").value;
-      const orders = DB.getOrders();
+      let orders = [];
+      try {
+        const result = await StoreApi.getOrders("admin");
+        orders = result.orders || [];
+        DB.saveOrders(orders);
+      } catch (error) {
+        console.error("Admin orders load failed:", error);
+        orders = DB.getOrders();
+      }
       const list = document.getElementById("admin-orders-list");
 
       const filtered = filter === "all" ? orders : orders.filter(o => o.status === filter);
@@ -175,59 +171,63 @@
         return;
       }
 
+      const allowedStatuses = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
       list.innerHTML = filtered.map(o => {
+        const status = allowedStatuses.has(o.status) ? o.status : "pending";
         let badgeClass = "badge-warning";
-        if (o.status === "confirmed") badgeClass = "badge-info";
-        if (o.status === "shipped") badgeClass = "badge-warning";
-        if (o.status === "delivered") badgeClass = "badge-success";
-        if (o.status === "cancelled") badgeClass = "badge-error";
+        if (status === "confirmed") badgeClass = "badge-info";
+        if (status === "shipped") badgeClass = "badge-warning";
+        if (status === "delivered") badgeClass = "badge-success";
+        if (status === "cancelled") badgeClass = "badge-error";
 
-        const itemsCount = o.items.reduce((sum, item) => sum + item.qty, 0);
-        const itemsList = o.items.map(item => `${item.name} (x${item.qty})`).join(", ");
-
-        // WhatsApp message contents
-        const statusMsg = encodeURIComponent(
-          `Hello ${o.customerName},\nYour Order #${o.id} at Mansi Jewellery & Cosmetics has been marked as *${o.status.toUpperCase()}*.\nTotal Order Amount: ₹${o.grandTotal}\nThank you for shopping with us!`
-        );
+        const items = Array.isArray(o.items) ? o.items : [];
+        const itemsCount = items.reduce((sum, item) => sum + Math.max(0, Number(item.qty) || 0), 0);
+        const itemsList = items.map(item => `${item.name || "Product"} (x${Math.max(0, Number(item.qty) || 0)})`).join(", ");
+        const address = o.address && typeof o.address === "object" ? o.address : {};
+        const orderId = String(o.id || "").replace(/[^A-Za-z0-9_-]/g, "");
+        const phone = String(o.phone || "").replace(/[^0-9+]/g, "");
+        const telegramUsername = String(STORE.telegramUsername || "MansiJewellery").replace(/^@/, "").replace(/[^A-Za-z0-9_]/g, "");
+        const createdAt = new Date(o.createdAt);
+        const dateLabel = Number.isNaN(createdAt.getTime()) ? "—" : `${createdAt.toLocaleDateString()} ${createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
 
         return `
           <tr>
-            <td><strong>${o.id}</strong></td>
+            <td><strong>${escapeHTML(orderId)}</strong></td>
             <td>
-              <div style="font-weight:700;">${o.customerName}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${o.address.house}, ${o.address.street}, ${o.address.city}, ${o.address.state} - ${o.address.pincode}">
-                📍 ${o.address.city}, ${o.address.pincode}
+              <div style="font-weight:700;">${escapeHTML(o.customerName || "Customer")}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHTML([address.house, address.street, address.city, address.state, address.pincode].filter(Boolean).join(", "))}">
+                📍 ${escapeHTML(address.city || "—")}, ${escapeHTML(address.pincode || "—")}
               </div>
             </td>
             <td>
-              <a href="tel:${o.phone}" style="color:var(--primary);">${o.phone}</a>
+              <a href="tel:${phone}" style="color:var(--primary);">${escapeHTML(phone || "—")}</a>
             </td>
             <td>
-              <span title="${itemsList}" style="cursor:help;border-bottom:1px dashed var(--text-light);">${itemsCount} Item(s)</span>
+              <span title="${escapeHTML(itemsList)}" style="cursor:help;border-bottom:1px dashed var(--text-light);">${itemsCount} Item(s)</span>
             </td>
-            <td style="color:var(--primary);font-weight:700;">₹${o.grandTotal}</td>
-            <td style="color:var(--text-muted);">₹${o.deliveryCharge}</td>
-            <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--bg-input);border-radius:4px;font-weight:700;">${o.paymentMode.toUpperCase()}</span></td>
+            <td style="color:var(--primary);font-weight:700;">₹${Math.max(0, Number(o.grandTotal) || 0).toFixed(2)}</td>
+            <td style="color:var(--text-muted);">₹${Math.max(0, Number(o.deliveryCharge) || 0).toFixed(2)}</td>
+            <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--bg-input);border-radius:4px;font-weight:700;">${escapeHTML(String(o.paymentMode || "unknown").toUpperCase())}</span></td>
             <td>
-              <span class="badge ${badgeClass}">${o.status.toUpperCase()}</span>
-              ${o.cancelReason ? `<div style="font-size:0.7rem;color:var(--error);margin-top:2px;">Reason: ${o.cancelReason}</div>` : ''}
+              <span class="badge ${badgeClass}">${status.toUpperCase()}</span>
+              ${o.cancelReason ? `<div style="font-size:0.7rem;color:var(--error);margin-top:2px;">Reason: ${escapeHTML(o.cancelReason)}</div>` : ''}
             </td>
-            <td style="font-size:0.78rem;color:var(--text-muted);">${new Date(o.createdAt).toLocaleDateString()} ${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">${escapeHTML(dateLabel)}</td>
             <td>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <select onchange="updateStatus('${o.id}', this.value)" class="form-input" style="padding:6px 10px;font-size:0.78rem;width:auto;">
-                  <option value="pending" ${o.status === "pending" ? "selected" : ""}>Pending</option>
-                  <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>Confirmed</option>
-                  <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>Shipped</option>
-                  <option value="delivered" ${o.status === "delivered" ? "selected" : ""}>Delivered</option>
-                  <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>Cancelled</option>
+                <select data-order-id="${escapeHTML(orderId)}" class="form-input order-status-select" style="padding:6px 10px;font-size:0.78rem;width:auto;">
+                  <option value="pending" ${status === "pending" ? "selected" : ""}>Pending</option>
+                  <option value="confirmed" ${status === "confirmed" ? "selected" : ""}>Confirmed</option>
+                  <option value="shipped" ${status === "shipped" ? "selected" : ""}>Shipped</option>
+                  <option value="delivered" ${status === "delivered" ? "selected" : ""}>Delivered</option>
+                  <option value="cancelled" ${status === "cancelled" ? "selected" : ""}>Cancelled</option>
                 </select>
-                <a href="https://t.me/${(STORE.telegramUsername || 'MansiJewellery').replace('@', '')}" target="_blank" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#0088cc;color:#0088cc;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
+                <a href="https://t.me/${telegramUsername}" target="_blank" rel="noopener" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:#0088cc;color:#0088cc;text-decoration:none;display:inline-flex;align-items:center;border-radius:10px;font-weight:600;">
                   ✈️ Telegram
                 </a>
-                ${o.status.toLowerCase() === "delivered" ? `
-                  <button onclick="deleteDeliveredOrder('${o.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);border-radius:10px;font-weight:700;cursor:pointer;" title="Delete Delivered Order Record">
-                    🗑️ Delete
+                ${status === "delivered" ? `
+                  <button data-order-id="${escapeHTML(orderId)}" class="btn-outline archive-order-btn" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);border-radius:10px;font-weight:700;cursor:pointer;" title="Archive Delivered Order Record">
+                    📦 Archive
                   </button>
                 ` : ''}
               </div>
@@ -235,19 +235,33 @@
           </tr>
         `;
       }).join("");
+      list.querySelectorAll(".order-status-select").forEach(select => {
+        select.addEventListener("change", () => updateStatus(select.dataset.orderId, select.value));
+      });
+      list.querySelectorAll(".archive-order-btn").forEach(button => {
+        button.addEventListener("click", () => deleteDeliveredOrder(button.dataset.orderId));
+      });
     }
 
-    function updateStatus(orderId, newStatus) {
-      DB.updateOrderStatus(orderId, newStatus);
-      renderOrdersTable();
-      Cart.showToast("Order status updated!");
+    async function updateStatus(orderId, newStatus) {
+      try {
+        await StoreApi.updateOrderStatus(orderId, newStatus);
+        await renderOrdersTable();
+        Cart.showToast("Order status updated securely.");
+      } catch (error) {
+        alert("Status update failed. " + error.message);
+        await renderOrdersTable();
+      }
     }
 
-    function deleteDeliveredOrder(orderId) {
-      if (confirm(`⚠️ Are you sure you want to delete delivered order #${orderId}? This record will be permanently deleted.`)) {
-        DB.deleteOrder(orderId);
-        renderOrdersTable();
-        Cart.showToast(`🗑️ Delivered Order #${orderId} deleted successfully!`);
+    async function deleteDeliveredOrder(orderId) {
+      if (!confirm(`Archive delivered order #${orderId}? The record remains recoverable.`)) return;
+      try {
+        await StoreApi.archiveOrder(orderId);
+        await renderOrdersTable();
+        Cart.showToast(`📦 Delivered order #${orderId} archived safely.`);
+      } catch (error) {
+        alert("Archive failed. Nothing was removed. " + error.message);
       }
     }
 

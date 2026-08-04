@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Orders — Mansi Jewellery &amp; Cosmetics</title>
-  <meta name="description" content="Track all your orders from Mansi Jewellery &amp; Cosmetics. View order status, details and track via WhatsApp." />
+  <meta name="description" content="Track your account orders from Mansi Jewellery &amp; Cosmetics and contact the store through Telegram or email." />
   <link rel="stylesheet" href="css/style.css?v=3.0" />
   <style>
     .page-title-section {
@@ -58,21 +58,14 @@
   </style>
 </head>
 <body>
-  <!-- AD1-TOP -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
-
   <!-- OFFER MARQUEE -->
   <div class="offer-banner">
     <div class="offer-banner-inner">
-      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>✨ Browse the latest jewellery and cosmetics collection</span>
       <span>💍 New Jewellery Collection Arrived!</span>
       <span>📦 COD Available All Over India</span>
-      <span>⭐ Trusted by 500+ Customers in Raipur</span>
-      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>🛡️ Products are backed up to the linked Google Sheet</span>
+      <span>✨ Browse the latest jewellery and cosmetics collection</span>
     </div>
   </div>
 
@@ -114,29 +107,15 @@
     <span class="orders-count" id="orders-count"></span>
   </div>
 
-  <!-- AD2-MIDDLE -->
-  <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
-
   <!-- ORDERS LIST -->
   <div class="orders-page" id="orders-container"></div>
-
-  <!-- AD3-BOTTOM -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
 
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="nav-logo-text" style="font-size:1.2rem;"><span style="color:var(--primary)">Mansi</span> Jewellery &amp; Cosmetics</div>
-        <p>Premium quality jewellery, cosmetics &amp; more. Trusted by 500+ customers in Raipur and all over India. COD available.</p>
+        <p>Current jewellery, cosmetics and gift catalogue with secure account-based order history.</p>
       </div>
       <div class="footer-col">
         <h4>Quick Links</h4>
@@ -147,7 +126,7 @@
       </div>
       <div class="footer-col">
         <h4>Contact Us</h4>
-        <a href="https://wa.me/919876543210" target="_blank">📱 WhatsApp Us</a>
+        <a href="https://t.me/MansiJewellery" target="_blank" rel="noopener">✈️ Telegram Support</a>
         <a href="mailto:mansialwani5@gmail.com">📧 Email Us (mansialwani5@gmail.com)</a>
         <a href="#">📍 Ward No 47, Raipur, CG</a>
       </div>
@@ -160,6 +139,7 @@
 
   <script src="js/config.js?v=3.0"></script>
   <script src="js/data.js?v=3.0"></script>
+  <script src="js/api-client.js?v=4.0"></script>
   <script src="js/app.js?v=3.0"></script>
   <script>
     loadTheme();
@@ -196,8 +176,16 @@
       return `https://t.me/${username}`;
     }
 
-    function renderOrders() {
-      const orders = DB.getOrdersByUser(session);
+    async function renderOrders() {
+      let orders = [];
+      try {
+        const result = await StoreApi.getOrders();
+        orders = result.orders || [];
+        DB.saveOrders(orders);
+      } catch (error) {
+        console.error("Orders load failed:", error);
+        orders = DB.getOrdersByUser(session);
+      }
       const container = document.getElementById('orders-container');
       const countEl = document.getElementById('orders-count');
 
@@ -220,7 +208,7 @@
       container.innerHTML = orders.map(order => {
         const itemsHTML = order.items.map(item => `
           <div class="order-preview-row">
-            <span class="order-preview-name">${item.name} <span style="color:var(--text-muted);">× ${item.qty}</span></span>
+            <span class="order-preview-name">${escapeHTML(item.name)} <span style="color:var(--text-muted);">× ${Number(item.qty) || 0}</span></span>
             <span class="order-preview-price">${formatCurrency(item.price * item.qty)}</span>
           </div>`).join('');
 
@@ -230,16 +218,19 @@
 
         const statusLower = (order.status || 'pending').toLowerCase();
         const isCancellable = statusLower !== 'shipped' && statusLower !== 'delivered' && statusLower !== 'cancelled';
+        const safeOrderId = safeProductId(order.id);
+        const safeCity = escapeHTML(order.address?.city || "");
+        const safeReason = escapeHTML(order.cancelReason || "");
 
         return `
           <div class="order-card">
             <div class="order-card-header">
               <div>
-                <div class="order-id">🧾 ${order.id}</div>
+                <div class="order-id">🧾 ${escapeHTML(order.id)}</div>
                 <div class="order-meta">
                   <span class="order-meta-item">📅 ${formatDate(order.createdAt)}</span>
                   <span class="order-meta-item">💳 ${order.paymentMode === 'cod' ? 'Cash on Delivery' : 'Online (Prepaid)'}</span>
-                  ${addr ? `<span class="order-meta-item">📍 ${order.address.city}</span>` : ''}
+                  ${addr ? `<span class="order-meta-item">📍 ${safeCity}</span>` : ''}
                 </div>
               </div>
               ${getStatusBadge(order.status)}
@@ -256,7 +247,7 @@
 
             ${order.status === 'cancelled' ? `
               <div style="margin-top:12px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px dashed var(--error);border-radius:10px;font-size:0.82rem;color:var(--error);">
-                ❌ Order Cancelled ${order.cancelReason ? `(${order.cancelReason})` : ''}
+                ❌ Order Cancelled ${safeReason ? `(${safeReason})` : ''}
               </div>
             ` : ''}
 
@@ -268,7 +259,7 @@
                 ${order.status === 'delivered' ? '<span style="font-size:0.82rem;color:var(--success);font-weight:600;">✅ Order Delivered!</span>' : ''}
               </div>
               ${isCancellable ? `
-                <button onclick="promptCancelOrder('${order.id}')" style="background:transparent;border:1px solid var(--error);color:var(--error);padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                <button onclick="promptCancelOrder('${safeOrderId}')" style="background:transparent;border:1px solid var(--error);color:var(--error);padding:8px 16px;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
                   ❌ Cancel Order
                 </button>
               ` : ''}
@@ -277,14 +268,16 @@
       }).join('');
     }
 
-    function promptCancelOrder(orderId) {
+    async function promptCancelOrder(orderId) {
       const reason = prompt("Why do you want to cancel this order?\n(e.g., Mind changed / Wrong address / Ordered by mistake)", "Mind changed");
       if (reason === null) return; // User clicked Cancel in prompt
 
-      const updated = DB.cancelOrder(orderId, reason.trim() || "Mind changed");
-      if (updated) {
+      try {
+        await StoreApi.cancelOrder(orderId, reason.trim() || "Mind changed");
         Cart.showToast(`Order #${orderId} cancelled successfully.`);
-        renderOrders();
+        await renderOrders();
+      } catch (error) {
+        alert("Cancellation failed. " + error.message);
       }
     }
 

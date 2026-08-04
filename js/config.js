@@ -4,16 +4,19 @@
 const defaultStore = {
   name: "Mansi Jewellery & Cosmetics",
   tagline: "Apna Local Market — Style Meets Tradition",
-  whatsapp: "919876543210", 
   address: "Ward No 47, Near Gurudwara, Raipur, Chhattisgarh",
   city: "Raipur",
   pincode: "492001",
   email: "mansialwani5@gmail.com",
   phone: "+91 98765 43210",
-  offerBanner: "🎉 Use code WELCOME | Free delivery on first order!",
-  razorpayKey: "rzp_test_XXXXXXXXXX", 
-  googleSheetCSV: "", 
-  adminPassword: "mansi@admin123", 
+  offerBanner: "✨ Browse our latest jewellery and cosmetics collection",
+  googleSheetCSV: "",
+  googleSheet: {
+    spreadsheetId: "1YPOM0mE6hBYnhco-JKhKohSkbhIVCx2abB2HKTEkmss",
+    productSheet: "Products",
+    productSheetId: 1836818113
+  },
+  apiBase: "",
   firebaseConfig: {
     apiKey: "AIzaSy" + "CtfYpLZYJNauPrNbnSY8Tv7kKzusQpr6U",
     authDomain: "mansi-9e187.firebaseapp.com",
@@ -22,8 +25,6 @@ const defaultStore = {
     messagingSenderId: "399147392144",
     appId: "1:399147392144:web:00166d6c57b146914f8c15"
   },
-  telegramBotToken: "8889847918:AAGGnxWxwt4ucKLwLcppq8DfFAgslKy4K0g", 
-  telegramChatId: "8774397431",
   telegramUsername: "MansiJewellery",
   gpayUpi: "",
   phonepeUpi: "",
@@ -37,7 +38,14 @@ const defaultDelivery = {
   restOfIndia:  { prepaid: 150, cod: 195 },
 };
 
-const STORE = { ...defaultStore, ...JSON.parse(localStorage.getItem("storeSettings") || "{}") };
+let storedSettings = {};
+try { storedSettings = JSON.parse(localStorage.getItem("storeSettings") || "{}"); } catch (_) {}
+const STORE = {
+  ...defaultStore,
+  ...storedSettings,
+  firebaseConfig: { ...defaultStore.firebaseConfig },
+  googleSheet: { ...defaultStore.googleSheet }
+};
 const DELIVERY = { ...defaultDelivery, ...JSON.parse(localStorage.getItem("deliverySettings") || "{}") };
 
 // =============================================

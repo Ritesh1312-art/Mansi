@@ -82,9 +82,12 @@
     <div class="admin-auth-card">
       <div style="font-size: 3rem; margin-bottom: 8px;">🔐</div>
       <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text); margin-bottom: 6px;">Admin Panel Access</h1>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px;">Please enter admin security password to continue.</p>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px;">Sign in with an authorized Firebase admin account.</p>
       
       <form onsubmit="verifyAdminPassword(event)">
+        <div class="admin-input-wrapper">
+          <input type="email" id="admin-email-input" placeholder="Admin Email" required autocomplete="username" />
+        </div>
         <div class="admin-input-wrapper">
           <input type="password" id="admin-pass-input" placeholder="Enter Admin Password" required autofocus />
           <button type="button" class="admin-eye-toggle" onclick="togglePassVisibility()">👁️</button>
@@ -206,16 +209,17 @@
 
   <script src="../js/config.js?v=3.0"></script>
   <script src="../js/data.js?v=3.0"></script>
+  <script src="../js/api-client.js?v=4.0"></script>
+  <script src="../js/admin-auth.js?v=4.0"></script>
   <script src="../js/app.js?v=3.0"></script>
-  <script src="../js/watchdog-core.js?v=3.0"></script>
   <script>
     loadTheme();
 
-    function checkAdminAuth() {
+    async function checkAdminAuth() {
       if (window.location.pathname.endsWith("/admin")) {
         window.history.replaceState(null, "", window.location.pathname + "/");
       }
-      if (localStorage.getItem("adminAuth") === "true") {
+      if (await AdminSession.authorizedUser()) {
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "flex";
         initDashboard();
@@ -234,8 +238,9 @@
       }
     }
 
-    function verifyAdminPassword(e) {
+    async function verifyAdminPassword(e) {
       e.preventDefault();
+      const email = document.getElementById("admin-email-input").value.trim();
       const typed = document.getElementById("admin-pass-input").value.trim();
       const err = document.getElementById("admin-auth-err");
 
@@ -245,28 +250,31 @@
         return;
       }
 
-      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-      const correctPass = settings.adminPassword || "mansi@admin123";
-
-      if (typed === correctPass) {
-        localStorage.setItem("adminAuth", "true");
+      try {
+        await AdminSession.login(email, typed);
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "flex";
         initDashboard();
-      } else {
-        err.textContent = "❌ Incorrect password! Default is: mansi@admin123";
+      } catch (error) {
+        err.textContent = "❌ " + (error.message || "Admin login failed");
         err.style.display = "block";
       }
     }
 
-    function logoutAdmin(e) {
+    async function logoutAdmin(e) {
       if (e) e.preventDefault();
-      localStorage.removeItem("adminAuth");
+      await AdminSession.logout();
       location.reload();
     }
 
-    function initDashboard() {
+    async function initDashboard() {
       document.getElementById("admin-date").textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      try {
+        const result = await StoreApi.getOrders("admin");
+        DB.saveOrders(result.orders || []);
+      } catch (error) {
+        console.warn("Dashboard order refresh failed; showing last known safe cache.", error);
+      }
       
       const rev = DB.getRevenue();
       const products = DB.getProducts();
@@ -286,15 +294,15 @@
       } else {
         ordersBody.innerHTML = recentOrders.map(o => `
           <tr>
-            <td><strong>#${o.id}</strong></td>
-            <td>${o.customerName || 'Guest'}</td>
-            <td>${o.phone || ''}</td>
-            <td><small>${o.address?.city || ''}, ${o.address?.pincode || ''}</small></td>
-            <td><strong>₹${o.grandTotal}</strong></td>
-            <td><span class="badge">${(o.paymentMode || 'cod').toUpperCase()}</span></td>
+            <td><strong>#${escapeHTML(o.id || "")}</strong></td>
+            <td>${escapeHTML(o.customerName || 'Guest')}</td>
+            <td>${escapeHTML(o.phone || '')}</td>
+            <td><small>${escapeHTML(o.address?.city || '')}, ${escapeHTML(o.address?.pincode || '')}</small></td>
+            <td><strong>₹${Math.max(0, Number(o.grandTotal) || 0).toFixed(2)}</strong></td>
+            <td><span class="badge">${escapeHTML((o.paymentMode || 'cod').toUpperCase())}</span></td>
             <td>
               <span class="badge ${o.status === 'confirmed' ? 'badge-success' : o.status === 'cancelled' || o.status === 'Cancelled' ? 'badge-error' : 'badge-warning'}">
-                ${o.status || 'Pending'}
+                ${escapeHTML(o.status || 'Pending')}
               </span>
             </td>
           </tr>`).join("");
@@ -310,7 +318,7 @@
         lowStockEl.innerHTML = lowStock.map(p => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;">
             <div>
-              <strong>${p.name}</strong> <span style="font-size:0.8rem;color:var(--text-muted);">(${p.category})</span>
+              <strong>${escapeHTML(p.name || "Product")}</strong> <span style="font-size:0.8rem;color:var(--text-muted);">(${escapeHTML(p.category || "Uncategorised")})</span>
             </div>
             <div>
               <span class="badge badge-error">Stock: ${p.stock || 0} left</span>

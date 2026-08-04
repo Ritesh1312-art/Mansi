@@ -2,6 +2,28 @@
 // CART MANAGEMENT
 // =============================================
 
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[character]));
+}
+
+function safeProductId(value) {
+  return String(value ?? "").replace(/[^A-Za-z0-9_-]/g, "");
+}
+
+function safeImageUrl(value) {
+  const fallback = "assets/brand/icon.svg";
+  try {
+    const raw = String(value || "").trim();
+    if (!raw) return fallback;
+    if (/^data:image\/(?:png|jpe?g|webp);base64,/i.test(raw) || /^blob:/i.test(raw)) return raw;
+    const parsed = new URL(raw, document.baseURI);
+    if (["http:", "https:"].includes(parsed.protocol)) return parsed.href;
+  } catch (_) {}
+  return fallback;
+}
+
 const Cart = {
   get() {
     return JSON.parse(localStorage.getItem("cart") || "[]");
@@ -57,7 +79,9 @@ const Cart = {
   showToast(msg) {
     const toast = document.createElement("div");
     toast.className = "toast-notification";
-    toast.innerHTML = `<span>🛒</span> ${msg}`;
+    const icon = document.createElement("span");
+    icon.textContent = "🛒";
+    toast.append(icon, document.createTextNode(" " + String(msg || "")));
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add("show"), 100);
     setTimeout(() => { toast.classList.remove("show"); setTimeout(() => toast.remove(), 400); }, 2500);
@@ -65,95 +89,36 @@ const Cart = {
 };
 
 // =============================================
-// SHEET SYNC — Google Sheet CSV
+// SHEET SYNC — authenticated server backup and merge-only restore
 // =============================================
 const SheetSync = {
-  parseCSVLine(line) {
-    const result = [];
-    let cur = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') {
-        inQuotes = !inQuotes;
-      } else if (c === ',' && !inQuotes) {
-        result.push(cur.trim().replace(/^"|"$/g, ""));
-        cur = "";
-      } else {
-        cur += c;
-      }
-    }
-    result.push(cur.trim().replace(/^"|"$/g, ""));
-    return result;
+  async backupNow() {
+    if (!window.StoreApi) throw new Error("Backup service is unavailable");
+    return StoreApi.backupNow();
   },
 
-  async importFromSheet(csvUrl) {
-    if (!csvUrl) return { success: false, error: "No CSV URL provided" };
-    try {
-      const response = await fetch(csvUrl);
-      const text = await response.text();
-      const lines = text.split(/\r?\n/).filter(l => l.trim());
-      if (lines.length <= 1) return { success: false, error: "Empty or invalid sheet" };
-
-      const rows = lines.slice(1); // skip header
-      let imported = 0;
-      const sheetProducts = [];
-
-      rows.forEach(row => {
-        const cols = this.parseCSVLine(row);
-        if (cols.length >= 2 && cols[0]) {
-          const name = cols[0];
-          const price = parseFloat(cols[1]) || 299;
-          const mrp = parseFloat(cols[2]) || Math.round(price * 1.3);
-          const category = (cols[3] || "jewellery").toLowerCase();
-          const image = cols[4] || "";
-          const description = cols[5] || name;
-          const stock = parseInt(cols[6]) || 10;
-
-          sheetProducts.push({
-            id: "sp_" + Math.abs(name.split("").reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)),
-            name,
-            price,
-            mrp,
-            category,
-            image,
-            description,
-            stock,
-            inStock: stock > 0,
-            rating: 4.8,
-            createdAt: new Date().toISOString()
-          });
-          imported++;
-        }
-      });
-
-      if (sheetProducts.length > 0) {
-        // Save imported products in DB
-        localStorage.setItem("products", JSON.stringify(sheetProducts));
-        localStorage.setItem("products_backup", JSON.stringify(sheetProducts));
-        window.dispatchEvent(new Event("productsSynced"));
-        return { success: true, count: imported };
-      }
-      return { success: false, error: "No products found in sheet" };
-    } catch (e) {
-      return { success: false, error: e.message };
-    }
+  async previewRestore() {
+    if (!window.StoreApi) throw new Error("Restore service is unavailable");
+    return StoreApi.restorePreview();
   },
 
-  async autoSyncFromSheet() {
-    const url = (STORE.googleSheetCSV || "").trim();
-    if (url && url.startsWith("http")) {
-      console.log("🌐 Auto-syncing products from Google Sheet CSV...");
-      await this.importFromSheet(url);
-    }
+  async restoreMerge() {
+    if (!window.StoreApi) throw new Error("Restore service is unavailable");
+    return StoreApi.restoreMerge();
   },
 
   exportToCSV() {
     const products = DB.getProducts();
     const header = "Name,Price,MRP,Category,Image,Description,Stock";
-    const rows = products.map(p =>
-      `"${p.name || ''}",${p.price || 0},${p.mrp || 0},"${p.category || 'jewellery'}","${p.image || ''}","${(p.description || '').replace(/"/g, '""')}",${p.stock || 10}`
-    );
+    const csvCell = value => {
+      let text = String(value ?? "");
+      if (/^[=+\-@]/.test(text)) text = "'" + text;
+      return `"${text.replace(/"/g, '""')}"`;
+    };
+    const rows = products.map(p => [
+      csvCell(p.name), Number(p.price) || 0, Number(p.mrp) || 0,
+      csvCell(p.category || "jewellery"), csvCell(p.image), csvCell(p.description), Math.max(0, Number(p.stock) || 0)
+    ].join(","));
     const csv = [header, ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -165,12 +130,7 @@ const SheetSync = {
   }
 };
 
-// Trigger Auto-Sync on load if Google Sheet CSV URL is set
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => SheetSync.autoSyncFromSheet());
-} else {
-  SheetSync.autoSyncFromSheet();
-}
+// Google Sheet sync is server-managed after authenticated product writes.
 
 // Re-render whichever catalog view is open after Firestore returns products.
 window.addEventListener("productsSynced", () => {
@@ -191,38 +151,6 @@ window.addEventListener("productsSynced", () => {
 });
 
 // =============================================
-// PAYMENT — Razorpay Integration
-// =============================================
-const Payment = {
-  async initOnlinePayment(order, onSuccess) {
-    if (typeof Razorpay === "undefined") {
-      alert("Payment gateway loading failed. Please try COD.");
-      return;
-    }
-    const options = {
-      key: STORE.razorpayKey,
-      amount: order.grandTotal * 100, // paise
-      currency: "INR",
-      name: STORE.name,
-      description: `Order #${order.id}`,
-      handler: function (response) {
-        order.paymentId = response.razorpay_payment_id;
-        order.status = "confirmed";
-        DB.updateOrderStatus(order.id, "confirmed");
-        onSuccess(order);
-      },
-      prefill: {
-        name: order.customerName,
-        contact: order.phone,
-      },
-      theme: { color: "var(--primary, #F59E0B)" }
-    };
-    const rzp = new Razorpay(options);
-    rzp.open();
-  }
-};
-
-// =============================================
 // NAVBAR & FOOTER — shared across all pages
 // =============================================
 function openTelegramChat(e) {
@@ -237,9 +165,10 @@ function callSupport(e) {
   window.open(`https://t.me/${username}`, "_blank");
 }
 
-function logoutAdmin(e) {
+async function logoutAdmin(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
-  localStorage.removeItem("adminAuth");
+  if (window.AdminSession) await AdminSession.logout();
+  else localStorage.removeItem("adminAuth");
   alert("🚪 Logged out from Admin Panel!");
   if (window.location.pathname.includes("/admin/")) {
     window.location.href = "../index.html";
@@ -253,13 +182,17 @@ function renderFooter() {
   if (!footer) return;
   const session = DB.getSession();
   const isAdmin = localStorage.getItem("adminAuth") === "true";
-  const tgUser = (STORE.telegramUsername || "").replace('@', '');
+  const tgUser = String(STORE.telegramUsername || "").replace(/^@/, "").replace(/[^A-Za-z0-9_]/g, "");
+  const storeName = escapeHTML(STORE.name || "Mansi Jewellery & Cosmetics");
+  const tagline = escapeHTML(STORE.tagline || "");
+  const address = escapeHTML(STORE.address || "");
+  const email = String(STORE.email || "").trim().replace(/[^A-Za-z0-9.!#$%&'*+/=?^_`{|}~@-]/g, "");
 
   footer.innerHTML = `
     <div class="footer-inner">
       <div class="footer-brand">
-        <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 ${STORE.name}</div>
-        <p>${STORE.tagline}</p>
+        <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 ${storeName}</div>
+        <p>${tagline}</p>
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
           <a href="${tgUser ? 'https://t.me/' + tgUser : '#'}" target="_blank" onclick="${!tgUser ? 'openTelegramChat(event)' : ''}"
              style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
@@ -283,14 +216,14 @@ function renderFooter() {
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
-        <a href="#">📍 ${STORE.address}</a>
-        <a href="mailto:${STORE.email}">✉️ ${STORE.email}</a>
+        <span>📍 ${address}</span>
+        <a href="mailto:${email}">✉️ ${escapeHTML(email)}</a>
         ${!session && !isAdmin ? `<a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>` : ""}
         ${isAdmin ? `<a href="javascript:void(0)" onclick="logoutAdmin(event)" style="color:var(--error);font-size:0.85rem;margin-top:8px;font-weight:600;">🚪 Admin Logout</a>` : ""}
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2025 ${STORE.name}. All rights reserved.</span>
+      <span>© ${new Date().getFullYear()} ${storeName}. All rights reserved.</span>
     </div>
   `;
 }
@@ -354,8 +287,9 @@ document.addEventListener("click", () => {
   if (dropdown) dropdown.classList.remove("open");
 });
 
-function logoutUser(e) {
+async function logoutUser(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (fbAuth && fbAuth.currentUser) await fbAuth.signOut();
   DB.clearSession();
   alert("🚪 Logged out successfully!");
   window.location.href = "index.html";
@@ -388,7 +322,7 @@ function initNavbar() {
           <span class="cart-count wishlist-count" id="wishlist-badge">0</span>
         </a>
         <div class="user-dropdown">
-          <button class="nav-btn user-btn" onclick="toggleUserDropdown(event)">👤 ${session.name.split(" ")[0]} ▾</button>
+          <button class="nav-btn user-btn" onclick="toggleUserDropdown(event)">👤 ${escapeHTML(String(session.name || "User").split(" ")[0])} ▾</button>
           <div class="dropdown-menu">
             <a href="profile.html">👤 My Profile & Address</a>
             <a href="orders.html">📦 My Orders</a>
@@ -661,7 +595,7 @@ function initTempMailBlocker() {
 initTempMailBlocker();
 
 // =============================================
-// SMART AI CHATBOT ASSISTANT
+// RULE-BASED STORE ASSISTANT
 // =============================================
 function initChatbotWidget() {
   if (document.getElementById("ai-chat-btn")) return;
@@ -669,7 +603,7 @@ function initChatbotWidget() {
   const btn = document.createElement("button");
   btn.id = "ai-chat-btn";
   btn.className = "ai-chat-btn";
-  btn.innerHTML = `💬 <span>Chat Assistant</span> <span class="ai-chat-badge">AI</span>`;
+  btn.innerHTML = `💬 <span>Store Assistant</span>`;
   btn.onclick = toggleChatbot;
 
   const box = document.createElement("div");
@@ -677,16 +611,14 @@ function initChatbotWidget() {
   box.className = "ai-chat-box";
   box.style.display = "none";
 
-  const tgUser = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
-
   box.innerHTML = `
     <div class="ai-chat-header">
-      <h4>🤖 Mansi AI Assistant</h4>
+      <h4>💬 Mansi Store Assistant</h4>
       <button class="ai-chat-close" onclick="toggleChatbot()">✕</button>
     </div>
     <div class="ai-chat-body" id="ai-chat-messages">
       <div class="ai-msg bot">
-        👋 Hello! Welcome to <strong>${STORE.name}</strong>.<br/>
+        👋 Hello! Welcome to <strong>${escapeHTML(STORE.name || "Mansi Jewellery & Cosmetics")}</strong>.<br/>
         How can I help you today? Ask me anything about products, delivery, orders or discounts!
       </div>
       <div class="ai-chips">
@@ -754,14 +686,13 @@ function handleUserChatSubmit() {
 
 function getSmartBotResponse(q) {
   const lower = q.toLowerCase();
-  const tgUser = (STORE.telegramUsername || "MansiJewellery").replace('@', '');
+  const tgUser = String(STORE.telegramUsername || "MansiJewellery").replace(/^@/, "").replace(/[^A-Za-z0-9_]/g, "");
 
   if (lower.includes("delivery") || lower.includes("cod") || lower.includes("ship") || lower.includes("time") || lower.includes("raipur")) {
     return `🚚 <strong>Delivery & COD Information:</strong><br/>
-    • <strong>Raipur City:</strong> Fast Express Delivery in 1-2 Days!<br/>
-    • <strong>Rest of India:</strong> 3-5 Days nationwide shipping.<br/>
-    • <strong>Cash on Delivery (COD):</strong> Available across all pincodes in India.<br/>
-    • Free delivery available on orders using code <strong>WELCOME</strong>.`;
+    • Delivery zone and charge are calculated from your checkout address.<br/>
+    • <strong>Cash on Delivery (COD)</strong> and configured UPI options appear at checkout.<br/>
+    • The store confirms dispatch timing after the order is placed.`;
   }
 
   if (lower.includes("track") || lower.includes("order") || lower.includes("status") || lower.includes("where")) {
@@ -771,15 +702,15 @@ function getSmartBotResponse(q) {
   }
 
   if (lower.includes("offer") || lower.includes("coupon") || lower.includes("discount") || lower.includes("code") || lower.includes("deal")) {
-    return `🎉 <strong>Active Store Offers:</strong><br/>
-    • Use Code <strong>WELCOME</strong> for <strong>Free Delivery</strong> on your order!<br/>
-    • Products starting at budget rates from ₹99.<br/>
-    • Extra deals on Jewellery Sets & Cosmetics Collections.`;
+    return `🎉 <strong>Current Offers:</strong><br/>
+    Any active offer is shown in the store banner and reflected in the final checkout total. We do not apply hidden or unverified coupon claims.`;
   }
 
   if (lower.includes("price") || lower.includes("product") || lower.includes("jewel") || lower.includes("cosmetic") || lower.includes("item")) {
+    const prices = DB.getProducts().map(product => Number(product.price)).filter(price => Number.isFinite(price) && price >= 0);
+    const range = prices.length ? `<strong>₹${Math.min(...prices)} to ₹${Math.max(...prices)}</strong>` : "shown on each product";
     return `💎 <strong>Our Collections & Price Range:</strong><br/>
-    We offer handcrafted Jewellery, Premium Cosmetics, Tea Sets, Paintings & Gifts starting from <strong>₹99 to ₹2,499+</strong>.<br/>
+    Current catalogue prices are ${range}.<br/>
     👉 Browse all collections on our <a href="products.html" style="color:var(--primary);font-weight:700;">🛍️ Collections Page</a>.`;
   }
 
@@ -803,4 +734,14 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initChatbotWidget);
 } else {
   initChatbotWidget();
+}
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    const appScript = Array.from(document.scripts).find(script => /\/js\/app\.js(?:\?|$)/.test(script.src));
+    const root = appScript ? new URL("../", appScript.src) : new URL("./", document.baseURI);
+    navigator.serviceWorker.register(new URL("sw.js", root)).catch(error => {
+      console.warn("PWA service worker registration skipped:", error.message);
+    });
+  });
 }

@@ -30,7 +30,11 @@
     <div class="admin-auth-card">
       <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
       <h2 style="margin-bottom: 8px;">Admin Login</h2>
-      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Enter password to access the panel</p>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Sign in with an authorized Firebase admin account.</p>
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Admin Email</label>
+        <input type="email" id="admin-email-input" class="form-input" placeholder="admin@example.com" autocomplete="username"/>
+      </div>
       <div class="form-group" style="text-align: left;">
         <label class="form-label">Password</label>
         <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
@@ -44,13 +48,6 @@
   </div>
 
   <div id="admin-content" style="display: none;">
-    <!-- AD 1 — TOP -->
-    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-      </a>
-    </div>
-
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
@@ -77,13 +74,6 @@
             <h1>⚙️ Store Settings</h1>
             <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">Configure look, feel, and business rules</p>
           </div>
-        </div>
-
-        <!-- AD 2 — MIDDLE -->
-        <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-          </a>
         </div>
 
         <!-- SECTION 1: THEME -->
@@ -131,16 +121,7 @@
               <label class="form-label">Offer Banner Text <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(Optional)</span></label>
               <input type="text" id="s-banner" class="form-input" placeholder="e.g. 🎉 Free Shipping on orders above ₹499 | Use code MANSI10 for 10% OFF"/>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label class="form-label">Razorpay Key ID</label>
-                <input type="text" id="s-razorpay" class="form-input" placeholder="rzp_test_xxxxxx"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Admin Password</label>
-                <input type="password" id="s-password" class="form-input" placeholder="Enter new admin password"/>
-              </div>
-            </div>
+            <p style="font-size:.8rem;color:var(--text-muted);">Razorpay remains disabled/test-only until its server credentials are added securely at launch.</p>
             <button type="submit" class="btn-full" style="margin-top: 10px;">Save Store Information</button>
           </form>
         </div>
@@ -186,54 +167,26 @@
 
         <!-- SECTION 4: GOOGLE SHEET SYNC -->
         <div class="settings-section">
-          <h2>📊 Google Sheets CSV Configuration</h2>
-          <div class="form-group">
-            <label class="form-label">Published CSV Link</label>
-            <input type="url" id="s-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"/>
-          </div>
-          <button onclick="saveSheetUrl()" class="btn-full" style="padding: 12px 24px;">Save CSV Link</button>
+          <h2>📊 Permanent Google Sheet Backup</h2>
+          <p style="font-size:.86rem;color:var(--text-muted);margin-bottom:14px;">The Products tab is permanently linked. Product writes back up automatically; restore is preview-and-merge only.</p>
+          <a href="https://docs.google.com/spreadsheets/d/1YPOM0mE6hBYnhco-JKhKohSkbhIVCx2abB2HKTEkmss/edit" target="_blank" rel="noopener" class="btn-outline" style="display:inline-flex;padding:12px 18px;text-decoration:none;">Open Backup Sheet</a>
+          <a href="products.html" class="btn-primary" style="display:inline-flex;padding:12px 18px;text-decoration:none;margin-left:8px;">Backup / Restore</a>
         </div>
 
         <!-- SECTION 5: FIREBASE CENTRAL DATABASE -->
         <div class="settings-section">
-          <h2>🔥 Firebase Central Database Configuration</h2>
+          <h2>🔥 Firebase Central Database</h2>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
-            Set up a free Firebase project to centralize all user registrations, passwords, and orders. Leave API Key blank to disable Firebase.
+            Firebase Auth, Firestore and Storage are configured centrally in the deployed app. Browser-level editing is disabled so one device cannot break the store for everyone.
           </p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">API Key</label>
-              <input type="text" id="fb-apikey" class="form-input" placeholder="AIzaSy..."/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Auth Domain</label>
-              <input type="text" id="fb-authdomain" class="form-input" placeholder="project-id.firebaseapp.com"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Project ID</label>
-              <input type="text" id="fb-projectid" class="form-input" placeholder="project-id"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Storage Bucket</label>
-              <input type="text" id="fb-storagebucket" class="form-input" placeholder="project-id.appspot.com"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Messaging Sender ID</label>
-              <input type="text" id="fb-sendersid" class="form-input" placeholder="84729104..."/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">App ID</label>
-              <input type="text" id="fb-appid" class="form-input" placeholder="1:847291..."/>
-            </div>
-          </div>
-          <button onclick="saveFirebaseConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save Firebase Connection</button>
+          <div style="padding:12px 16px;border-radius:10px;background:var(--bg-input);font-weight:700;color:var(--success);">✓ Managed securely on the server</div>
         </div>
 
         <!-- SECTION 6: TELEGRAM BOT & SUPPORT ALERTS -->
         <div class="settings-section">
           <h2>✈️ Telegram Support & Instant Order Alerts</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-            Set your Telegram Support Username for customer contact links across the site, and your Telegram Bot Token & Chat ID for instant background order alerts.
+            Set the public Telegram support username. Bot credentials are stored only as encrypted Vercel server environment variables.
           </p>
           <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label">Telegram Support Username (without @, e.g. MansiJewellery)</label>
@@ -242,21 +195,7 @@
               ✨ Updating this automatically updates Telegram support buttons across Footer, Checkout, Customer Orders, and Admin panel!
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Telegram Bot Token (from @BotFather)</label>
-              <input type="text" id="s-telegram-token" class="form-input" placeholder="e.g. 7123456789:AAFx..."/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Telegram Chat ID (from @userinfobot)</label>
-              <input type="text" id="s-telegram-chat" class="form-input" placeholder="e.g. 987654321"/>
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:12px;">
-            <button onclick="saveTelegramConfig()" class="btn-full" style="flex:2;padding:12px 24px;">Save All Telegram Settings</button>
-            <button onclick="testTelegramBot()" class="btn-outline" style="flex:1;padding:12px 20px;border-color:var(--primary);color:var(--primary);font-weight:700;">🧪 Send Test Alert</button>
-          </div>
-          <div id="tg-test-status" style="margin-top:10px;font-size:0.85rem;display:none;"></div>
+          <button onclick="saveTelegramConfig()" class="btn-full" style="padding:12px 24px;">Save Public Telegram Username</button>
         </div>
 
         <!-- SECTION 7: UPI PAYMENTS -->
@@ -282,49 +221,33 @@
           <button onclick="saveUpiConfig()" class="btn-full" style="padding: 12px 24px; margin-top: 10px;">Save UPI Settings</button>
         </div>
 
-        <!-- DANGER ZONE -->
-        <div class="settings-section" style="border: 2px solid var(--error); background: var(--bg-card);">
-          <h2 style="color: var(--error) !important; border-bottom: 1px solid var(--border);">⚠️ Danger Zone</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted) !important; margin-bottom: 16px;">Perform destructive database operations. Use with care.</p>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button onclick="clearOrders()" class="btn-outline" style="border-color: var(--error); color: var(--error); padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Clear All Orders</button>
-            <button onclick="clearProducts()" class="btn-outline" style="border-color: var(--error); color: var(--error); padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">Reset Products list</button>
-            <button onclick="factoryReset()" style="background: var(--error); color: #FFFFFF; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 10px; border: none;">Factory Reset Website</button>
-          </div>
+        <div class="settings-section" style="border:1px solid var(--success);">
+          <h2>🛡️ Data Safety</h2>
+          <p style="font-size:.86rem;color:var(--text-muted);">Destructive reset and clear-all controls are disabled. Products and delivered orders can only be archived and remain recoverable.</p>
         </div>
 
-        <!-- AD 3 — BOTTOM -->
-        <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-          </a>
-        </div>
       </main>
     </div>
   </div>
 
   <script src="../js/config.js"></script>
   <script src="../js/data.js"></script>
+  <script src="../js/api-client.js"></script>
+  <script src="../js/admin-auth.js"></script>
   <script src="../js/app.js"></script>
   <script>
     loadTheme();
 
-    // ===== ADMIN AUTH — Uses saved password from settings =====
-    function getAdminPassword() {
-      // Priority: saved settings > default
-      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-      return settings.adminPassword || "";
-    }
-
-    function checkAdminAuth() {
-      if (localStorage.getItem("adminAuth") === "true") {
+    async function checkAdminAuth() {
+      if (await AdminSession.authorizedUser()) {
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         initSettings();
       }
     }
 
-    function verifyAdminPassword() {
+    async function verifyAdminPassword() {
+      const email = document.getElementById("admin-email-input").value.trim();
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
       
@@ -334,25 +257,20 @@
         return;
       }
 
-      const savedPass = getAdminPassword();
-      
-      // If admin password is saved, use that; otherwise use default
-      const correctPass = savedPass || "mansi@admin123";
-      
-      if (btoa(typed) === btoa(correctPass)) {
-        localStorage.setItem("adminAuth", "true");
+      try {
+        await AdminSession.login(email, typed);
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         err.style.display = "none";
         initSettings();
-      } else {
-        err.textContent = "❌ Incorrect password!";
+      } catch (error) {
+        err.textContent = "❌ " + (error.message || "Admin login failed");
         err.style.display = "block";
       }
     }
 
-    function logoutAdmin() {
-      localStorage.removeItem("adminAuth");
+    async function logoutAdmin() {
+      await AdminSession.logout();
       location.reload();
     }
 
@@ -368,8 +286,6 @@
       document.getElementById("s-email").value = STORE.email || "";
       document.getElementById("s-address").value = STORE.address || "";
       document.getElementById("s-banner").value = STORE.offerBanner || "";
-      document.getElementById("s-razorpay").value = STORE.razorpayKey || "";
-      document.getElementById("s-password").value = STORE.adminPassword || "";
 
       // 3. Pre-fill Delivery Charges
       document.getElementById("del-city-pre").value = DELIVERY.sameCity.prepaid;
@@ -381,22 +297,8 @@
       document.getElementById("del-india-pre").value = DELIVERY.restOfIndia.prepaid;
       document.getElementById("del-india-cod").value = DELIVERY.restOfIndia.cod;
 
-      // 4. Pre-fill Sheet Sync
-      document.getElementById("s-sheet-url").value = STORE.googleSheetCSV || "";
-
-      // 5. Pre-fill Firebase Config
-      const fb = STORE.firebaseConfig || {};
-      document.getElementById("fb-apikey").value = fb.apiKey || "";
-      document.getElementById("fb-authdomain").value = fb.authDomain || "";
-      document.getElementById("fb-projectid").value = fb.projectId || "";
-      document.getElementById("fb-storagebucket").value = fb.storageBucket || "";
-      document.getElementById("fb-sendersid").value = fb.messagingSenderId || "";
-      document.getElementById("fb-appid").value = fb.appId || "";
-
       // 6. Pre-fill Telegram Config
       document.getElementById("s-telegram-username").value = STORE.telegramUsername || "";
-      document.getElementById("s-telegram-token").value = STORE.telegramBotToken || "";
-      document.getElementById("s-telegram-chat").value = STORE.telegramChatId || "";
 
       // 7. Pre-fill UPI Configurations
       document.getElementById("s-upi-gpay").value = STORE.gpayUpi || "";
@@ -435,103 +337,29 @@
       applyTheme("custom", { primary, primaryDark: primary, primaryLight: bg, bg, card, text, textMuted: text, border: "#2A2A38" });
     }
 
-    function saveTelegramConfig() {
+    async function saveTelegramConfig() {
       const username = document.getElementById("s-telegram-username").value.trim().replace('@', '');
-      const token = document.getElementById("s-telegram-token").value.trim();
-      const chatId = document.getElementById("s-telegram-chat").value.trim();
-      
       STORE.telegramUsername = username;
-      STORE.telegramBotToken = token;
-      STORE.telegramChatId = chatId;
-      
-      localStorage.setItem("storeSettings", JSON.stringify(STORE));
-      Cart.showToast("✈️ Telegram Support & Bot Alert settings updated successfully!");
+      await StoreApi.saveSettings({ telegramUsername: username }, {});
+      Cart.showToast("✈️ Public Telegram support username updated.");
       setTimeout(() => location.reload(), 1000);
     }
 
-    function testTelegramBot() {
-      const token = document.getElementById("s-telegram-token").value.trim();
-      const chatId = document.getElementById("s-telegram-chat").value.trim();
-      const status = document.getElementById("tg-test-status");
-
-      if (!token || !chatId) {
-        alert("⚠️ Please enter both Telegram Bot Token and Chat ID first!");
-        return;
-      }
-
-      status.style.display = "block";
-      status.style.color = "var(--primary)";
-      status.innerHTML = "🔄 Sending test message to Telegram...";
-
-      const msg = `🎉 <b>TEST ALERT — Mansi Jewellery & Cosmetics</b>\n\nYour Telegram Bot is configured and working perfectly! 🚀\n\n<i>Time: ${new Date().toLocaleString()}</i>`;
-      const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "HTML" })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.ok) {
-          status.style.color = "var(--success)";
-          status.innerHTML = "✅ <strong>SUCCESS!</strong> Test message sent to your Telegram app!";
-          Cart.showToast("✅ Telegram Test Message Sent!");
-        } else {
-          status.style.color = "var(--error)";
-          status.innerHTML = `❌ <strong>Telegram Error:</strong> ${data.description || 'Failed to send message.'}`;
-        }
-      })
-      .catch(err => {
-        status.style.color = "var(--error)";
-        status.innerHTML = `❌ <strong>Network Error:</strong> ${err.message}`;
-      });
-    }
-
-    function saveUpiConfig() {
+    async function saveUpiConfig() {
       STORE.gpayUpi = document.getElementById("s-upi-gpay").value.trim();
       STORE.phonepeUpi = document.getElementById("s-upi-phonepe").value.trim();
       STORE.paytmUpi = document.getElementById("s-upi-paytm").value.trim();
-      localStorage.setItem("storeSettings", JSON.stringify(STORE));
-      Cart.showToast("UPI Configuration saved!");
+      await StoreApi.saveSettings({
+        gpayUpi: STORE.gpayUpi,
+        phonepeUpi: STORE.phonepeUpi,
+        paytmUpi: STORE.paytmUpi
+      }, {});
+      Cart.showToast("UPI configuration saved globally.");
       setTimeout(() => location.reload(), 1000);
     }
 
-    function saveFirebaseConfig() {
-      const apiKey = document.getElementById("fb-apikey").value.trim();
-      const authDomain = document.getElementById("fb-authdomain").value.trim();
-      const projectId = document.getElementById("fb-projectid").value.trim();
-      const storageBucket = document.getElementById("fb-storagebucket").value.trim();
-      const messagingSenderId = document.getElementById("fb-sendersid").value.trim();
-      const appId = document.getElementById("fb-appid").value.trim();
-
-      if (!apiKey) {
-        STORE.firebaseConfig = null;
-      } else {
-        STORE.firebaseConfig = { apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId };
-      }
-
-      localStorage.setItem("storeSettings", JSON.stringify(STORE));
-      Cart.showToast("Firebase configuration saved! Please reload the page.");
-      setTimeout(() => location.reload(), 1000);
-    }
-
-    function changeTheme(themeId) {
-      applyTheme(themeId);
-      initSettings();
-      Cart.showToast(`Theme changed to ${THEMES.find(t=>t.id===themeId).name}!`);
-    }
-
-    function saveStoreInfo(e) {
+    async function saveStoreInfo(e) {
       e.preventDefault();
-      const adminPass = document.getElementById("s-password").value.trim();
-      if (adminPass && adminPass !== STORE.adminPassword) {
-        const val = validatePassword(adminPass, { name: "Admin", email: document.getElementById("s-email").value.trim() });
-        if (!val.valid) {
-          alert("❌ Admin Password Rule Error:\n" + val.error);
-          return;
-        }
-      }
       const updatedStore = {
         ...STORE,
         name: document.getElementById("s-name").value.trim(),
@@ -540,16 +368,14 @@
         email: document.getElementById("s-email").value.trim(),
         address: document.getElementById("s-address").value.trim(),
         offerBanner: document.getElementById("s-banner").value.trim(),
-        razorpayKey: document.getElementById("s-razorpay").value.trim(),
-        adminPassword: adminPass || STORE.adminPassword,
       };
 
-      localStorage.setItem("storeSettings", JSON.stringify(updatedStore));
-      Cart.showToast("Store settings saved! Refresh to see full updates.");
+      await StoreApi.saveSettings(updatedStore, {});
+      Cart.showToast("Store settings saved globally.");
       setTimeout(() => location.reload(), 1000);
     }
 
-    function saveDeliverySettings(e) {
+    async function saveDeliverySettings(e) {
       e.preventDefault();
       const updatedDelivery = {
         sameCity: {
@@ -570,40 +396,9 @@
         }
       };
 
-      localStorage.setItem("deliverySettings", JSON.stringify(updatedDelivery));
-      Cart.showToast("Delivery rates saved successfully!");
+      await StoreApi.saveSettings({}, updatedDelivery);
+      Cart.showToast("Delivery rates saved globally.");
       setTimeout(() => location.reload(), 1000);
-    }
-
-    function saveSheetUrl() {
-      const url = document.getElementById("s-sheet-url").value.trim();
-      STORE.googleSheetCSV = url;
-      localStorage.setItem("storeSettings", JSON.stringify(STORE));
-      Cart.showToast("Google Sheets CSV URL saved!");
-    }
-
-    // Destructive methods
-    function clearOrders() {
-      if (confirm("⚠️ Are you sure you want to clear ALL orders? This cannot be undone!")) {
-        localStorage.removeItem("orders");
-        Cart.showToast("All orders cleared.");
-      }
-    }
-
-    function clearProducts() {
-      if (confirm("⚠️ This will remove all your products and reset to defaults. Continue?")) {
-        localStorage.removeItem("products");
-        DB.seedSampleProducts();
-        Cart.showToast("Products catalog reset.");
-      }
-    }
-
-    function factoryReset() {
-      if (confirm("🚨 FACTORY RESET: This will wipe all orders, products, customized themes, and account database. Are you absolutely sure?")) {
-        localStorage.clear();
-        alert("Website reset completed. Reloading now.");
-        location.reload();
-      }
     }
 
     // Run auth check

@@ -112,39 +112,47 @@
     }
 
     function drawProduct(p) {
-      const tgUser = (STORE.telegramUsername || 'MansiJewellery').replace('@','');
-      const rating = Math.min(5, Math.max(4, parseFloat(p.rating) || 4.5));
+      const tgUser = String(STORE.telegramUsername || 'MansiJewellery').replace(/^@/, '').replace(/[^A-Za-z0-9_]/g, '');
+      const rating = Math.min(5, Math.max(0, parseFloat(p.rating) || 0));
       const fullStars = Math.floor(rating);
       const starsHtml = '★'.repeat(fullStars) + (rating - fullStars >= 0.5 ? '½' : '');
+      const safeName = escapeHTML(p.name);
+      const safeCategory = escapeHTML(p.category || "");
+      const safeDescription = escapeHTML(p.description || "Product description will be updated soon.");
+      const safeImage = escapeHTML(safeImageUrl(p.image));
+      const safeId = safeProductId(p.id);
+      const price = Math.max(0, Number(p.price) || 0);
+      const mrp = Math.max(price, Number(p.mrp) || price);
+      const reviews = Math.max(0, Number(p.reviews) || 0);
 
       document.getElementById('product-detail').innerHTML = `
         <div class="detail-img-container">
-          <img src="${p.image || 'https://via.placeholder.com/600x800'}" alt="${p.name}" />
+          <img src="${safeImage}" alt="${safeName}" style="background:#fff;object-fit:contain;" onerror="this.src='assets/brand/icon.svg'" />
         </div>
         <div class="detail-info">
-          <div class="detail-category">${p.category || ''}</div>
-          <h1 class="detail-title">${p.name}</h1>
+          <div class="detail-category">${safeCategory}</div>
+          <h1 class="detail-title">${safeName}</h1>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
             <span style="color:#f5a623;font-size:1rem;">${starsHtml}</span>
-            <span style="font-size:0.85rem;font-weight:600;color:#f5a623;">${rating.toFixed(1)}</span>
-            <span style="font-size:0.82rem;color:var(--text-muted);">(${p.reviews || 0} reviews)</span>
+            <span style="font-size:0.85rem;font-weight:600;color:#f5a623;">${rating ? rating.toFixed(1) : "New"}</span>
+            <span style="font-size:0.82rem;color:var(--text-muted);">(${reviews} reviews)</span>
           </div>
           <div class="detail-price">
-            <span>₹${p.price}</span>
-            ${p.mrp && Number(p.mrp) > Number(p.price) ? `<span style="font-size:1.1rem;color:var(--text-muted);text-decoration:line-through;font-weight:400;">₹${p.mrp}</span><span style="font-size:0.9rem;background:var(--primary);color:#fff;padding:2px 10px;border-radius:20px;font-weight:700;">${Math.round((1-p.price/p.mrp)*100)}% OFF</span>` : ''}
+            <span>₹${price}</span>
+            ${mrp > price ? `<span style="font-size:1.1rem;color:var(--text-muted);text-decoration:line-through;font-weight:400;">₹${mrp}</span><span style="font-size:0.9rem;background:var(--primary);color:#fff;padding:2px 10px;border-radius:20px;font-weight:700;">${Math.round((1-price/mrp)*100)}% OFF</span>` : ''}
           </div>
-          <p class="detail-desc">${p.description || 'A premium quality product crafted with precision — designed to delight you at every use.'}</p>
+          <p class="detail-desc">${safeDescription}</p>
 
           <div class="detail-btn-group">
-            <button class="btn-add-bag" onclick="Cart.add('${p.id}');Cart.showToast('Added to cart! ✅')">🛒 Add to Cart</button>
-            <button class="btn-buy-now" onclick="buyNow('${p.id}')">⚡ Buy Now</button>
-            <a class="btn-telegram" href="https://t.me/${tgUser}" target="_blank">✈️ Ask on Telegram</a>
+            <button class="btn-add-bag" onclick="Cart.add('${safeId}');Cart.showToast('Added to cart! ✅')">🛒 Add to Cart</button>
+            <button class="btn-buy-now" onclick="buyNow('${safeId}')">⚡ Buy Now</button>
+            <a class="btn-telegram" href="https://t.me/${tgUser}" target="_blank" rel="noopener">✈️ Ask on Telegram</a>
           </div>
 
           <div style="display:flex;gap:16px;font-size:0.82rem;color:var(--text-muted);flex-wrap:wrap;">
-            <span>📦 Free delivery available</span>
-            <span>🔒 Secure payment</span>
-            <span>💳 COD available</span>
+            <span>📦 Delivery calculated at checkout</span>
+            <span>🔒 Server-validated order total</span>
+            <span>💳 COD on eligible orders</span>
           </div>
         </div>
       `;

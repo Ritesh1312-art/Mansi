@@ -29,7 +29,7 @@
   <!-- OFFER MARQUEE -->
   <div class="offer-banner">
     <div class="offer-banner-inner">
-      <span>🎉 Use code WELCOME — Free delivery on first order!</span>
+      <span>✨ Browse the latest jewellery and cosmetics collection</span>
       <span>💍 New Jewellery Collection Arrived!</span>
       <span>📦 COD Available All Over India</span>
     </div>
@@ -126,29 +126,36 @@
       countText.textContent = `${wishlistProducts.length} item${wishlistProducts.length > 1 ? 's' : ''} saved`;
 
       grid.innerHTML = wishlistProducts.map(p => {
-        const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
+        const productId = safeProductId(p.id);
+        const name = escapeHTML(p.name || "Product");
+        const image = escapeHTML(safeImageUrl(p.image));
+        const price = Math.max(0, Number(p.price) || 0);
+        const mrp = Math.max(price, Number(p.mrp) || price);
+        const rating = Math.min(5, Math.max(0, Number(p.rating) || 0));
+        const reviews = Math.max(0, Number(p.reviews) || 0);
+        const disc = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
         return `
-          <div class="product-card" onclick="location.href='product-detail.html?id=${p.id}'">
+          <div class="product-card" onclick="location.href='product-detail.html?id=${productId}'">
             <div class="product-card-img">
-              <img src="${p.image || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" />
+              <img src="${image}" alt="${name}" loading="lazy" onerror="this.src='assets/brand/icon.svg'" />
               ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
-              <button class="product-wishlist active" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');renderWishlist();">❤️</button>
+              <button class="product-wishlist active" data-wishlist-id="${productId}" onclick="event.stopPropagation();Wishlist.toggle('${productId}');renderWishlist();">❤️</button>
             </div>
             <div class="product-card-body">
-              <div class="product-card-name">${p.name}</div>
+              <div class="product-card-name">${name}</div>
               <div class="product-card-rating">
-                <span class="stars">★★★★★</span>
-                <span class="rating-count">(${p.reviews || 0})</span>
+                <span class="stars">${rating ? "★".repeat(Math.round(rating)) + "☆".repeat(5 - Math.round(rating)) : "New"}</span>
+                <span class="rating-count">(${reviews})</span>
               </div>
               <div class="product-card-price">
-                <span class="price-current">₹${p.price}</span>
-                ${p.mrp > p.price ? `<span class="price-mrp">₹${p.mrp}</span><span class="price-off">Save ₹${p.mrp - p.price}</span>` : ""}
+                <span class="price-current">₹${price}</span>
+                ${mrp > price ? `<span class="price-mrp">₹${mrp}</span><span class="price-off">Save ₹${mrp - price}</span>` : ""}
               </div>
               <div style="display:flex;gap:8px;margin-top:auto;">
-                <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${p.id}')">
+                <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${productId}')">
                   🛒 Add
                 </button>
-                <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${p.id}')">
+                <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${productId}')">
                   ⚡ Buy Now
                 </button>
               </div>

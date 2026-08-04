@@ -34,12 +34,16 @@
     <div class="admin-auth-card">
       <div style="font-size: 3rem; margin-bottom: 12px;">🔐</div>
       <h2 style="margin-bottom: 8px;">Admin Login</h2>
-      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Enter password to access the panel</p>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px;">Sign in with an authorized Firebase admin account.</p>
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Admin Email</label>
+        <input type="email" id="admin-email-input" class="form-input" placeholder="admin@example.com" autocomplete="username"/>
+      </div>
       <div class="form-group" style="text-align: left;">
         <label class="form-label">Password</label>
         <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') verifyAdminPassword()"/>
       </div>
-      <button class="btn-full" onclick="verifyAdminPassword()" style="margin-top: 12px;">Login as Admin</button>
+      <button class="btn-full" onclick="verifyAdminPassword()" style="margin-top: 12px;">Secure Admin Login</button>
       <p id="admin-auth-err" style="color: var(--error); font-size: 0.85rem; margin-top: 12px; display: none;">❌ Incorrect password!</p>
       <a href="../index.html" class="btn-outline" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; padding: 12px; font-size: 0.9rem; font-weight: 700; border: 1.5px solid var(--border); color: var(--text); border-radius: var(--radius-sm); text-decoration: none;">
         🛒 Exit Admin & Return to Store
@@ -48,13 +52,6 @@
   </div>
 
   <div id="admin-content" style="display: none;">
-    <!-- AD 1 — SABSE UPAR -->
-    <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-      <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-        <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-      </a>
-    </div>
-
     <div class="admin-layout">
       <!-- SIDEBAR -->
       <aside class="admin-sidebar">
@@ -79,21 +76,17 @@
         <div class="admin-header" style="flex-wrap: wrap; gap: 16px;">
           <div>
             <h1>🛍️ Manage Products</h1>
-            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">Add, edit, or delete items in your catalog</p>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">Products save to Firebase and mirror to Google Sheet automatically.</p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button onclick="openAddModal()" class="btn-primary" style="padding: 10px 18px; font-size: 0.88rem;">➕ Add Product</button>
-            <button onclick="openImportModal()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">📥 Import Sheet</button>
+            <button onclick="backupProductsNow()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">☁️ Backup Now</button>
+            <button onclick="previewAndRestore()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">♻️ Preview / Restore</button>
             <button onclick="SheetSync.exportToCSV()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">📤 Export CSV</button>
           </div>
         </div>
 
-        <!-- AD 2 — BICH MEIN -->
-        <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;border-radius:10px;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-          </a>
-        </div>
+        <div id="backup-status" style="margin:16px 0;padding:12px 16px;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:.86rem;">Backup status will appear here.</div>
 
         <!-- SEARCH BAR -->
         <div class="search-bar-container" style="margin-bottom: 20px;">
@@ -122,12 +115,6 @@
           </table>
         </div>
 
-        <!-- AD 3 — SABSE LAST MEIN -->
-        <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-          <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-            <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-          </a>
-        </div>
       </main>
     </div>
   </div>
@@ -185,77 +172,58 @@
     </div>
   </div>
 
-  <!-- IMPORT MODAL -->
-  <div class="modal-overlay" id="import-modal">
-    <div class="modal" style="max-width:600px;">
-      <div class="modal-header">
-        <h3>📥 Import / Bulk Upload Products</h3>
-        <button class="modal-close" onclick="closeImportModal()">×</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Option 1: Google Sheet CSV URL</label>
-        <input type="url" id="sheet-csv-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv" />
-        <button class="btn-primary" style="margin-top:8px; width:100%;" onclick="importFromSheet()">Import From Google Sheet</button>
-      </div>
-      <hr style="border:none; border-top:1px solid var(--border); margin: 20px 0;" />
-      <div class="form-group">
-        <label class="form-label">Option 2: Bulk Paste Products (JSON / CSV / Names)</label>
-        <textarea id="bulk-paste-text" class="form-input" rows="5" placeholder='Paste JSON array or line-by-line list:
-e.g. 
-Designer Gold Necklace, jewellery, 1299, 1999
-Rose Lip Gloss, cosmetics, 399, 699'></textarea>
-        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Supports JSON array or line format: Name, Category, SellingPrice, MRP</p>
-        <button class="btn-full" style="margin-top:8px;" onclick="importFromBulkPaste()">⚡ Bulk Upload All Products</button>
-      </div>
-    </div>
-  </div>
-
   <script src="../js/config.js"></script>
   <script src="../js/data.js"></script>
+  <script src="../js/api-client.js"></script>
   <script src="../js/app.js"></script>
-  <script src="../js/watchdog-core.js"></script>
   <script>
     loadTheme();
 
-    function checkAdminAuth() {
-      if (localStorage.getItem("adminAuth") === "true") {
-        document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
-        initProductsPage();
+    async function checkAdminAuth() {
+      const user = await DB.waitForAuthState();
+      if (user) {
+        try {
+          await StoreApi.backupStatus();
+          localStorage.setItem("adminAuth", "firebase");
+          document.getElementById("admin-auth").style.display = "none";
+          document.getElementById("admin-content").style.display = "block";
+          initProductsPage();
+          return;
+        } catch (_) {
+          await fbAuth.signOut();
+        }
       }
+      localStorage.removeItem("adminAuth");
     }
 
-    function getAdminPassword() {
-      const settings = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-      return settings.adminPassword || "";
-    }
-
-    function verifyAdminPassword() {
+    async function verifyAdminPassword() {
+      const email = document.getElementById("admin-email-input").value.trim();
       const typed = document.getElementById("admin-pass-input").value;
       const err = document.getElementById("admin-auth-err");
 
-      if (!typed) {
-        err.textContent = "❌ Please enter a password!";
+      if (!email || !typed) {
+        err.textContent = "❌ Enter admin email and password.";
         err.style.display = "block";
         return;
       }
-
-      const savedPass = getAdminPassword();
-      const correctPass = savedPass || "mansi@admin123";
-
-      if (btoa(typed) === btoa(correctPass)) {
-        localStorage.setItem("adminAuth", "true");
+      try {
+        await DB.waitForFirebase();
+        await fbAuth.signInWithEmailAndPassword(email, typed);
+        await StoreApi.backupStatus();
+        localStorage.setItem("adminAuth", "firebase");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "block";
         err.style.display = "none";
         initProductsPage();
-      } else {
-        err.textContent = "❌ Incorrect password!";
+      } catch (error) {
+        if (fbAuth && fbAuth.currentUser) await fbAuth.signOut();
+        err.textContent = "❌ " + (error.message || "Admin login failed.");
         err.style.display = "block";
       }
     }
 
-    function logoutAdmin() {
+    async function logoutAdmin() {
+      if (fbAuth) await fbAuth.signOut();
       localStorage.removeItem("adminAuth");
       location.reload();
     }
@@ -283,9 +251,9 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
       const products = DB.getProducts();
       const list = document.getElementById("admin-products-list");
 
-      const filtered = products.filter(p => 
-        p.name.toLowerCase().includes(query) || 
-        p.category.toLowerCase().includes(query)
+      const filtered = products.filter(p =>
+        String(p.name || "").toLowerCase().includes(query) ||
+        String(p.category || "").toLowerCase().includes(query)
       );
 
       if (filtered.length === 0) {
@@ -294,24 +262,27 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
       }
 
       list.innerHTML = filtered.map(p => {
-        const safeName = escapeHTML(p.name);
+        const safeName = escapeHTML(p.name || "Product");
+        const productId = String(p.id || "").replace(/[^A-Za-z0-9_-]/g, "");
         return `
         <tr>
-          <td><img src="${p.image || 'https://via.placeholder.com/80?text=No+Image'}" class="table-img" alt="${safeName}" /></td>
+          <td><img src="${escapeHTML(safeImageUrl(p.image))}" class="table-img" alt="${safeName}" onerror="this.src='../assets/brand/icon.svg'" /></td>
           <td><strong>${safeName}</strong></td>
-          <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--primary-light);color:var(--primary-dark);border-radius:4px;font-weight:700;">${escapeHTML(p.category.toUpperCase())}</span></td>
-          <td style="font-weight:700;">₹${p.price}</td>
-          <td style="color:var(--text-light);text-decoration:line-through;font-size:0.8rem;">₹${p.mrp}</td>
-          <td>${p.stock}</td>
-          <td><strong>${p.sales || 0}</strong></td>
+          <td><span style="font-size:0.75rem;padding:3px 6px;background:var(--primary-light);color:var(--primary-dark);border-radius:4px;font-weight:700;">${escapeHTML(String(p.category || "uncategorised").toUpperCase())}</span></td>
+          <td style="font-weight:700;">₹${Math.max(0, Number(p.price) || 0).toFixed(2)}</td>
+          <td style="color:var(--text-light);text-decoration:line-through;font-size:0.8rem;">₹${Math.max(0, Number(p.mrp) || 0).toFixed(2)}</td>
+          <td>${Math.max(0, Number(p.stock) || 0)}</td>
+          <td><strong>${Math.max(0, Number(p.sales) || 0)}</strong></td>
           <td>
             <div style="display:flex;gap:6px;">
-              <button onclick="openEditModal('${p.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--primary);color:var(--primary);">✏️ Edit</button>
-              <button onclick="deleteProduct('${p.id}')" class="btn-outline" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);">🗑️ Delete</button>
+              <button data-product-id="${productId}" class="btn-outline edit-product-btn" style="padding:6px 10px;font-size:0.75rem;border-color:var(--primary);color:var(--primary);">✏️ Edit</button>
+              <button data-product-id="${productId}" class="btn-outline archive-product-btn" style="padding:6px 10px;font-size:0.75rem;border-color:var(--error);color:var(--error);">📦 Archive</button>
             </div>
           </td>
         </tr>`;
       }).join("");
+      list.querySelectorAll(".edit-product-btn").forEach(button => button.addEventListener("click", () => openEditModal(button.dataset.productId)));
+      list.querySelectorAll(".archive-product-btn").forEach(button => button.addEventListener("click", () => deleteProduct(button.dataset.productId)));
     }
 
     let uploadedImageBase64 = "";
@@ -354,62 +325,76 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
       ctx.putImageData(imageData, 0, 0);
     }
 
-    function handleImageUpload(input) {
+    async function handleImageUpload(input) {
       const file = input.files[0];
       const status = document.getElementById("p-image-status");
       const preview = document.getElementById("p-image-preview");
 
       if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        status.textContent = "❌ Please choose an image file.";
+        return;
+      }
 
-      status.textContent = "🔄 Processing & compressing image...";
+      status.textContent = "🔄 AI is removing the background…";
       status.style.color = "var(--primary)";
+      try {
+        let processedBlob = file;
+        let usedAiRemoval = true;
+        try {
+          const module = await import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm");
+          processedBlob = await module.removeBackground(file, {
+            progress: function (_key, current, total) {
+              const percent = total ? Math.round(current / total * 100) : 0;
+              status.textContent = `🔄 Removing background… ${percent}%`;
+            }
+          });
+        } catch (aiError) {
+          console.warn("AI background removal fallback:", aiError);
+          usedAiRemoval = false;
+          status.textContent = "🔄 Using safe local background cleanup…";
+        }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
+        const objectUrl = URL.createObjectURL(processedBlob);
         const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const max_size = 450;
-          let width = img.width;
-          let height = img.height;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = objectUrl;
+        });
 
-          if (width > height) {
-            if (width > max_size) { height = Math.round(height * max_size / width); width = max_size; }
-          } else {
-            if (height > max_size) { width = Math.round(width * max_size / height); height = max_size; }
-          }
+        const scale = Math.min(620 / img.width, 620 / img.height, 1);
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const subjectCanvas = document.createElement("canvas");
+        subjectCanvas.width = width;
+        subjectCanvas.height = height;
+        const subjectContext = subjectCanvas.getContext("2d", { willReadFrequently: !usedAiRemoval });
+        subjectContext.drawImage(img, 0, 0, width, height);
+        if (!usedAiRemoval) removeBackground(subjectContext, width, height);
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
+        const canvas = document.createElement("canvas");
+        canvas.width = 700;
+        canvas.height = 700;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(subjectCanvas, Math.round((700 - width) / 2), Math.round((700 - height) / 2));
+        URL.revokeObjectURL(objectUrl);
 
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-
-          try { removeBackground(ctx, width, height); } catch(err){}
-
-          // Try WebP compression first (supports transparency + ultra lightweight ~25KB), fallback to PNG
-          try {
-            uploadedImageBase64 = canvas.toDataURL("image/webp", 0.75);
-          } catch(err) {
-            uploadedImageBase64 = canvas.toDataURL("image/png");
-          }
-
-          preview.src = uploadedImageBase64;
-          preview.style.display = "block";
-          preview.style.background = "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 10px 10px";
-          preview.style.borderRadius = "8px";
-          status.textContent = "✅ Image compressed & ready!";
-          status.style.color = "var(--success)";
-          document.getElementById("p-image").value = "";
-        };
-        img.onerror = function() {
-          status.textContent = "❌ Failed to read image file.";
-          status.style.color = "var(--error)";
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+        uploadedImageBase64 = canvas.toDataURL("image/webp", 0.84);
+        preview.src = uploadedImageBase64;
+        preview.style.display = "block";
+        preview.style.background = "#ffffff";
+        preview.style.borderRadius = "8px";
+        status.textContent = "✅ Background removed; white product image is ready.";
+        status.style.color = "var(--success)";
+        document.getElementById("p-image").value = "";
+      } catch (error) {
+        console.error("Image processing failed:", error);
+        status.textContent = "❌ Image processing failed. Please choose another image.";
+        status.style.color = "var(--error)";
+      }
     }
 
     // Modal Control
@@ -455,7 +440,7 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
       document.getElementById("product-modal").classList.remove("open");
     }
 
-    function saveProduct(e) {
+    async function saveProduct(e) {
       e.preventDefault();
       const saveBtn = document.querySelector("#product-modal button[type='submit']");
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "⏳ Saving..."; }
@@ -482,13 +467,22 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
           description: document.getElementById("p-desc").value.trim()
         };
 
-        if (id) {
-          DB.updateProduct(id, data);
-          Cart.showToast("✅ Product updated! Backup updated for Google Sheet.");
-        } else {
-          DB.addProduct(data);
-          Cart.showToast("✅ Product added! Backup updated for Google Sheet.");
+        const existing = id ? DB.getProductById(id) : null;
+        let product = {
+          ...(existing || {}),
+          ...data,
+          id: id || `p_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          createdAt: existing?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        if (product.image && product.image.startsWith("data:image/")) {
+          const uploaded = await StoreApi.uploadProductImage(product.id, product.image);
+          product = { ...product, image: uploaded.url, imageStoragePath: uploaded.path };
         }
+        const saved = await DB.persistProduct(product);
+        if (existing) DB.updateProduct(saved.id, saved);
+        else DB.addProduct(saved);
+        Cart.showToast("✅ Product saved to Firebase and Google Sheet backup.");
 
         closeProductModal();
         renderProductsTable();
@@ -500,113 +494,41 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
       }
     }
 
-    function deleteProduct(id) {
-      if (confirm("⚠️ Are you sure you want to delete this product?")) {
-        DB.deleteProduct(id);
-        Cart.showToast("Product deleted successfully.");
-        renderProductsTable();
-      }
-    }
-
-    // Sheet Import Modals
-    function openImportModal() {
-      document.getElementById("sheet-csv-url").value = STORE.googleSheetCSV || "";
-      document.getElementById("import-modal").classList.add("open");
-    }
-
-    function closeImportModal() {
-      document.getElementById("import-modal").classList.remove("open");
-    }
-
-    async function importFromSheet() {
-      const url = document.getElementById("sheet-csv-url").value.trim();
-      if (!url) {
-        alert("Please enter a valid URL!"); return;
-      }
-      Cart.showToast("Importing products...");
-      const result = await SheetSync.importFromSheet(url);
-      if (result.success) {
-        Cart.showToast(`Imported ${result.count} products successfully!`);
-        // save URL in configuration
-        STORE.googleSheetCSV = url;
-        localStorage.setItem("storeSettings", JSON.stringify(STORE));
-        closeImportModal();
-        renderProductsTable();
-      } else {
-        alert("❌ Import failed: " + result.error);
-      }
-    }
-
-    function importFromBulkPaste() {
-      const text = document.getElementById("bulk-paste-text").value.trim();
-      if (!text) { alert("⚠️ Please paste product JSON or list!"); return; }
-
-      let count = 0;
-      const categoryFallbacks = {
-        jewellery: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500",
-        cosmetics: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500",
-        "tea-sets": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500",
-        paintings: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500",
-        gifts: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500"
-      };
-
+    async function deleteProduct(id) {
+      if (!confirm("Archive this product? It remains recoverable in Firebase and Google Sheet.")) return;
       try {
-        // Try parsing JSON array
-        if (text.startsWith("[") && text.endsWith("]")) {
-          const list = JSON.parse(text);
-          if (Array.isArray(list)) {
-            list.forEach(p => {
-              if (p && p.name) {
-                const cat = (p.category || "jewellery").toLowerCase();
-                DB.addProduct({
-                  name: p.name,
-                  category: cat,
-                  price: parseFloat(p.price) || 499,
-                  mrp: parseFloat(p.mrp) || Math.round((parseFloat(p.price)||499) * 1.4),
-                  stock: parseInt(p.stock) || 10,
-                  image: p.image || categoryFallbacks[cat] || categoryFallbacks.jewellery,
-                  description: p.description || ""
-                });
-                count++;
-              }
-            });
-          }
-        } else {
-          // Line by line parsing
-          const lines = text.split("\n");
-          lines.forEach(line => {
-            const parts = line.split(",").map(s => s.trim());
-            if (parts.length >= 1 && parts[0]) {
-              const name = parts[0];
-              const cat = (parts[1] || "jewellery").toLowerCase();
-              const price = parseFloat(parts[2]) || 499;
-              const mrp = parseFloat(parts[3]) || Math.round(price * 1.4);
-              const img = parts[4] || categoryFallbacks[cat] || categoryFallbacks.jewellery;
+        await DB.persistArchive(id);
+        DB.deleteProduct(id);
+        Cart.showToast("Product archived safely; backup was preserved.");
+        renderProductsTable();
+      } catch (error) {
+        alert("Archive failed. Nothing was removed. " + error.message);
+      }
+    }
 
-              DB.addProduct({
-                name,
-                category: cat,
-                price,
-                mrp,
-                stock: 10,
-                image: img,
-                description: name
-              });
-              count++;
-            }
-          });
-        }
+    async function backupProductsNow() {
+      const status = document.getElementById("backup-status");
+      status.textContent = "Backing up all products…";
+      try {
+        const result = await SheetSync.backupNow();
+        status.textContent = `✅ Backup complete: ${result.updated} updated, ${result.appended} added, ${result.total} total.`;
+      } catch (error) {
+        status.textContent = "⚠️ Backup failed; no product was removed. " + error.message;
+      }
+    }
 
-        if (count > 0) {
-          Cart.showToast(`✅ ${count} products imported successfully!`);
-          document.getElementById("bulk-paste-text").value = "";
-          closeImportModal();
-          renderProductsTable();
-        } else {
-          alert("⚠️ No valid products found in pasted text.");
+    async function previewAndRestore() {
+      const status = document.getElementById("backup-status");
+      status.textContent = "Comparing Firebase with Google Sheet…";
+      try {
+        const preview = await SheetSync.previewRestore();
+        status.textContent = `Preview: ${preview.creates} missing, ${preview.updates} newer, ${preview.unchanged} unchanged, 0 deletes.`;
+        if ((preview.creates || preview.updates) && confirm(`Merge ${preview.creates + preview.updates} recoverable product(s)? Nothing will be deleted.`)) {
+          const result = await SheetSync.restoreMerge();
+          status.textContent = `✅ Restore merged: ${result.creates} created, ${result.updates} updated, 0 deleted.`;
         }
-      } catch (err) {
-        alert("❌ Parse error: " + err.message);
+      } catch (error) {
+        status.textContent = "⚠️ Restore preview failed; nothing changed. " + error.message;
       }
     }
 

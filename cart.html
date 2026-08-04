@@ -24,13 +24,6 @@
   </style>
 </head>
 <body>
-  <!-- AD1-TOP -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
-
   <!-- OFFER MARQUEE — Dynamic from Admin Settings -->
   <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
     <div class="offer-banner-inner" id="offer-banner-inner"></div>
@@ -43,7 +36,11 @@
         if (banner) {
           var wrap = document.getElementById("offer-banner-wrap");
           var inner = document.getElementById("offer-banner-inner");
-          inner.innerHTML = [banner, banner, banner].map(t => '<span>' + t + '</span>').join('');
+          inner.replaceChildren(...[banner, banner, banner].map(function(text) {
+            var span = document.createElement("span");
+            span.textContent = text;
+            return span;
+          }));
           wrap.style.display = "";
         }
       } catch(e) {}
@@ -80,22 +77,8 @@
     <h1>🛒 My Cart</h1>
   </div>
 
-  <!-- AD2-MIDDLE -->
-  <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
-
   <!-- CART PAGE -->
   <div class="cart-page" id="cart-container"></div>
-
-  <!-- AD3-BOTTOM -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;"/>
-    </a>
-  </div>
 
   <!-- FOOTER (rendered by JS) -->
   <footer class="footer"></footer>
@@ -130,24 +113,29 @@
 
       const subtotal = Cart.total();
 
-      const itemsHTML = items.map(item => `
-        <div class="cart-item" id="item-${item.productId}">
-          <img class="cart-item-img" src="${item.image || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200'}"
-               alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200'" />
+      const itemsHTML = items.map(item => {
+        const productId = safeProductId(item.productId);
+        const qty = Math.max(1, Number(item.qty) || 1);
+        const price = Math.max(0, Number(item.price) || 0);
+        return `
+        <div class="cart-item" id="item-${productId}">
+          <img class="cart-item-img" src="${escapeHTML(safeImageUrl(item.image))}"
+               alt="${escapeHTML(item.name || "Product")}" onerror="this.src='assets/brand/icon.svg'" />
           <div class="cart-item-info">
-            <div class="cart-item-name">${item.name}</div>
-            <div class="cart-item-price">${formatCurrency(item.price)}</div>
+            <div class="cart-item-name">${escapeHTML(item.name || "Product")}</div>
+            <div class="cart-item-price">${formatCurrency(price)}</div>
             <div class="cart-item-qty-ctrl" style="margin-top:8px;">
-              <button class="cart-qty-btn" onclick="changeQty('${item.productId}', ${item.qty - 1})">−</button>
-              <span class="cart-qty-val">${item.qty}</span>
-              <button class="cart-qty-btn" onclick="changeQty('${item.productId}', ${item.qty + 1})">+</button>
+              <button class="cart-qty-btn" onclick="changeQty('${productId}', ${qty - 1})">−</button>
+              <span class="cart-qty-val">${qty}</span>
+              <button class="cart-qty-btn" onclick="changeQty('${productId}', ${qty + 1})">+</button>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-            <div style="font-weight:800;color:var(--primary);font-size:1.05rem;">${formatCurrency(item.price * item.qty)}</div>
-            <button class="cart-item-remove" onclick="removeItem('${item.productId}')" title="Remove item">🗑️</button>
+            <div style="font-weight:800;color:var(--primary);font-size:1.05rem;">${formatCurrency(price * qty)}</div>
+            <button class="cart-item-remove" onclick="removeItem('${productId}')" title="Remove item">🗑️</button>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
 
       container.innerHTML = `
         <div class="cart-grid">

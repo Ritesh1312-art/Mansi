@@ -3,23 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#650d25" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
   <title>Mansi Jewellery & Cosmetics — Apna Local Market</title>
-  <meta name="description" content="Shop jewellery, cosmetics, tea sets, paintings and more at best prices. Fast delivery in Raipur and all over India. COD available." />
+  <meta name="description" content="Shop jewellery, cosmetics, gifts and decor from Mansi Jewellery & Cosmetics in Raipur. Delivery and COD options available." />
+  <link rel="canonical" href="https://mansi-jewellery-store.vercel.app/" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/brand/icon.svg" type="image/svg+xml" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Mansi Jewellery & Cosmetics" />
+  <meta property="og:title" content="Mansi Jewellery & Cosmetics — Style Meets Tradition" />
+  <meta property="og:description" content="Jewellery, cosmetics, gifts and decor from your trusted Raipur store." />
+  <meta property="og:url" content="https://mansi-jewellery-store.vercel.app/" />
+  <meta property="og:image" content="https://mansi-jewellery-store.vercel.app/assets/brand/mansi-share-card.png" />
+  <meta property="og:image:width" content="1728" />
+  <meta property="og:image:height" content="909" />
+  <meta property="og:image:alt" content="Mansi Jewellery & Cosmetics — Style Meets Tradition" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mansi Jewellery & Cosmetics" />
+  <meta name="twitter:description" content="Style Meets Tradition — jewellery, cosmetics, gifts and decor." />
+  <meta name="twitter:image" content="https://mansi-jewellery-store.vercel.app/assets/brand/mansi-share-card.png" />
   <meta name="1921d0f1b72b1e655d86b0a0a39da449365d5246" content="1921d0f1b72b1e655d86b0a0a39da449365d5246" />
   <link rel="stylesheet" href="css/style.css?v=3.0" />
-  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Store","name":"Mansi Jewellery & Cosmetics","description":"Jewellery, cosmetics, gifts and decor store in Raipur.","url":"https://mansi-jewellery-store.vercel.app/","image":"https://mansi-jewellery-store.vercel.app/assets/brand/mansi-share-card.png","address":{"@type":"PostalAddress","streetAddress":"Ward No 47, Near Gurudwara","addressLocality":"Raipur","addressRegion":"Chhattisgarh","postalCode":"492001","addressCountry":"IN"}}</script>
 </head>
 <body>
-
-  <!-- ================================================
-       AD BANNER 1 — SABSE UPAR
-       ================================================ -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:6px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/huge_income/728x90.gif?v=1783682851"
-           alt="Advertisement" onerror="if(this.parentElement&&this.parentElement.parentElement)this.parentElement.parentElement.style.display='none';" style="max-width:100%;height:auto;display:block;" />
-    </a>
-  </div>
 
   <!-- OFFER MARQUEE BANNER — Dynamic from Admin Settings -->
   <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
@@ -33,8 +41,11 @@
         if (banner) {
           var wrap = document.getElementById("offer-banner-wrap");
           var inner = document.getElementById("offer-banner-inner");
-          // Repeat text 3x for smooth marquee loop
-          inner.innerHTML = [banner, banner, banner].map(t => '<span>' + t + '</span>').join('');
+          inner.replaceChildren(...[banner, banner, banner].map(function(text) {
+            var span = document.createElement("span");
+            span.textContent = text;
+            return span;
+          }));
           wrap.style.display = "";
         }
       } catch(e) {}
@@ -79,17 +90,17 @@
   <!-- HERO SECTION -->
   <section class="hero">
     <div class="hero-inner">
-      <div class="hero-badge">🟢 Open Now — 01-02 Days Delivery</div>
+      <div class="hero-badge">🟢 53 products safely synced and backed up</div>
       <h1>Shop <span>Jewellery, Cosmetics</span><br/>& Much More!</h1>
-      <p>Premium quality products at unbeatable prices. Fast delivery in Raipur and all over India. COD available!</p>
+      <p>Browse the current catalogue with secure accounts, address-based delivery charges, COD and configured UPI options.</p>
       <div class="hero-actions">
         <a href="products.html" class="btn-primary">🛍️ Shop Now</a>
         <a href="products.html?cat=jewellery" class="btn-outline">💍 View Jewellery</a>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="num">500+</div><div class="label">Happy Customers</div></div>
-        <div class="hero-stat"><div class="num">100+</div><div class="label">Products</div></div>
-        <div class="hero-stat"><div class="num">1-2</div><div class="label">Days Delivery</div></div>
+        <div class="hero-stat"><div class="num">53</div><div class="label">Backed-up Products</div></div>
+        <div class="hero-stat"><div class="num">24×7</div><div class="label">Online Catalogue</div></div>
+        <div class="hero-stat"><div class="num">India</div><div class="label">Delivery Zones</div></div>
         <div class="hero-stat"><div class="num">COD</div><div class="label">Available</div></div>
       </div>
     </div>
@@ -110,16 +121,6 @@
     </div>
   </div>
 
-  <!-- ================================================
-       AD BANNER 2 — BICH MEIN
-       ================================================ -->
-  <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:20px 0;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851"
-           alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-    </a>
-  </div>
-
   <!-- NEW ARRIVALS -->
   <div class="section">
     <div class="section-title">✨ New Arrivals</div>
@@ -138,7 +139,7 @@
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
         <div style="font-size:2.5rem;margin-bottom:10px;">💰</div>
         <div style="font-weight:700;margin-bottom:6px;">Best Prices</div>
-        <div style="color:var(--text-muted);font-size:0.85rem;">Guaranteed lowest prices always</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">Clear catalogue and checkout pricing</div>
       </div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
         <div style="font-size:2.5rem;margin-bottom:10px;">🏅</div>
@@ -148,19 +149,9 @@
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
         <div style="font-size:2.5rem;margin-bottom:10px;">📦</div>
         <div style="font-weight:700;margin-bottom:6px;">COD Available</div>
-        <div style="color:var(--text-muted);font-size:0.85rem;">Pay on delivery, no risk!</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">Pay when an eligible order is delivered</div>
       </div>
     </div>
-  </div>
-
-  <!-- ================================================
-       AD BANNER 3 — SABSE LAST MEIN
-       ================================================ -->
-  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:20px;overflow:hidden;">
-    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
-      <img src="//static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851"
-           alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
-    </a>
   </div>
 
   <!-- FOOTER -->
@@ -170,9 +161,9 @@
         <div style="font-size:1.2rem;font-weight:800;color:var(--primary);">💍 Mansi Jewellery & Cosmetics</div>
         <p>Your trusted local market for jewellery, cosmetics, tea sets, and more. Serving Raipur and all of India.</p>
         <div style="margin-top:16px;display:flex;gap:10px;">
-          <a href="https://wa.me/919876543210" target="_blank"
-             style="background:#25D366;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
-            💬 WhatsApp Us
+          <a href="https://t.me/MansiJewellery" target="_blank" rel="noopener"
+             style="background:#0088cc;color:#fff;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            ✈️ Telegram Support
           </a>
         </div>
       </div>
@@ -199,12 +190,10 @@
   <script src="js/config.js?v=3.0"></script>
   <script src="js/data.js?v=3.0"></script>
   <script src="js/app.js?v=3.0"></script>
-  <script src="js/watchdog-core.js?v=3.0"></script>
   <script>
     // Init
     loadTheme();
     initNavbar();
-    try { Watchdog.runHealthCheck(); } catch(e) {}
 
     // Categories
     function renderCategories() {
@@ -220,34 +209,40 @@
 
     // Product card HTML — use data-index for reliable click
     function productCard(p, index) {
-      const disc = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
-      const rating = Math.min(5, Math.max(4, parseFloat(p.rating) || 4.5));
+      const price = Math.max(0, Number(p.price) || 0);
+      const mrp = Math.max(price, Number(p.mrp) || price);
+      const reviews = Math.max(0, Number(p.reviews) || 0);
+      const disc = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
+      const rating = Math.min(5, Math.max(0, parseFloat(p.rating) || 0));
+      const safeName = escapeHTML(p.name || "Product");
+      const safeId = safeProductId(p.id);
+      const safeImage = escapeHTML(safeImageUrl(p.image));
       const fullStars = Math.floor(rating);
       const halfStar = (rating - fullStars) >= 0.5 ? '⭐' : '';
       const starsHtml = '★'.repeat(fullStars) + (halfStar ? '½' : '') ;
       return `
         <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
           <div class="product-card-img">
-            <img src="${p.image || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" style="object-fit:contain;" />
+            <img src="${safeImage}" alt="${safeName}" loading="lazy" style="object-fit:contain;background:#fff;" onerror="this.src='assets/brand/icon.svg'" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
-            <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? 'active' : ''}" data-wishlist-id="${p.id}" onclick="event.stopPropagation();Wishlist.toggle('${p.id}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(p.id) ? '❤️' : '🤍'}</button>
+            <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? 'active' : ''}" data-wishlist-id="${safeId}" onclick="event.stopPropagation();Wishlist.toggle('${safeId}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? '❤️' : '🤍'}</button>
           </div>
           <div class="product-card-body">
-            <div class="product-card-name">${p.name}</div>
+            <div class="product-card-name">${safeName}</div>
             <div class="product-card-rating">
               <span class="stars" style="color:#f5a623;font-size:0.9rem;">${starsHtml}</span>
-              <span style="font-size:0.8rem;font-weight:600;color:#f5a623;margin-left:2px;">${rating.toFixed(1)}</span>
-              <span class="rating-count">(${p.reviews || 0})</span>
+              <span style="font-size:0.8rem;font-weight:600;color:#f5a623;margin-left:2px;">${rating ? rating.toFixed(1) : "New"}</span>
+              <span class="rating-count">(${reviews})</span>
             </div>
             <div class="product-card-price">
-              <span class="price-current">₹${p.price}</span>
-              ${p.mrp > p.price ? `<span class="price-mrp">₹${p.mrp}</span><span class="price-off">Save ₹${p.mrp - p.price}</span>` : ""}
+              <span class="price-current">₹${price}</span>
+              ${mrp > price ? `<span class="price-mrp">₹${mrp}</span><span class="price-off">Save ₹${mrp - price}</span>` : ""}
             </div>
             <div style="display:flex;gap:8px;margin-top:auto;">
-              <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${p.id}')">
+              <button class="btn-add-cart" style="flex:1;padding:10px;font-size:0.82rem;" onclick="event.stopPropagation();Cart.add('${safeId}')">
                 🛒 Add
               </button>
-              <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${p.id}')">
+              <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${safeId}')">
                 ⚡ Buy Now
               </button>
             </div>
