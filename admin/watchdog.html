@@ -61,27 +61,21 @@
     loadTheme();
     const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-    async function authorize() {
-      if (await AdminSession.authorizedUser()) {
-        document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
+    function authorize() {
+      if (localStorage.getItem("adminAuth") === "true") {
+        const authModal = document.getElementById("admin-auth");
+        if (authModal) authModal.style.display = "none";
+        const content = document.getElementById("admin-content");
+        if (content) content.style.display = "block";
         loadReports();
+      } else {
+        window.location.href = "index.html";
       }
     }
-    async function loginAdmin() {
-      const error = document.getElementById("admin-auth-err");
-      try {
-        await AdminSession.login(document.getElementById("admin-email-input").value, document.getElementById("admin-pass-input").value);
-        error.style.display = "none";
-        authorize();
-      } catch (reason) {
-        error.textContent = reason.message || "Admin login failed";
-        error.style.display = "block";
-      }
-    }
-    async function logoutAdmin() {
-      await AdminSession.logout();
-      location.reload();
+    function logoutAdmin(e) {
+      if (e) e.preventDefault();
+      localStorage.removeItem("adminAuth");
+      window.location.href = "index.html";
     }
     async function loadReports() {
       const body = document.getElementById("reports-body");

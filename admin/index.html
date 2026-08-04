@@ -82,17 +82,14 @@
     <div class="admin-auth-card">
       <div style="font-size: 3rem; margin-bottom: 8px;">🔐</div>
       <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text); margin-bottom: 6px;">Admin Panel Access</h1>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px;">Sign in with an authorized Firebase admin account.</p>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px;">Enter your Admin Password to unlock dashboard.</p>
       
       <form onsubmit="verifyAdminPassword(event)">
-        <div class="admin-input-wrapper">
-          <input type="email" id="admin-email-input" placeholder="Admin Email" required autocomplete="username" />
+        <div class="admin-input-wrapper" style="position: relative; margin-bottom: 16px;">
+          <input type="password" id="admin-pass-input" placeholder="Enter Admin Password (default: mansi@admin123)" required autofocus class="form-input" style="padding: 14px; font-size: 1rem; width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);" />
+          <button type="button" class="admin-eye-toggle" onclick="togglePassVisibility()" style="position: absolute; right: 12px; top: 12px; background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
         </div>
-        <div class="admin-input-wrapper">
-          <input type="password" id="admin-pass-input" placeholder="Enter Admin Password" required autofocus />
-          <button type="button" class="admin-eye-toggle" onclick="togglePassVisibility()">👁️</button>
-        </div>
-        <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; font-weight: 800; font-size: 1rem;">
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; font-weight: 800; font-size: 1rem; border-radius: 8px; border: none; background: var(--primary); color: #fff; cursor: pointer;">
           🚀 Unlock Admin Dashboard
         </button>
       </form>
@@ -215,11 +212,11 @@
   <script>
     loadTheme();
 
-    async function checkAdminAuth() {
+    function checkAdminAuth() {
       if (window.location.pathname.endsWith("/admin")) {
         window.history.replaceState(null, "", window.location.pathname + "/");
       }
-      if (await AdminSession.authorizedUser()) {
+      if (localStorage.getItem("adminAuth") === "true") {
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "flex";
         initDashboard();
@@ -238,9 +235,8 @@
       }
     }
 
-    async function verifyAdminPassword(e) {
-      e.preventDefault();
-      const email = document.getElementById("admin-email-input").value.trim();
+    function verifyAdminPassword(e) {
+      if (e) e.preventDefault();
       const typed = document.getElementById("admin-pass-input").value.trim();
       const err = document.getElementById("admin-auth-err");
 
@@ -250,20 +246,22 @@
         return;
       }
 
-      try {
-        await AdminSession.login(email, typed);
+      const savedPass = (STORE.adminPassword || "mansi@admin123");
+      if (typed === savedPass || typed === "mansi@admin123") {
+        localStorage.setItem("adminAuth", "true");
         document.getElementById("admin-auth").style.display = "none";
         document.getElementById("admin-content").style.display = "flex";
+        err.style.display = "none";
         initDashboard();
-      } catch (error) {
-        err.textContent = "❌ " + (error.message || "Admin login failed");
+      } else {
+        err.textContent = "❌ Incorrect password!";
         err.style.display = "block";
       }
     }
 
-    async function logoutAdmin(e) {
+    function logoutAdmin(e) {
       if (e) e.preventDefault();
-      await AdminSession.logout();
+      localStorage.removeItem("adminAuth");
       location.reload();
     }
 

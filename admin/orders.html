@@ -122,33 +122,22 @@
   <script>
     loadTheme();
 
-    async function checkAdminAuth() {
-      if (await AdminSession.authorizedUser()) {
-        document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
+    function checkAdminAuth() {
+      if (localStorage.getItem("adminAuth") === "true") {
+        const authModal = document.getElementById("admin-auth");
+        if (authModal) authModal.style.display = "none";
+        const content = document.getElementById("admin-content");
+        if (content) content.style.display = "block";
         renderOrdersTable();
+      } else {
+        window.location.href = "index.html";
       }
     }
 
-    async function verifyAdminPassword() {
-      const email = document.getElementById("admin-email-input").value.trim();
-      const typed = document.getElementById("admin-pass-input").value;
-      const err = document.getElementById("admin-auth-err");
-      try {
-        await AdminSession.login(email, typed);
-        document.getElementById("admin-auth").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
-        err.style.display = "none";
-        renderOrdersTable();
-      } catch (error) {
-        err.textContent = "❌ " + (error.message || "Admin login failed");
-        err.style.display = "block";
-      }
-    }
-
-    async function logoutAdmin() {
-      await AdminSession.logout();
-      location.reload();
+    function logoutAdmin(e) {
+      if (e) e.preventDefault();
+      localStorage.removeItem("adminAuth");
+      window.location.href = "index.html";
     }
 
     async function renderOrdersTable() {
