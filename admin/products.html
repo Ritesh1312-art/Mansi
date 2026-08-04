@@ -467,22 +467,13 @@
           description: document.getElementById("p-desc").value.trim()
         };
 
-        const existing = id ? DB.getProductById(id) : null;
-        let product = {
-          ...(existing || {}),
-          ...data,
-          id: id || `p_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          createdAt: existing?.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        if (product.image && product.image.startsWith("data:image/")) {
-          const uploaded = await StoreApi.uploadProductImage(product.id, product.image);
-          product = { ...product, image: uploaded.url, imageStoragePath: uploaded.path };
+        if (id) {
+          DB.updateProduct(id, data);
+          Cart.showToast("✅ Product updated successfully!");
+        } else {
+          DB.addProduct(data);
+          Cart.showToast("✅ Product added successfully!");
         }
-        const saved = await DB.persistProduct(product);
-        if (existing) DB.updateProduct(saved.id, saved);
-        else DB.addProduct(saved);
-        Cart.showToast("✅ Product saved to Firebase and Google Sheet backup.");
 
         closeProductModal();
         renderProductsTable();
@@ -494,15 +485,11 @@
       }
     }
 
-    async function deleteProduct(id) {
-      if (!confirm("Archive this product? It remains recoverable in Firebase and Google Sheet.")) return;
-      try {
-        await DB.persistArchive(id);
+    function deleteProduct(id) {
+      if (confirm("⚠️ Are you sure you want to delete this product?")) {
         DB.deleteProduct(id);
-        Cart.showToast("Product archived safely; backup was preserved.");
+        Cart.showToast("Product deleted successfully.");
         renderProductsTable();
-      } catch (error) {
-        alert("Archive failed. Nothing was removed. " + error.message);
       }
     }
 
