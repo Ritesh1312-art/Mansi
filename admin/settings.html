@@ -382,7 +382,7 @@
       document.getElementById("del-india-cod").value = DELIVERY.restOfIndia.cod;
 
       // 4. Pre-fill Sheet Sync
-      document.getElementById("s-sheet-url").value = STORE.googleSheetCSV || "";
+      document.getElementById("s-sheet-url").value = STORE.googleSheetCSV || defaultStore.googleSheetCSV || "";
 
       // 5. Pre-fill Firebase Config
       const fb = STORE.firebaseConfig || {};
@@ -534,6 +534,7 @@
       }
       const updatedStore = {
         ...STORE,
+        googleSheetCSV: document.getElementById("s-sheet-url")?.value.trim() || STORE.googleSheetCSV || defaultStore.googleSheetCSV,
         name: document.getElementById("s-name").value.trim(),
         tagline: document.getElementById("s-tagline").value.trim(),
         telegramUsername: document.getElementById("s-tg-username").value.trim().replace('@', ''),

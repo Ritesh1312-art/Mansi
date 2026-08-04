@@ -37,7 +37,11 @@ const defaultDelivery = {
   restOfIndia:  { prepaid: 150, cod: 195 },
 };
 
-const STORE = { ...defaultStore, ...JSON.parse(localStorage.getItem("storeSettings") || "{}") };
+const _savedStore = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+if (!_savedStore.googleSheetCSV) {
+  _savedStore.googleSheetCSV = defaultStore.googleSheetCSV;
+}
+const STORE = { ...defaultStore, ..._savedStore };
 const DELIVERY = { ...defaultDelivery, ...JSON.parse(localStorage.getItem("deliverySettings") || "{}") };
 
 // =============================================
