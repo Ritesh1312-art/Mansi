@@ -167,6 +167,31 @@ const Watchdog = {
   },
 
   /**
+   * Checks if 9 AM or 9 PM scheduled report needs to be sent
+   */
+  async checkScheduledReport() {
+    const now = new Date();
+    const hour = now.getHours();
+    const dateStr = now.toISOString().split('T')[0];
+
+    let slot = null;
+    if (hour === 9) slot = "9AM";
+    if (hour === 21) slot = "9PM";
+
+    if (slot) {
+      const slotKey = `watchdog_scheduled_${dateStr}_${slot}`;
+      if (!localStorage.getItem(slotKey)) {
+        console.log(`[Watchdog] ⏰ Triggering scheduled ${slot} Telegram health report...`);
+        const report = this.inspect();
+        const res = await this.sendTelegramAlert(report, true);
+        if (res.success) {
+          localStorage.setItem(slotKey, "sent");
+        }
+      }
+    }
+  },
+
+  /**
    * Run non-blocking health check on app startup
    */
   async runHealthCheck() {
@@ -174,7 +199,10 @@ const Watchdog = {
       const report = this.inspect();
       console.log(`[Watchdog] Health Check Status: ${report.status} (${report.productCount}/${report.baselineCount} products)`);
 
-      // Only alert if there is a warning or critical alert
+      // 1. Scheduled 9 AM & 9 PM report check
+      await this.checkScheduledReport();
+
+      // 2. Only alert on emergency warnings if count drops
       if (report.status === "WARNING" || report.status === "ALERT") {
         await this.sendTelegramAlert(report, false);
       }

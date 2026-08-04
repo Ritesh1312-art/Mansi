@@ -804,3 +804,64 @@ if (document.readyState === "loading") {
 } else {
   initChatbotWidget();
 }
+
+// =============================================
+// AUTOMATIC IMAGE WHITE CANVAS PROCESSOR
+// Automatically composites any uploaded or fetched image onto a pure white canvas (#FFFFFF)
+// =============================================
+function processImageToWhiteCanvas(imageSrc, maxWidth = 800, maxHeight = 800) {
+  return new Promise((resolve) => {
+    if (!imageSrc || typeof imageSrc !== "string") return resolve(imageSrc || "");
+    if (imageSrc.startsWith("http://") || imageSrc.startsWith("https://")) return resolve(imageSrc);
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      let width = img.width || 400;
+      let height = img.height || 400;
+
+      if (width > maxWidth || height > maxHeight) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      // Fill pure crisp white background (#FFFFFF)
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Composite alpha channels onto white
+      try {
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const a = d[i + 3];
+          if (a < 255) {
+            const alpha = a / 255;
+            d[i] = Math.round(d[i] * alpha + 255 * (1 - alpha));
+            d[i + 1] = Math.round(d[i + 1] * alpha + 255 * (1 - alpha));
+            d[i + 2] = Math.round(d[i + 2] * alpha + 255 * (1 - alpha));
+            d[i + 3] = 255;
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+      } catch(err) {}
+
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => resolve(imageSrc);
+    img.src = imageSrc;
+  });
+}
+window.processImageToWhiteCanvas = processImageToWhiteCanvas;
+

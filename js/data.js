@@ -117,21 +117,15 @@ const DB = {
     return products;
   },
   saveLocalProductCache(products) {
-    const lightweight = products.map(product => {
-      const copy = { ...product };
-      if (copy.image && (copy.image.startsWith("data:") || copy.image.length > 50000)) {
-        copy.image = "";
-      }
-      return copy;
-    });
-
+    if (!Array.isArray(products)) return;
     try {
-      localStorage.removeItem("products_backup");
-      localStorage.setItem("products", JSON.stringify(lightweight));
+      localStorage.setItem("products", JSON.stringify(products));
+      localStorage.setItem("products_backup", JSON.stringify(products));
     } catch (e) {
-      console.warn("Local product cache skipped because browser storage is full.", e);
-      localStorage.removeItem("products");
-      localStorage.removeItem("products_backup");
+      console.warn("Local product cache quota warning, storing clean payload:", e);
+      try {
+        localStorage.setItem("products", JSON.stringify(products));
+      } catch(err) {}
     }
   },
   saveProducts(products) {

@@ -383,23 +383,20 @@ Rose Lip Gloss, cosmetics, 399, 699'></textarea>
           canvas.height = height;
           const ctx = canvas.getContext("2d");
 
-          ctx.clearRect(0, 0, width, height);
+          // Fill pure white canvas background (#FFFFFF)
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
 
-          try { removeBackground(ctx, width, height); } catch(err){}
-
-          // Try WebP compression first (supports transparency + ultra lightweight ~25KB), fallback to PNG
-          try {
-            uploadedImageBase64 = canvas.toDataURL("image/webp", 0.75);
-          } catch(err) {
-            uploadedImageBase64 = canvas.toDataURL("image/png");
-          }
+          // Compress to lightweight clean JPEG on white background
+          uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.85);
 
           preview.src = uploadedImageBase64;
           preview.style.display = "block";
-          preview.style.background = "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 10px 10px";
+          preview.style.background = "#FFFFFF";
+          preview.style.border = "1px solid var(--border)";
           preview.style.borderRadius = "8px";
-          status.textContent = "✅ Image compressed & ready!";
+          status.textContent = "✅ Image processed on pure white background!";
           status.style.color = "var(--success)";
           document.getElementById("p-image").value = "";
         };
