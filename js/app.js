@@ -95,23 +95,54 @@ const SheetSync = {
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       if (lines.length <= 1) return { success: false, error: "Empty or invalid sheet" };
 
-      const rows = lines.slice(1); // skip header
-      let imported = 0;
+      const headerCols = this.parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      
+      // Find column indices dynamically
+      let idIdx = headerCols.indexOf("id");
+      let nameIdx = headerCols.indexOf("name");
+      let catIdx = headerCols.indexOf("category");
+      let priceIdx = headerCols.indexOf("price");
+      let mrpIdx = headerCols.indexOf("mrp");
+      let descIdx = headerCols.indexOf("description");
+      let imgIdx = headerCols.indexOf("image");
+      let stockIdx = headerCols.indexOf("stock");
+      let ratingIdx = headerCols.indexOf("rating");
+
+      // Fallback default indices if standard Name, Price, MRP format is used
+      if (nameIdx === -1) nameIdx = 0;
+      if (priceIdx === -1) priceIdx = 1;
+      if (mrpIdx === -1) mrpIdx = 2;
+      if (catIdx === -1) catIdx = 3;
+      if (imgIdx === -1) imgIdx = 4;
+      if (descIdx === -1) descIdx = 5;
+      if (stockIdx === -1) stockIdx = 6;
+
+      const rows = lines.slice(1);
       const sheetProducts = [];
 
       rows.forEach(row => {
         const cols = this.parseCSVLine(row);
-        if (cols.length >= 2 && cols[0]) {
-          const name = cols[0];
-          const price = parseFloat(cols[1]) || 299;
-          const mrp = parseFloat(cols[2]) || Math.round(price * 1.3);
-          const category = (cols[3] || "jewellery").toLowerCase();
-          const image = cols[4] || "";
-          const description = cols[5] || name;
-          const stock = parseInt(cols[6]) || 10;
+        const name = (cols[nameIdx] || "").trim();
+        if (name) {
+          const id = (idIdx !== -1 && cols[idIdx]) ? cols[idIdx].trim() : ("p_sp_" + Math.abs(name.split("").reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)));
+          const price = parseFloat(cols[priceIdx]) || 299;
+          const mrp = parseFloat(cols[mrpIdx]) || Math.round(price * 1.3);
+          const category = (cols[catIdx] || "jewellery").toLowerCase().trim();
+          let image = (cols[imgIdx] || "").trim();
+          const description = (cols[descIdx] || name).trim();
+          const stock = parseInt(cols[stockIdx]) || 10;
+          const rating = parseFloat(cols[ratingIdx]) || (4.0 + Math.random() * 0.9);
+
+          // Convert Google Drive view links to direct image URLs
+          if (image.includes("drive.google.com/file/d/")) {
+            const fileId = image.split("/file/d/")[1]?.split("/")[0];
+            if (fileId) {
+              image = `https://lh3.googleusercontent.com/d/${fileId}`;
+            }
+          }
 
           sheetProducts.push({
-            id: "sp_" + Math.abs(name.split("").reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)),
+            id,
             name,
             price,
             mrp,
@@ -120,19 +151,21 @@ const SheetSync = {
             description,
             stock,
             inStock: stock > 0,
-            rating: 4.8,
+            rating: parseFloat(Math.min(rating, 5.0).toFixed(1)),
+            reviews: Math.floor(Math.random() * 40) + 10,
             createdAt: new Date().toISOString()
           });
-          imported++;
         }
       });
 
       if (sheetProducts.length > 0) {
-        // Save imported products in DB
         localStorage.setItem("products", JSON.stringify(sheetProducts));
         localStorage.setItem("products_backup", JSON.stringify(sheetProducts));
+        if (typeof Watchdog !== 'undefined' && Watchdog.updateBaseline) {
+          Watchdog.updateBaseline(sheetProducts.length);
+        }
         window.dispatchEvent(new Event("productsSynced"));
-        return { success: true, count: imported };
+        return { success: true, count: sheetProducts.length };
       }
       return { success: false, error: "No products found in sheet" };
     } catch (e) {

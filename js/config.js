@@ -12,7 +12,7 @@ const defaultStore = {
   phone: "+91 98765 43210",
   offerBanner: "🎉 Use code WELCOME | Free delivery on first order!",
   razorpayKey: "rzp_test_XXXXXXXXXX", 
-  googleSheetCSV: "", 
+  googleSheetCSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxjU88A3UAAG-S9qK9AkGKybrh4VEUPxMzA7RSFfdyktaFcDJmMzkcTCnGGPgZuodDXC800tBn6wmR/pub?output=csv", 
   adminPassword: "mansi@admin123", 
   firebaseConfig: {
     apiKey: "AIzaSy" + "CtfYpLZYJNauPrNbnSY8Tv7kKzusQpr6U",
