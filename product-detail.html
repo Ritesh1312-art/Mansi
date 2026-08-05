@@ -47,6 +47,34 @@
 </head>
 <body>
 
+  <!-- OFFER MARQUEE BANNER — Dynamic from Admin Settings -->
+  <div class="offer-banner" id="offer-banner-wrap">
+    <div class="offer-banner-inner" id="offer-banner-inner">
+      <span>✨ Browse our latest jewellery and cosmetics collection</span>
+      <span>💍 Mansi Jewellery & Cosmetics — Style Meets Tradition</span>
+      <span>📦 COD Available All Over India</span>
+      <span>✨ Browse our latest jewellery and cosmetics collection</span>
+    </div>
+  </div>
+  <script>
+    (function() {
+      try {
+        var store = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+        var banner = (store.offerBanner || (window.STORE && window.STORE.offerBanner) || "✨ Browse our latest jewellery and cosmetics collection").trim();
+        if (banner) {
+          var inner = document.getElementById("offer-banner-inner");
+          if (inner) {
+            inner.replaceChildren(...[banner, "💍 Mansi Jewellery & Cosmetics — Style Meets Tradition", "📦 COD Available All Over India", banner].map(function(text) {
+              var span = document.createElement("span");
+              span.textContent = text;
+              return span;
+            }));
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
+
   <!-- NAVBAR -->
   <nav class="navbar">
     <a class="nav-logo" href="index.html">

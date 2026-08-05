@@ -143,23 +143,28 @@
 <body>
 
   <!-- OFFER MARQUEE BANNER — Dynamic from Admin Settings -->
-  <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
-    <div class="offer-banner-inner" id="offer-banner-inner"></div>
+  <div class="offer-banner" id="offer-banner-wrap">
+    <div class="offer-banner-inner" id="offer-banner-inner">
+      <span>✨ Browse our latest jewellery and cosmetics collection</span>
+      <span>💍 Mansi Jewellery & Cosmetics — Style Meets Tradition</span>
+      <span>📦 COD Available All Over India</span>
+      <span>✨ Browse our latest jewellery and cosmetics collection</span>
+    </div>
   </div>
   <script>
     (function() {
       try {
         var store = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-        var banner = (store.offerBanner || "").trim();
+        var banner = (store.offerBanner || (window.STORE && window.STORE.offerBanner) || "✨ Browse our latest jewellery and cosmetics collection").trim();
         if (banner) {
-          var wrap = document.getElementById("offer-banner-wrap");
           var inner = document.getElementById("offer-banner-inner");
-          inner.replaceChildren(...[banner, banner, banner].map(function(text) {
-            var span = document.createElement("span");
-            span.textContent = text;
-            return span;
-          }));
-          wrap.style.display = "";
+          if (inner) {
+            inner.replaceChildren(...[banner, "💍 Mansi Jewellery & Cosmetics — Style Meets Tradition", "📦 COD Available All Over India", banner].map(function(text) {
+              var span = document.createElement("span");
+              span.textContent = text;
+              return span;
+            }));
+          }
         }
       } catch(e) {}
     })();
