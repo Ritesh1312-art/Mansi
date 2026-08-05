@@ -147,7 +147,6 @@ const CATEGORIES = [
   { id: "all",       name: "All Products",    icon: "🛍️" },
   { id: "jewellery", name: "Jewellery",       icon: "💍" },
   { id: "cosmetics", name: "Cosmetics",       icon: "💄" },
-  { id: "tea-sets",  name: "Tea Cup Sets",    icon: "☕" },
   { id: "paintings", name: "Paintings",       icon: "🖼️" },
   { id: "gifts",     name: "Gift Items",      icon: "🎁" }
 ];
