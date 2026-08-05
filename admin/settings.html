@@ -302,65 +302,103 @@
     async function saveTelegramConfig() {
       const username = document.getElementById("s-telegram-username").value.trim().replace('@', '');
       STORE.telegramUsername = username;
-      await StoreApi.saveSettings({ telegramUsername: username }, {});
+      const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      current.telegramUsername = username;
+      localStorage.setItem("storeSettings", JSON.stringify(current));
+
+      try {
+        if (window.StoreApi && window.fbAuth && fbAuth.currentUser) {
+          await StoreApi.saveSettings({ telegramUsername: username }, {});
+        }
+      } catch (e) { console.warn("Server settings sync skipped:", e); }
+
       Cart.showToast("✈️ Public Telegram support username updated.");
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 800);
     }
 
     async function saveUpiConfig() {
-      STORE.gpayUpi = document.getElementById("s-upi-gpay").value.trim();
-      STORE.phonepeUpi = document.getElementById("s-upi-phonepe").value.trim();
-      STORE.paytmUpi = document.getElementById("s-upi-paytm").value.trim();
-      await StoreApi.saveSettings({
-        gpayUpi: STORE.gpayUpi,
-        phonepeUpi: STORE.phonepeUpi,
-        paytmUpi: STORE.paytmUpi
-      }, {});
-      Cart.showToast("UPI configuration saved globally.");
-      setTimeout(() => location.reload(), 1000);
+      const gpayUpi = document.getElementById("s-upi-gpay").value.trim();
+      const phonepeUpi = document.getElementById("s-upi-phonepe").value.trim();
+      const paytmUpi = document.getElementById("s-upi-paytm").value.trim();
+
+      STORE.gpayUpi = gpayUpi;
+      STORE.phonepeUpi = phonepeUpi;
+      STORE.paytmUpi = paytmUpi;
+
+      const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      current.gpayUpi = gpayUpi;
+      current.phonepeUpi = phonepeUpi;
+      current.paytmUpi = paytmUpi;
+      localStorage.setItem("storeSettings", JSON.stringify(current));
+
+      try {
+        if (window.StoreApi && window.fbAuth && fbAuth.currentUser) {
+          await StoreApi.saveSettings({ gpayUpi, phonepeUpi, paytmUpi }, {});
+        }
+      } catch (e) { console.warn("Server settings sync skipped:", e); }
+
+      Cart.showToast("✅ UPI Settings (PhonePe, GPay, Paytm) saved successfully!");
+      setTimeout(() => location.reload(), 800);
     }
 
     async function saveStoreInfo(e) {
       e.preventDefault();
-      const updatedStore = {
-        ...STORE,
-        name: document.getElementById("s-name").value.trim(),
-        tagline: document.getElementById("s-tagline").value.trim(),
-        telegramUsername: document.getElementById("s-tg-username").value.trim().replace('@', ''),
-        email: document.getElementById("s-email").value.trim(),
-        address: document.getElementById("s-address").value.trim(),
-        offerBanner: document.getElementById("s-banner").value.trim(),
-      };
+      const name = document.getElementById("s-name").value.trim();
+      const tagline = document.getElementById("s-tagline").value.trim();
+      const telegramUsername = document.getElementById("s-tg-username").value.trim().replace('@', '');
+      const email = document.getElementById("s-email").value.trim();
+      const address = document.getElementById("s-address").value.trim();
+      const offerBanner = document.getElementById("s-banner").value.trim();
 
-      await StoreApi.saveSettings(updatedStore, {});
-      Cart.showToast("Store settings saved globally.");
-      setTimeout(() => location.reload(), 1000);
+      const updatedStore = { ...STORE, name, tagline, telegramUsername, email, address, offerBanner };
+      Object.assign(STORE, updatedStore);
+
+      const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      Object.assign(current, { name, tagline, telegramUsername, email, address, offerBanner });
+      localStorage.setItem("storeSettings", JSON.stringify(current));
+
+      try {
+        if (window.StoreApi && window.fbAuth && fbAuth.currentUser) {
+          await StoreApi.saveSettings(updatedStore, {});
+        }
+      } catch (err) { console.warn("Server settings sync skipped:", err); }
+
+      Cart.showToast("✅ Store settings saved successfully!");
+      setTimeout(() => location.reload(), 800);
     }
 
     async function saveDeliverySettings(e) {
       e.preventDefault();
       const updatedDelivery = {
         sameCity: {
-          prepaid: parseInt(document.getElementById("del-city-pre").value),
-          cod: parseInt(document.getElementById("del-city-cod").value)
+          prepaid: parseInt(document.getElementById("del-city-pre").value) || 0,
+          cod: parseInt(document.getElementById("del-city-cod").value) || 0
         },
         sameState: {
-          prepaid: parseInt(document.getElementById("del-state-pre").value),
-          cod: parseInt(document.getElementById("del-state-cod").value)
+          prepaid: parseInt(document.getElementById("del-state-pre").value) || 0,
+          cod: parseInt(document.getElementById("del-state-cod").value) || 0
         },
         nearbyStates: {
-          prepaid: parseInt(document.getElementById("del-near-pre").value),
-          cod: parseInt(document.getElementById("del-near-cod").value)
+          prepaid: parseInt(document.getElementById("del-near-pre").value) || 0,
+          cod: parseInt(document.getElementById("del-near-cod").value) || 0
         },
         restOfIndia: {
-          prepaid: parseInt(document.getElementById("del-india-pre").value),
-          cod: parseInt(document.getElementById("del-india-cod").value)
+          prepaid: parseInt(document.getElementById("del-india-pre").value) || 0,
+          cod: parseInt(document.getElementById("del-india-cod").value) || 0
         }
       };
 
-      await StoreApi.saveSettings({}, updatedDelivery);
-      Cart.showToast("Delivery rates saved globally.");
-      setTimeout(() => location.reload(), 1000);
+      Object.assign(DELIVERY, updatedDelivery);
+      localStorage.setItem("deliverySettings", JSON.stringify(updatedDelivery));
+
+      try {
+        if (window.StoreApi && window.fbAuth && fbAuth.currentUser) {
+          await StoreApi.saveSettings({}, updatedDelivery);
+        }
+      } catch (err) { console.warn("Server settings sync skipped:", err); }
+
+      Cart.showToast("✅ Delivery rates saved successfully!");
+      setTimeout(() => location.reload(), 800);
     }
 
     // Run auth check
