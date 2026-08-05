@@ -180,6 +180,9 @@ async function logoutAdmin(e) {
 function renderFooter() {
   const footer = document.querySelector(".footer");
   if (!footer) return;
+  const inAdmin = window.location.pathname.includes("/admin/");
+  const prefix = inAdmin ? "../" : "";
+  const adminPrefix = inAdmin ? "" : "admin/";
   const session = DB.getSession();
   const isAdmin = localStorage.getItem("adminAuth") === "true";
   const tgUser = String(STORE.telegramUsername || "").replace(/^@/, "").replace(/[^A-Za-z0-9_]/g, "");
@@ -205,20 +208,20 @@ function renderFooter() {
       </div>
       <div class="footer-col">
         <h4>Quick Links</h4>
-        <a href="index.html">🏠 Home</a>
-        <a href="products.html">🛍️ Products</a>
-        <a href="cart.html">🛒 Cart</a>
+        <a href="${prefix}index.html">🏠 Home</a>
+        <a href="${prefix}products.html">🛍️ Products</a>
+        <a href="${prefix}cart.html">🛒 Cart</a>
         ${isAdmin 
-          ? `<a href="admin/index.html">⚙️ Admin Dashboard</a>` 
+          ? `<a href="${adminPrefix}index.html">⚙️ Admin Dashboard</a>` 
           : session 
-            ? `<a href="orders.html">📦 My Orders</a>` 
-            : `<a href="login.html">👤 Login / Sign Up</a>`}
+            ? `<a href="${prefix}orders.html">📦 My Orders</a>` 
+            : `<a href="${prefix}login.html">👤 Login / Sign Up</a>`}
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
         <span>📍 ${address}</span>
         <a href="mailto:${email}">✉️ ${escapeHTML(email)}</a>
-        ${!session && !isAdmin ? `<a href="admin/index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>` : ""}
+        ${!session && !isAdmin ? `<a href="${adminPrefix}index.html" style="color:var(--text-light);font-size:0.78rem;margin-top:8px;">🔐 Admin Panel</a>` : ""}
         ${isAdmin ? `<a href="javascript:void(0)" onclick="logoutAdmin(event)" style="color:var(--error);font-size:0.85rem;margin-top:8px;font-weight:600;">🚪 Admin Logout</a>` : ""}
       </div>
     </div>
