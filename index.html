@@ -32,28 +32,25 @@
 <body>
 
   <!-- OFFER MARQUEE BANNER — Dynamic from Admin Settings -->
-  <div class="offer-banner" id="offer-banner-wrap">
-    <div class="offer-banner-inner" id="offer-banner-inner">
-      <span>✨ Browse our latest jewellery and cosmetics collection</span>
-      <span>💍 Mansi Jewellery & Cosmetics — Style Meets Tradition</span>
-      <span>📦 COD Available All Over India</span>
-      <span>✨ Browse our latest jewellery and cosmetics collection</span>
-    </div>
+  <div class="offer-banner" id="offer-banner-wrap" style="display:none;">
+    <div class="offer-banner-inner" id="offer-banner-inner"></div>
   </div>
   <script>
     (function() {
       try {
         var store = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-        var banner = (store.offerBanner || (window.STORE && window.STORE.offerBanner) || "✨ Browse our latest jewellery and cosmetics collection").trim();
-        if (banner) {
-          var inner = document.getElementById("offer-banner-inner");
-          if (inner) {
-            inner.replaceChildren(...[banner, "💍 Mansi Jewellery & Cosmetics — Style Meets Tradition", "📦 COD Available All Over India", banner].map(function(text) {
-              var span = document.createElement("span");
-              span.textContent = text;
-              return span;
-            }));
-          }
+        var banner = (store.offerBanner || "").trim();
+        var wrap = document.getElementById("offer-banner-wrap");
+        var inner = document.getElementById("offer-banner-inner");
+        if (banner && wrap && inner) {
+          inner.replaceChildren(...[banner, banner, banner, banner].map(function(text) {
+            var span = document.createElement("span");
+            span.textContent = text;
+            return span;
+          }));
+          wrap.style.display = "block";
+        } else if (wrap) {
+          wrap.style.display = "none";
         }
       } catch(e) {}
     })();
@@ -128,6 +125,15 @@
     </div>
   </div>
 
+  <!-- ================================================
+       AD BANNER 2 — BICH MEIN
+       ================================================ -->
+  <div style="width:100%;background:#111;display:flex;justify-content:center;align-items:center;padding:10px 0;margin:24px 0;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="https://static.hilltopads.com/other/banners/pub/get_high_ecpm/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
+    </a>
+  </div>
+
   <!-- NEW ARRIVALS -->
   <div class="section">
     <div class="section-title">✨ New Arrivals</div>
@@ -156,9 +162,18 @@
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
         <div style="font-size:2.5rem;margin-bottom:10px;">📦</div>
         <div style="font-weight:700;margin-bottom:6px;">COD Available</div>
-        <div style="color:var(--text-muted);font-size:0.85rem;">Pay when an eligible order is delivered</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;">Pay on delivery, no risk!</div>
       </div>
     </div>
+  </div>
+
+  <!-- ================================================
+       AD BANNER 3 — SABSE LAST MEIN
+       ================================================ -->
+  <div style="width:100%;background:#000;display:flex;justify-content:center;align-items:center;padding:10px 0;margin-top:24px;overflow:hidden;">
+    <a href="https://hilltopads.com/?ref=392928" target="_blank" rel="noopener">
+      <img src="https://static.hilltopads.com/other/banners/pub/make_big_money/728x90.gif?v=1783682851" alt="Advertisement" style="max-width:100%;height:auto;display:block;" />
+    </a>
   </div>
 
   <!-- FOOTER -->
