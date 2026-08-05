@@ -307,28 +307,11 @@
         return;
       }
 
-      status.textContent = "⚡ Optimizing image size...";
+      status.textContent = "⚡ Processing image instantly...";
       status.style.color = "var(--primary)";
       try {
         const optimizedFile = await downscaleImage(file, 800);
-        let processedBlob = optimizedFile;
-        let usedAiRemoval = true;
-        status.textContent = "🔄 AI is removing the background…";
-        try {
-          const module = await import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm");
-          processedBlob = await module.removeBackground(optimizedFile, {
-            progress: function (_key, current, total) {
-              const percent = total ? Math.round(current / total * 100) : 0;
-              status.textContent = `🔄 Removing background… ${percent}%`;
-            }
-          });
-        } catch (aiError) {
-          console.warn("AI background removal fallback:", aiError);
-          usedAiRemoval = false;
-          status.textContent = "🔄 Using safe local background cleanup…";
-        }
-
-        const objectUrl = URL.createObjectURL(processedBlob);
+        const objectUrl = URL.createObjectURL(optimizedFile);
         const img = new Image();
         await new Promise((resolve, reject) => {
           img.onload = resolve;
@@ -342,9 +325,9 @@
         const subjectCanvas = document.createElement("canvas");
         subjectCanvas.width = width;
         subjectCanvas.height = height;
-        const subjectContext = subjectCanvas.getContext("2d", { willReadFrequently: !usedAiRemoval });
+        const subjectContext = subjectCanvas.getContext("2d", { willReadFrequently: true });
         subjectContext.drawImage(img, 0, 0, width, height);
-        if (!usedAiRemoval) removeBackground(subjectContext, width, height);
+        removeBackground(subjectContext, width, height);
 
         const canvas = document.createElement("canvas");
         canvas.width = 700;
@@ -355,12 +338,12 @@
         ctx.drawImage(subjectCanvas, Math.round((700 - width) / 2), Math.round((700 - height) / 2));
         URL.revokeObjectURL(objectUrl);
 
-        uploadedImageBase64 = canvas.toDataURL("image/webp", 0.84);
+        uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.88);
         preview.src = uploadedImageBase64;
         preview.style.display = "block";
         preview.style.background = "#ffffff";
         preview.style.borderRadius = "8px";
-        status.textContent = "✅ Background removed; white product image is ready.";
+        status.textContent = "✅ Royal white product image ready.";
         status.style.color = "var(--success)";
         document.getElementById("p-image").value = "";
       } catch (error) {
