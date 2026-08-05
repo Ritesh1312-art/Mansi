@@ -71,17 +71,62 @@ function rowToProduct(row) {
   return product;
 }
 
+const PUBLIC_CSV_URL = process.env.GOOGLE_SHEET_CSV_URL || "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxjU88A3UAAG-S9qK9AkGKybrh4VEUPxMzA7RSFfdyktaFcDJmMzkcTCnGGPgZuodDXC800tBn6wmR/pub?output=csv";
+
+async function fetchPublicCSV() {
+  const res = await fetch(PUBLIC_CSV_URL);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const text = await res.text();
+  const lines = text.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+
+  function parseCSVLine(line) {
+    const result = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQuotes = !inQuotes; }
+      else if (c === ',' && !inQuotes) { result.push(cur.replace(/^"|"$/g, '')); cur = ""; }
+      else { cur += c; }
+    }
+    result.push(cur.replace(/^"|"$/g, ''));
+    return result;
+  }
+
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const products = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = values[idx] || ""; });
+    if (obj.name || obj.id) {
+      products.push(rowToProduct([
+        obj.id, obj.name, obj.category, obj.price, obj.mrp, obj.description,
+        obj.image, obj.stock, obj.instock, obj.rating, obj.reviews, obj.sales,
+        obj.createdat, obj.updatedat, obj.isdeleted
+      ]));
+    }
+  }
+  return products;
+}
+
 async function readProducts() {
-  const { spreadsheetId, sheetName } = config();
-  const sheets = sheetsClient();
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${sheetName}!A1:R`,
-    valueRenderOption: "UNFORMATTED_VALUE"
-  });
-  const rows = response.data.values || [];
-  if (!rows.length) return [];
-  return rows.slice(1).filter(row => row[0]).map(rowToProduct);
+  try {
+    const { spreadsheetId, sheetName } = config();
+    const sheets = sheetsClient();
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!A1:R`,
+      valueRenderOption: "UNFORMATTED_VALUE"
+    });
+    const rows = response.data.values || [];
+    if (!rows.length) return [];
+    return rows.slice(1).filter(row => row[0]).map(rowToProduct);
+  } catch (error) {
+    console.warn("Private Google Sheet API fallback to Public CSV:", error.message);
+    return await fetchPublicCSV();
+  }
 }
 
 async function backupProducts(products) {
