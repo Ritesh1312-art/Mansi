@@ -171,8 +171,8 @@ const DB = {
   saveLocalProductCache(products) {
     const lightweight = products.map(product => {
       const copy = { ...product };
-      if (copy.image && (copy.image.startsWith("data:") || copy.image.length > 50000)) {
-        copy.image = "";
+      if (copy.image && copy.image.startsWith("data:") && copy.image.length > 2000000) {
+        console.warn("Product image data URL exceeds 2MB limit, skipping cache for:", copy.id);
       }
       return copy;
     });

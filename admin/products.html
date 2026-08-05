@@ -420,9 +420,17 @@
           DB.updateProduct(id, data);
           Cart.showToast("✅ Product updated successfully!");
         } else {
-          DB.addProduct(data);
+          const added = DB.addProduct(data);
+          if (window.Watchdog) Watchdog.updateBaseline(DB.getProducts().length);
           Cart.showToast("✅ Product added successfully!");
         }
+
+        uploadedImageBase64 = "";
+        document.getElementById("p-id").value = "";
+        document.getElementById("p-image").value = "";
+        document.getElementById("p-image-file").value = "";
+        document.getElementById("p-image-preview").style.display = "none";
+        document.getElementById("p-desc").value = "";
 
         closeProductModal();
         renderProductsTable();
