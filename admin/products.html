@@ -440,6 +440,7 @@
         document.getElementById("p-desc").value = "";
 
         closeProductModal();
+        window.dispatchEvent(new Event("productsSynced"));
         renderProductsTable();
       } catch (err) {
         console.error("Error saving product:", err);

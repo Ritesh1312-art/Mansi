@@ -125,12 +125,19 @@ const DB = {
       products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       const active = products.filter(product => !product.archived && !product.isDeleted);
-      // Never replace a working catalog with a transient empty snapshot.
       if (active.length > 0) {
-        firebaseProductsCache = active;
-        this.saveLocalProductCache(active);
+        // Merge remote active products with locally created/updated products so nothing is wiped
+        let localRaw = [];
+        try { localRaw = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
+        const mergedMap = new Map();
+        (localRaw || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+        active.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+        const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        firebaseProductsCache = merged;
+        this.saveLocalProductCache(merged);
         window.dispatchEvent(new Event("productsSynced"));
-        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "firestore", count: active.length } }));
+        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "firestore", count: merged.length } }));
       } else {
         console.warn("Firestore returned no active products; preserving the last known good catalog.");
         window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "last-known-good", warning: "empty-firestore" } }));
@@ -204,6 +211,9 @@ const DB = {
     filtered.unshift(product);
     this.saveProducts(filtered);
 
+    // Auto persist to remote database in background
+    this.persistProduct(product).catch(err => console.warn("Background persist product warning:", err));
+
     return product;
   },
   updateProduct(id, updates) {
@@ -214,6 +224,9 @@ const DB = {
       products[idx] = updated;
       this.saveProducts(products);
 
+      // Auto persist to remote database in background
+      this.persistProduct(updated).catch(err => console.warn("Background persist product warning:", err));
+
       return updated;
     }
     return null;
@@ -223,6 +236,10 @@ const DB = {
     if (!product) return null;
     const products = this.getProducts().filter(p => p.id !== id);
     this.saveProducts(products);
+
+    // Auto persist archive to remote database in background
+    this.persistArchive(id).catch(err => console.warn("Background archive product warning:", err));
+
     return { ...product, archived: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   },
   async persistProduct(product) {
