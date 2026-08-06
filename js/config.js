@@ -26,6 +26,7 @@ const defaultStore = {
     appId: "1:399147392144:web:00166d6c57b146914f8c15"
   },
   telegramUsername: "MansiJewellery",
+  geminiApiKey: "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8",
   gpayUpi: "",
   phonepeUpi: "",
   paytmUpi: "",
