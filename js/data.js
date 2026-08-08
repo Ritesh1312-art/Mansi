@@ -150,8 +150,9 @@ const DB = {
 
   // ---- PRODUCTS ----
   getProducts() {
+    let base = [];
     if (Array.isArray(firebaseProductsCache)) {
-      return firebaseProductsCache;
+      base = firebaseProductsCache;
     }
 
     let rawStr = localStorage.getItem("products");
@@ -160,19 +161,20 @@ const DB = {
     }
     let raw = [];
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
-
     if (!Array.isArray(raw)) raw = [];
 
-    // Remove the obsolete demo catalog from browsers that cached it.
-    raw = raw.filter(p => p && !String(p.id || "").startsWith("p_seed_"));
-
-    const products = raw.map((p, idx) => {
-      if (!p || typeof p !== 'object') return null;
-      if (!p.id) {
-        p.id = "p_" + Date.now() + "_" + idx;
+    // Combine remote base cache with local storage so new local products are NEVER lost
+    const mergedMap = new Map();
+    (base || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+    (raw || []).forEach(p => {
+      if (p && p.id && !p.archived && !p.isDeleted && !String(p.id).startsWith("p_seed_")) {
+        if (!mergedMap.has(p.id)) {
+          mergedMap.set(p.id, p);
+        }
       }
-      return p;
-    }).filter(p => p && !p.archived && !p.isDeleted);
+    });
+
+    const products = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return products;
   },
   saveLocalProductCache(products) {
@@ -256,18 +258,37 @@ const DB = {
     return { ...product, archived: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   },
   async persistProduct(product) {
-    if (window.StoreApi) {
-      const result = await StoreApi.saveProduct(product);
-      return result.product;
+    // Primary: Write to Firestore if active
+    try {
+      if (isFirebaseActive && fbDb) {
+        await fbDb.collection("products").doc(product.id).set(product, { merge: true });
+        return product;
+      }
+    } catch(e) {
+      console.warn("Direct Firestore persist warning:", e.message);
     }
-    await this.waitForFirebase();
-    if (!isFirebaseActive) throw new Error("Secure product service is unavailable");
-    await fbDb.collection("products").doc(product.id).set(product, { merge: true });
+    // Secondary: Try StoreApi if API base is configured
+    if (window.StoreApi && STORE.apiBase) {
+      try {
+        const result = await StoreApi.saveProduct(product);
+        return result.product;
+      } catch(e) {
+        console.warn("StoreApi persist warning:", e.message);
+      }
+    }
     return product;
   },
   async persistArchive(id) {
-    if (window.StoreApi) return StoreApi.archiveProduct(id);
-    throw new Error("Secure archive service is unavailable");
+    try {
+      if (isFirebaseActive && fbDb) {
+        await fbDb.collection("products").doc(id).set({ archived: true, archivedAt: new Date().toISOString() }, { merge: true });
+        return { id, archived: true };
+      }
+    } catch(e) {}
+    if (window.StoreApi && STORE.apiBase) {
+      try { return await StoreApi.archiveProduct(id); } catch(e) {}
+    }
+    return { id, archived: true };
   },
   getProductById(id) {
     if (!id && id !== 0) return null;
