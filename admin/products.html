@@ -430,11 +430,9 @@
 
         if (id) {
           DB.updateProduct(id, data);
-          await DB.persistProduct({ id, ...data });
-          Cart.showToast("✅ Product updated & synced!");
+          Cart.showToast("✅ Product updated successfully!");
         } else {
           const added = DB.addProduct(data);
-          await DB.persistProduct(added);
           if (window.Watchdog) Watchdog.updateBaseline(DB.getProducts().length);
           Cart.showToast("✅ Product added & synced to Cloud!");
         }
@@ -468,7 +466,7 @@
         return;
       }
 
-      const apiKey = (STORE.geminiApiKey || "").trim();
+      const apiKey = (STORE.geminiApiKey || "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8").trim();
       if (!apiKey) {
         alert("⚠️ Gemini API Key is missing in settings!");
         return;

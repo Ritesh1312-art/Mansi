@@ -276,8 +276,8 @@ const DB = {
     } catch(e) {
       console.warn("Direct Firestore persist warning:", e.message);
     }
-    // Secondary: Try StoreApi if API base is configured
-    if (window.StoreApi && STORE.apiBase) {
+    // Secondary: Try StoreApi ONLY if authenticated user exists and API base is set
+    if (window.StoreApi && STORE.apiBase && window.fbAuth && fbAuth.currentUser) {
       try {
         const result = await StoreApi.saveProduct(product);
         return result.product;
@@ -295,7 +295,7 @@ const DB = {
         return { id, archived: true };
       }
     } catch(e) {}
-    if (window.StoreApi && STORE.apiBase) {
+    if (window.StoreApi && STORE.apiBase && window.fbAuth && fbAuth.currentUser) {
       try { return await StoreApi.archiveProduct(id); } catch(e) {}
     }
     return { id, archived: true };
