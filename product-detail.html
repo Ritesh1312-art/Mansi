@@ -215,6 +215,9 @@
           <div class="detail-btn-group">
             <button class="btn-add-bag" onclick="Cart.add('${safeId}');Cart.showToast('Added to cart! ✅')">🛒 Add to Cart</button>
             <button class="btn-buy-now" onclick="buyNow('${safeId}')">⚡ Buy Now</button>
+            <button class="btn-share-card" onclick="shareProductCard('${safeId}')" style="background:linear-gradient(135deg, #25D366, #128C7E);color:#fff;border:none;padding:12px 18px;border-radius:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(37,211,102,0.3);">
+              📲 Share Card
+            </button>
             <a class="btn-telegram" href="https://t.me/${tgUser}" target="_blank" rel="noopener">✈️ Ask on Telegram</a>
           </div>
 
@@ -225,6 +228,24 @@
           </div>
         </div>
       `;
+    }
+
+    function shareProductCard(productId) {
+      const p = DB.getProductById(productId);
+      if (!p) return;
+      const shareUrl = window.location.origin + window.location.pathname + '?id=' + encodeURIComponent(p.id);
+      const text = `🛍️ *${p.name}*\n💰 Price: ₹${p.price} (MRP: ₹${p.mrp || p.price})\n✨ Category: ${p.category || 'Jewellery'}\n\n👉 Buy now on Mansi Store:\n${shareUrl}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: p.name + ' - Mansi Store',
+          text: text,
+          url: shareUrl
+        }).catch(() => {});
+      } else {
+        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+      }
+      Cart.showToast('📲 Product share card ready!');
     }
 
     // Buy Now — add to cart and go directly to checkout

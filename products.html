@@ -467,9 +467,30 @@
               <button class="btn-add-cart" style="flex:1.3;padding:10px;font-size:0.82rem;background:linear-gradient(135deg, var(--accent), #FF357E);box-shadow:0 4px 12px rgba(251,191,36,0.3);" onclick="event.stopPropagation();quickBuy('${safeId}')">
                 ⚡ Buy Now
               </button>
+              <button class="btn-add-cart" style="padding:10px;font-size:0.82rem;background:#25D366;box-shadow:0 4px 12px rgba(37,211,102,0.3);" onclick="event.stopPropagation();shareProductCard('${safeId}')" title="Share Product Card">
+                📲
+              </button>
             </div>
           </div>
         </div>`;
+    }
+
+    function shareProductCard(productId) {
+      const p = DB.getProductById(productId);
+      if (!p) return;
+      const shareUrl = window.location.origin + '/product-detail.html?id=' + encodeURIComponent(p.id);
+      const text = `🛍️ *${p.name}*\n💰 Price: ₹${p.price} (MRP: ₹${p.mrp || p.price})\n✨ Category: ${p.category || 'Jewellery'}\n\n👉 Buy now on Mansi Store:\n${shareUrl}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: p.name + ' - Mansi Store',
+          text: text,
+          url: shareUrl
+        }).catch(() => {});
+      } else {
+        window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
+      }
+      Cart.showToast('📲 Product share card ready!');
     }
 
     // Global click handler — saves product to sessionStorage before navigating
