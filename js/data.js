@@ -150,9 +150,8 @@ const DB = {
 
   // ---- PRODUCTS ----
   getProducts() {
-    let base = [];
-    if (Array.isArray(firebaseProductsCache)) {
-      base = firebaseProductsCache;
+    if (Array.isArray(firebaseProductsCache) && firebaseProductsCache.length > 0) {
+      return firebaseProductsCache.filter(p => p && !p.archived && !p.isDeleted);
     }
 
     let rawStr = localStorage.getItem("products");
@@ -163,18 +162,12 @@ const DB = {
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
     if (!Array.isArray(raw)) raw = [];
 
-    // Combine remote base cache with local storage so new local products are NEVER lost
-    const mergedMap = new Map();
-    (base || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
-    (raw || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted && !String(p.id).startsWith("p_seed_")) {
-        if (!mergedMap.has(p.id)) {
-          mergedMap.set(p.id, p);
-        }
-      }
-    });
+    const products = raw.map((p, idx) => {
+      if (!p || typeof p !== 'object') return null;
+      if (!p.id) p.id = "p_" + Date.now() + "_" + idx;
+      return p;
+    }).filter(p => p && !p.archived && !p.isDeleted && !String(p.id || "").startsWith("p_seed_"));
 
-    const products = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return products;
   },
   saveLocalProductCache(products) {
