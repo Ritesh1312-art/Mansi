@@ -101,7 +101,10 @@
               <label class="form-label">Offer Banner Text <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(Optional)</span></label>
               <input type="text" id="s-banner" class="form-input" placeholder="e.g. 🎉 Free Shipping on orders above ₹499 | Use code MANSI10 for 10% OFF"/>
             </div>
-            <p style="font-size:.8rem;color:var(--text-muted);">Razorpay remains disabled/test-only until its server credentials are added securely at launch.</p>
+            <div class="form-group">
+              <label class="form-label">✨ Google Gemini AI API Key <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(for AI Description Generator)</span></label>
+              <input type="text" id="s-gemini-key" class="form-input" placeholder="Paste your Google Gemini API key here..."/>
+            </div>
             <button type="submit" class="btn-full" style="margin-top: 10px;">Save Store Information</button>
           </form>
         </div>
@@ -248,6 +251,7 @@
       document.getElementById("s-email").value = STORE.email || "";
       document.getElementById("s-address").value = STORE.address || "";
       document.getElementById("s-banner").value = STORE.offerBanner || "";
+      document.getElementById("s-gemini-key").value = STORE.geminiApiKey || "";
 
       // 3. Pre-fill Delivery Charges
       document.getElementById("del-city-pre").value = DELIVERY.sameCity.prepaid;
@@ -349,12 +353,13 @@
       const email = document.getElementById("s-email").value.trim();
       const address = document.getElementById("s-address").value.trim();
       const offerBanner = document.getElementById("s-banner").value.trim();
+      const geminiApiKey = document.getElementById("s-gemini-key").value.trim();
 
-      const updatedStore = { ...STORE, name, tagline, telegramUsername, email, address, offerBanner };
+      const updatedStore = { ...STORE, name, tagline, telegramUsername, email, address, offerBanner, geminiApiKey };
       Object.assign(STORE, updatedStore);
 
       const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-      Object.assign(current, { name, tagline, telegramUsername, email, address, offerBanner });
+      Object.assign(current, { name, tagline, telegramUsername, email, address, offerBanner, geminiApiKey });
       localStorage.setItem("storeSettings", JSON.stringify(current));
 
       try {
