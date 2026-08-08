@@ -67,6 +67,18 @@ const DB = {
   },
 
   async loadFallbackCatalog() {
+    // If local storage already contains user products, prioritize local storage and DO NOT overwrite with seed 53 products
+    let existingLocal = [];
+    try { existingLocal = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
+    if (Array.isArray(existingLocal) && existingLocal.length > 0) {
+      const activeLocal = existingLocal.filter(p => p && !p.archived && !p.isDeleted);
+      if (activeLocal.length > 0) {
+        firebaseProductsCache = activeLocal;
+        window.dispatchEvent(new Event("productsSynced"));
+        return;
+      }
+    }
+
     try {
       const dataScript = Array.from(document.scripts).find(script => /\/js\/data\.js(?:\?|$)/.test(script.src));
       const siteRoot = dataScript ? new URL("../", dataScript.src) : new URL("./", document.baseURI);
@@ -150,8 +162,9 @@ const DB = {
 
   // ---- PRODUCTS ----
   getProducts() {
+    let base = [];
     if (Array.isArray(firebaseProductsCache) && firebaseProductsCache.length > 0) {
-      return firebaseProductsCache.filter(p => p && !p.archived && !p.isDeleted);
+      base = firebaseProductsCache;
     }
 
     let rawStr = localStorage.getItem("products");
@@ -162,12 +175,18 @@ const DB = {
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
     if (!Array.isArray(raw)) raw = [];
 
-    const products = raw.map((p, idx) => {
-      if (!p || typeof p !== 'object') return null;
-      if (!p.id) p.id = "p_" + Date.now() + "_" + idx;
-      return p;
-    }).filter(p => p && !p.archived && !p.isDeleted && !String(p.id || "").startsWith("p_seed_"));
+    // Merge base cache and local raw items to ensure NO user product is ever omitted or flickered
+    const mergedMap = new Map();
+    (base || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+    (raw || []).forEach(p => {
+      if (p && p.id && !p.archived && !p.isDeleted && !String(p.id).startsWith("p_seed_")) {
+        if (!mergedMap.has(p.id)) {
+          mergedMap.set(p.id, p);
+        }
+      }
+    });
 
+    const products = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return products;
   },
   saveLocalProductCache(products) {
