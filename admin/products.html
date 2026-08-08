@@ -466,11 +466,7 @@
         return;
       }
 
-      const apiKey = (STORE.geminiApiKey || (typeof defaultStore !== "undefined" && defaultStore.geminiApiKey) || "").trim();
-      if (!apiKey) {
-        alert("⚠️ Gemini API Key is missing!");
-        return;
-      }
+      const apiKey = (STORE.geminiApiKey || "").trim() || window.DEFAULT_GEMINI_KEY;
 
       btn.disabled = true;
       btn.textContent = "✨ Generating AI Description...";

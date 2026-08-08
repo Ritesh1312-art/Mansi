@@ -39,6 +39,9 @@ const defaultDelivery = {
   restOfIndia:  { prepaid: 150, cod: 195 },
 };
 
+window.defaultStore = defaultStore;
+window.DEFAULT_GEMINI_KEY = "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8";
+
 let storedSettings = {};
 try { storedSettings = JSON.parse(localStorage.getItem("storeSettings") || "{}"); } catch (_) {}
 const STORE = {
@@ -48,6 +51,7 @@ const STORE = {
   firebaseConfig: { ...defaultStore.firebaseConfig },
   googleSheet: { ...defaultStore.googleSheet }
 };
+window.STORE = STORE;
 const DELIVERY = { ...defaultDelivery, ...JSON.parse(localStorage.getItem("deliverySettings") || "{}") };
 
 // =============================================
