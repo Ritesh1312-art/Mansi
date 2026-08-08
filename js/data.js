@@ -258,10 +258,19 @@ const DB = {
     return { ...product, archived: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   },
   async persistProduct(product) {
-    // Primary: Write to Firestore if active
+    // Primary: Write directly to Firestore cloud database
     try {
-      if (isFirebaseActive && fbDb) {
+      if (typeof this.waitForFirebase === "function") await this.waitForFirebase();
+      if (!fbDb && typeof firebase !== "undefined" && STORE.firebaseConfig && STORE.firebaseConfig.apiKey) {
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(STORE.firebaseConfig);
+          fbDb = firebase.firestore();
+          isFirebaseActive = true;
+        } catch(e) {}
+      }
+      if (fbDb) {
         await fbDb.collection("products").doc(product.id).set(product, { merge: true });
+        console.log("✅ Product successfully persisted to Firestore:", product.id);
         return product;
       }
     } catch(e) {
@@ -280,7 +289,8 @@ const DB = {
   },
   async persistArchive(id) {
     try {
-      if (isFirebaseActive && fbDb) {
+      if (typeof this.waitForFirebase === "function") await this.waitForFirebase();
+      if (fbDb) {
         await fbDb.collection("products").doc(id).set({ archived: true, archivedAt: new Date().toISOString() }, { merge: true });
         return { id, archived: true };
       }
