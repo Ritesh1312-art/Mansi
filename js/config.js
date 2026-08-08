@@ -44,7 +44,7 @@ try { storedSettings = JSON.parse(localStorage.getItem("storeSettings") || "{}")
 const STORE = {
   ...defaultStore,
   ...storedSettings,
-  geminiApiKey: (storedSettings && storedSettings.geminiApiKey) || (typeof window !== "undefined" && window.ENV && window.ENV.GEMINI_API_KEY) || defaultStore.geminiApiKey || "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8",
+  geminiApiKey: (storedSettings && storedSettings.geminiApiKey && storedSettings.geminiApiKey.trim()) || (typeof window !== "undefined" && window.ENV && window.ENV.GEMINI_API_KEY) || defaultStore.geminiApiKey || "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8",
   firebaseConfig: { ...defaultStore.firebaseConfig },
   googleSheet: { ...defaultStore.googleSheet }
 };

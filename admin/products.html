@@ -466,9 +466,9 @@
         return;
       }
 
-      const apiKey = (STORE.geminiApiKey || "").trim();
+      const apiKey = (STORE.geminiApiKey || (typeof defaultStore !== "undefined" && defaultStore.geminiApiKey) || "").trim();
       if (!apiKey) {
-        alert("⚠️ Gemini API Key is missing in settings!");
+        alert("⚠️ Gemini API Key is missing!");
         return;
       }
 
