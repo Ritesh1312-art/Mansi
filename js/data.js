@@ -67,17 +67,9 @@ const DB = {
   },
 
   async loadFallbackCatalog() {
-    // If local storage already contains user products, prioritize local storage and DO NOT overwrite with seed 53 products
     let existingLocal = [];
     try { existingLocal = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
-    if (Array.isArray(existingLocal) && existingLocal.length > 0) {
-      const activeLocal = existingLocal.filter(p => p && !p.archived && !p.isDeleted);
-      if (activeLocal.length > 0) {
-        firebaseProductsCache = activeLocal;
-        window.dispatchEvent(new Event("productsSynced"));
-        return;
-      }
-    }
+    let localActive = Array.isArray(existingLocal) ? existingLocal.filter(p => p && !p.archived && !p.isDeleted) : [];
 
     try {
       const dataScript = Array.from(document.scripts).find(script => /\/js\/data\.js(?:\?|$)/.test(script.src));
@@ -85,20 +77,29 @@ const DB = {
       const response = await fetch(new URL("data/catalog.json", siteRoot), { cache: "no-cache" });
       if (!response.ok) throw new Error("Fallback catalog HTTP " + response.status);
       const payload = await response.json();
-      const products = (Array.isArray(payload.products) ? payload.products : []).map(product => ({
+      const seedProducts = (Array.isArray(payload.products) ? payload.products : []).map(product => ({
         ...product,
         image: product.image && !/^(?:https?:|data:|blob:)/i.test(product.image)
           ? new URL(product.image, siteRoot).href
           : product.image
       }));
-      if (products.length) {
-        firebaseProductsCache = products.filter(product => product && !product.archived && !product.isDeleted);
-        this.saveLocalProductCache(firebaseProductsCache);
-        window.dispatchEvent(new Event("productsSynced"));
-        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "versioned-backup", count: products.length } }));
-      }
+      
+      // Combine seed catalog with local items so local additions are NEVER wiped
+      const mergedMap = new Map();
+      seedProducts.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+      localActive.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+
+      const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      firebaseProductsCache = merged;
+      this.saveLocalProductCache(merged);
+      window.dispatchEvent(new Event("productsSynced"));
+      window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "versioned-backup", count: merged.length } }));
     } catch (error) {
       console.warn("Versioned catalog fallback could not load:", error.message);
+      if (localActive.length > 0) {
+        firebaseProductsCache = localActive;
+        window.dispatchEvent(new Event("productsSynced"));
+      }
     }
   },
 

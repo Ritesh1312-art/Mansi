@@ -191,6 +191,10 @@
 
       // Render Table
       renderProductsTable();
+
+      // Auto-update table when products sync or update from cloud/other tab
+      window.addEventListener("productsSynced", () => renderProductsTable());
+      window.addEventListener("storage", (e) => { if (e.key === "products" || e.key === "products_backup") renderProductsTable(); });
     }
 
     function escapeHTML(str) {

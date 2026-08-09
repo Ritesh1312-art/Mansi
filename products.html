@@ -324,6 +324,10 @@
     bindSearchInput();
     renderProducts();
 
+    // Auto-update when products are added/synced or updated in another tab/admin
+    window.addEventListener('productsSynced', () => renderProducts());
+    window.addEventListener('storage', (e) => { if (e.key === 'products' || e.key === 'products_backup') renderProducts(); });
+
     // ============================================================
     // READ URL PARAMS (?cat=jewellery&search=gold)
     // ============================================================

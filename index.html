@@ -329,6 +329,10 @@
     renderCategories();
     renderFeatured();
     renderNewArrivals();
+
+    // Auto-update home page grids when products are added/synced
+    window.addEventListener("productsSynced", () => { renderFeatured(); renderNewArrivals(); });
+    window.addEventListener("storage", (e) => { if (e.key === "products" || e.key === "products_backup") { renderFeatured(); renderNewArrivals(); } });
   </script>
 </body>
 </html>
