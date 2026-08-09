@@ -316,11 +316,10 @@
         return;
       }
 
-      status.textContent = "⚡ Processing image instantly...";
+      status.textContent = "⚡ Processing HD image crisply...";
       status.style.color = "var(--primary)";
       try {
-        const optimizedFile = await downscaleImage(file, 800);
-        const objectUrl = URL.createObjectURL(optimizedFile);
+        const objectUrl = URL.createObjectURL(file);
         const img = new Image();
         await new Promise((resolve, reject) => {
           img.onload = resolve;
@@ -328,31 +327,38 @@
           img.src = objectUrl;
         });
 
-        const scale = Math.min(620 / img.width, 620 / img.height, 1);
-        const width = Math.max(1, Math.round(img.width * scale));
-        const height = Math.max(1, Math.round(img.height * scale));
-        const subjectCanvas = document.createElement("canvas");
-        subjectCanvas.width = width;
-        subjectCanvas.height = height;
-        const subjectContext = subjectCanvas.getContext("2d", { willReadFrequently: true });
-        subjectContext.drawImage(img, 0, 0, width, height);
-        removeBackground(subjectContext, width, height);
+        // Crisp HD Canvas (1000x1000 square with high-quality bicubic smoothing)
+        const maxDim = 1000;
+        let w = img.width;
+        let h = img.height;
+        const scale = Math.min(maxDim / w, maxDim / h, 1);
+        const fitW = Math.round(w * scale);
+        const fitH = Math.round(h * scale);
 
         const canvas = document.createElement("canvas");
-        canvas.width = 700;
-        canvas.height = 700;
+        canvas.width = maxDim;
+        canvas.height = maxDim;
         const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Clean white studio background
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(subjectCanvas, Math.round((700 - width) / 2), Math.round((700 - height) / 2));
+        ctx.fillRect(0, 0, maxDim, maxDim);
+
+        // Center original image crisply without destructive edge pixelation
+        const offsetX = Math.round((maxDim - fitW) / 2);
+        const offsetY = Math.round((maxDim - fitH) / 2);
+        ctx.drawImage(img, offsetX, offsetY, fitW, fitH);
+
         URL.revokeObjectURL(objectUrl);
 
-        uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.88);
+        uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.92);
         preview.src = uploadedImageBase64;
         preview.style.display = "block";
         preview.style.background = "#ffffff";
         preview.style.borderRadius = "8px";
-        status.textContent = "✅ Royal white product image ready.";
+        status.textContent = "✨ High-definition HD product image ready!";
         status.style.color = "var(--success)";
         document.getElementById("p-image").value = "";
       } catch (error) {
