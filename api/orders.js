@@ -4,6 +4,11 @@ const { requireUser, requireAdmin } = require("./_lib/auth");
 const { services } = require("./_lib/firebase");
 const { notifyOrder } = require("./_lib/notifications");
 const { send, readJson, methodNotAllowed } = require("./_lib/http");
+const { withRateLimit } = require("./_lib/rate-limit");
+
+const orderPostLimit = withRateLimit({ limit: 5, windowMs: 60000 });
+const orderReadLimit = withRateLimit({ limit: 60, windowMs: 60000 });
+
 
 function deliveryFor(pincode, paymentMode, configuredFees = {}) {
   const pin = String(pincode || "").trim();
@@ -45,7 +50,14 @@ function cleanAddress(address) {
 
 module.exports = async function handler(req, res) {
   if (!["GET", "POST", "PATCH"].includes(req.method)) return methodNotAllowed(res, ["GET", "POST", "PATCH"]);
+  // Apply rate limiting
+  if (req.method === "POST") {
+    if (!orderPostLimit(req, res)) return; // 5 orders/minute per IP
+  } else {
+    if (!orderReadLimit(req, res)) return; // 60 reads/minute per IP
+  }
   try {
+
     if (req.method === "GET") {
       const adminScope = String(req.query?.scope || "") === "admin";
       const user = adminScope ? await requireAdmin(req) : await requireUser(req);

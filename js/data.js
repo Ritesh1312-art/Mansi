@@ -67,13 +67,9 @@ const DB = {
   },
 
   async loadFallbackCatalog() {
-    let existingLocal = [];
-    try { existingLocal = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
-    let localActive = Array.isArray(existingLocal) ? existingLocal.filter(p => p && !p.archived && !p.isDeleted) : [];
-
-    let customUser = [];
-    try { customUser = JSON.parse(localStorage.getItem("custom_user_products") || "[]"); } catch(e){}
-
+    // Emergency read-only fallback — loads static data/catalog.json only.
+    // Does NOT merge any browser localStorage data.
+    // The authoritative API fetch (fetchCatalogFromApi) always takes precedence.
     try {
       const dataScript = Array.from(document.scripts).find(script => /\/js\/data\.js(?:\?|$)/.test(script.src));
       const siteRoot = dataScript ? new URL("../", dataScript.src) : new URL("./", document.baseURI);
@@ -85,51 +81,19 @@ const DB = {
         image: product.image && !/^(?:https?:|data:|blob:)/i.test(product.image)
           ? new URL(product.image, siteRoot).href
           : product.image
-      }));
-      
-      // Combine seed catalog, local items, and protected custom user products
-      const seedImageMap = new Map();
-      const mergedMap = new Map();
-      seedProducts.forEach(p => {
-        if (p && p.id && !p.archived && !p.isDeleted) {
-          mergedMap.set(p.id, p);
-          if (p.image) seedImageMap.set(p.id, p.image);
-        }
-      });
-      localActive.forEach(p => {
-        if (p && p.id && !p.archived && !p.isDeleted) {
-          const copy = { ...p };
-          if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
-            copy.image = seedImageMap.get(copy.id);
-          }
-          mergedMap.set(p.id, copy);
-        }
-      });
+      })).filter(p => p && p.id && !p.archived && !p.isDeleted);
 
-      // Always merge custom user-added products with 100% HIGHEST PRIORITY
-      (customUser || []).forEach(p => {
-        if (p && p.id && !p.archived && !p.isDeleted) {
-          mergedMap.set(p.id, p);
-        }
-      });
-
-      const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      firebaseProductsCache = merged;
-      this.saveLocalProductCache(merged);
-      window.dispatchEvent(new Event("productsSynced"));
-      window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "versioned-backup", count: merged.length } }));
-    } catch (error) {
-      console.warn("Versioned catalog fallback could not load:", error.message);
-      if (localActive.length > 0 || customUser.length > 0) {
-        const mergedMap = new Map();
-        localActive.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
-        customUser.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
-        const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        firebaseProductsCache = merged;
+      if (seedProducts.length > 0) {
+        firebaseProductsCache = seedProducts;
+        this.saveLocalProductCache(seedProducts);
         window.dispatchEvent(new Event("productsSynced"));
+        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "static-catalog-fallback", count: seedProducts.length } }));
       }
+    } catch (error) {
+      console.warn("Static catalog fallback could not load:", error.message);
     }
   },
+
 
   loadSDKs() {
     return new Promise((resolve, reject) => {
@@ -344,26 +308,9 @@ const DB = {
     return { ...(product || { id }), archived: true, isDeleted: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   },
   async persistProduct(product) {
-    // Primary: Write directly to Firestore cloud database
-    try {
-      if (typeof this.waitForFirebase === "function") await this.waitForFirebase();
-      if (!fbDb && typeof firebase !== "undefined" && STORE.firebaseConfig && STORE.firebaseConfig.apiKey) {
-        try {
-          if (!firebase.apps.length) firebase.initializeApp(STORE.firebaseConfig);
-          fbDb = firebase.firestore();
-          isFirebaseActive = true;
-        } catch(e) {}
-      }
-      if (fbDb) {
-        await fbDb.collection("products").doc(product.id).set(product, { merge: true });
-        console.log("✅ Product successfully persisted to Firestore:", product.id);
-        return product;
-      }
-    } catch(e) {
-      console.warn("Direct Firestore persist warning:", e.message);
-    }
-    // Secondary: Try StoreApi ONLY if authenticated user exists and API base is set
-    if (window.StoreApi && STORE.apiBase && window.fbAuth && fbAuth.currentUser) {
+    // All product writes must go through the server Admin API.
+    // Never write directly to Firestore from the browser client — no auth token is available here.
+    if (window.StoreApi && STORE.apiBase) {
       try {
         const result = await StoreApi.saveProduct(product);
         return result.product;
@@ -374,18 +321,12 @@ const DB = {
     return product;
   },
   async persistArchive(id) {
-    try {
-      if (typeof this.waitForFirebase === "function") await this.waitForFirebase();
-      if (fbDb) {
-        await fbDb.collection("products").doc(id).set({ archived: true, archivedAt: new Date().toISOString() }, { merge: true });
-        return { id, archived: true };
-      }
-    } catch(e) {}
-    if (window.StoreApi && STORE.apiBase && window.fbAuth && fbAuth.currentUser) {
+    if (window.StoreApi && STORE.apiBase) {
       try { return await StoreApi.archiveProduct(id); } catch(e) {}
     }
     return { id, archived: true };
   },
+
   getProductById(id) {
     if (!id && id !== 0) return null;
     const cleanId = decodeURIComponent(String(id)).trim();

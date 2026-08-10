@@ -71,6 +71,8 @@ test("4. Service Worker Employs Network-First Strategy for JS & CSS Code Assets"
   assert.ok(swContent.includes("mansi-shell-"), "SW must define a shell version cache name");
   assert.ok(swContent.includes(".css"), "SW must handle CSS assets");
   assert.ok(swContent.includes(".js"), "SW must handle JS assets");
+  assert.ok(swContent.includes("NEW_VERSION_AVAILABLE"), "SW must notify tabs of new version");
+  assert.ok(swContent.includes("offline.html"), "SW must reference offline.html fallback");
 });
 
 test("5. Admin Auth Module Requires Server Session Guard", () => {
@@ -99,4 +101,130 @@ test("6. Order State Machine Enforces Valid Order Transitions", () => {
   assert.equal(canTransition("pending", "delivered"), false);
   assert.equal(canTransition("shipped", "delivered"), true);
   assert.equal(canTransition("delivered", "cancelled"), false);
+});
+
+test("7. Rate Limiter Module Works Correctly", () => {
+  const { rateLimit } = require(path.join(root, "api/_lib/rate-limit"));
+  const key = "test_" + Date.now();
+  
+  // Should allow first 3 requests
+  for (let i = 0; i < 3; i++) {
+    const r = rateLimit(key, 3, 10000);
+    assert.equal(r.allowed, true, `Request ${i+1} should be allowed`);
+  }
+  
+  // Should block the 4th request
+  const blocked = rateLimit(key, 3, 10000);
+  assert.equal(blocked.allowed, false, "4th request should be blocked");
+  assert.ok(blocked.retryAfter > 0, "retryAfter must be positive when blocked");
+});
+
+test("8. app.js Does NOT Contain setInterval Email Type Scanner", () => {
+  const appJsPath = path.join(root, "js", "app.js");
+  const content = fs.readFileSync(appJsPath, "utf8");
+
+  // Must NOT contain the pattern that downgrades email inputs
+  assert.ok(
+    !content.includes("setAttribute(\"type\", \"text\")"),
+    "app.js must not change email input type to text"
+  );
+  assert.ok(
+    !content.includes("setAttribute('type', 'text')"),
+    "app.js must not change email input type to text (single quotes)"
+  );
+});
+
+test("9. app.js Does NOT Use setInterval for Widget Positioning", () => {
+  const appJsPath = path.join(root, "js", "app.js");
+  const content = fs.readFileSync(appJsPath, "utf8");
+
+  // The 1-second interval for positionAssistantWidgets must be gone
+  assert.ok(
+    !content.includes("setInterval(adjustPosition"),
+    "app.js must not use setInterval for widget positioning — use MutationObserver"
+  );
+});
+
+test("10. data.js loadFallbackCatalog Does NOT Merge localStorage Products", () => {
+  const dataJsPath = path.join(root, "js", "data.js");
+  const content = fs.readFileSync(dataJsPath, "utf8");
+
+  // Extract just the loadFallbackCatalog function body
+  const funcStart = content.indexOf("async loadFallbackCatalog()");
+  assert.ok(funcStart !== -1, "loadFallbackCatalog function must exist");
+
+  // Find the next function definition after loadFallbackCatalog
+  const nextFuncMatch = content.indexOf("\n  loadSDKs()", funcStart);
+  const funcBody = nextFuncMatch !== -1
+    ? content.slice(funcStart, nextFuncMatch)
+    : content.slice(funcStart, funcStart + 3000);
+
+  // The function body must NOT contain localStorage product merge logic
+  assert.ok(
+    !funcBody.includes("custom_user_products"),
+    "loadFallbackCatalog must not merge custom_user_products (remove multi-source merge)"
+  );
+  assert.ok(
+    !funcBody.includes("localActive"),
+    "loadFallbackCatalog must not merge localActive localStorage products"
+  );
+  assert.ok(
+    !funcBody.includes("mergedMap"),
+    "loadFallbackCatalog must not use mergedMap (multi-source merge)"
+  );
+});
+
+
+test("11. api/admin/products.js Reads Request Body Before Using It", () => {
+  const filePath = path.join(root, "api/admin/products.js");
+  const content = fs.readFileSync(filePath, "utf8");
+
+  const bodyReadIndex = content.indexOf("readJson(req)");
+  const bodyUseIndex = content.indexOf("body.action");
+
+  assert.ok(bodyReadIndex !== -1, "admin/products.js must call readJson(req)");
+  assert.ok(bodyReadIndex < bodyUseIndex, "readJson must be called before body.action is referenced");
+});
+
+test("12. Orders API Has Rate Limiting Applied", () => {
+  const filePath = path.join(root, "api/orders.js");
+  const content = fs.readFileSync(filePath, "utf8");
+
+  assert.ok(content.includes("withRateLimit"), "orders.js must import withRateLimit");
+  assert.ok(content.includes("orderPostLimit"), "orders.js must define orderPostLimit");
+  assert.ok(content.includes("orderPostLimit(req, res)"), "orders.js must apply orderPostLimit on POST");
+});
+
+test("13. vercel.json Contains CSP and HSTS Headers", () => {
+  const filePath = path.join(root, "vercel.json");
+  const content = fs.readFileSync(filePath, "utf8");
+  const config = JSON.parse(content);
+
+  const globalHeaders = config.headers.find(h => h.source === "/(.*)");
+  assert.ok(globalHeaders, "vercel.json must have global header rule");
+
+  const headerKeys = globalHeaders.headers.map(h => h.key);
+  assert.ok(headerKeys.includes("Content-Security-Policy"), "vercel.json must set CSP header");
+  assert.ok(headerKeys.includes("Strict-Transport-Security"), "vercel.json must set HSTS header");
+  assert.ok(headerKeys.includes("X-Content-Type-Options"), "vercel.json must set X-Content-Type-Options");
+});
+
+test("14. offline.html and 404.html Exist", () => {
+  assert.equal(fs.existsSync(path.join(root, "offline.html")), true, "offline.html must exist");
+  assert.equal(fs.existsSync(path.join(root, "404.html")), true, "404.html must exist");
+
+  const offline = fs.readFileSync(path.join(root, "offline.html"), "utf8");
+  assert.ok(offline.includes("offline") || offline.includes("Offline"), "offline.html must mention offline state");
+
+  const notfound = fs.readFileSync(path.join(root, "404.html"), "utf8");
+  assert.ok(notfound.includes("404") || notfound.includes("Not Found"), "404.html must mention 404");
+});
+
+test("15. api/_lib/rate-limit.js Exports rateLimit and withRateLimit", () => {
+  const rateLimitPath = path.join(root, "api/_lib/rate-limit.js");
+  assert.equal(fs.existsSync(rateLimitPath), true, "api/_lib/rate-limit.js must exist");
+
+  const mod = require(rateLimitPath);
+  assert.equal(typeof mod.rateLimit, "function", "rateLimit must be a function");
+  assert.equal(typeof mod.withRateLimit, "function", "withRateLimit must be a function");
 });

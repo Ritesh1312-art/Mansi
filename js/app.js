@@ -133,15 +133,15 @@ const SheetSync = {
 
 // Google Sheet sync is server-managed after authenticated product writes.
 
-// Re-render whichever catalog view is open after Firestore returns products.
+// Re-render whichever catalog view is open after products are fetched from the API.
 window.addEventListener("productsSynced", () => {
+  const isAdminPage = window.location.pathname.includes("/admin/");
   [
     "renderProducts",
     "renderProductsTable",
     "renderFeatured",
     "renderNewArrivals",
-    "renderWishlist",
-    "initDashboard"
+    "renderWishlist"
   ].forEach(functionName => {
     if (typeof window[functionName] === "function") {
       try { window[functionName](); } catch (e) {
@@ -149,7 +149,14 @@ window.addEventListener("productsSynced", () => {
       }
     }
   });
+  // Only call initDashboard if on admin pages to prevent spurious admin metric renders on public pages
+  if (isAdminPage && typeof window["initDashboard"] === "function") {
+    try { window["initDashboard"](); } catch (e) {
+      console.warn("Could not refresh initDashboard", e);
+    }
+  }
 });
+
 
 // =============================================
 // NAVBAR & FOOTER — shared across all pages
@@ -575,28 +582,26 @@ function initAdminMobileNav() {
 
 
 // Global TempMail & Extension Overlay Blocker
+// Runs ONCE at DOM ready and on load — never on interval, so email inputs keep type=email.
 function initTempMailBlocker() {
   function cleanInputs() {
     document.querySelectorAll("input, select, textarea").forEach(el => {
       el.style.setProperty("background-image", "none", "important");
       el.style.setProperty("background-size", "0 0", "important");
-      if (el.getAttribute("type") === "email") {
-        el.setAttribute("type", "text");
-        el.setAttribute("inputmode", "email");
-      }
+      // NOTE: DO NOT change type=email — breaks native validation & keyboard
     });
     document.querySelectorAll("[class*='tempmail'], [id*='tempmail'], [class*='temp-mail'], [data-tempmail], tempmail-button").forEach(el => el.remove());
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", cleanInputs);
+    document.addEventListener("DOMContentLoaded", cleanInputs, { once: true });
   } else {
     cleanInputs();
   }
-  window.addEventListener("load", cleanInputs);
-  setInterval(cleanInputs, 300);
+  window.addEventListener("load", cleanInputs, { once: true });
 }
 initTempMailBlocker();
+
 
 // =============================================
 // RULE-BASED STORE ASSISTANT
@@ -750,7 +755,8 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   });
 }
 
-// Auto-position Store Assistant button at bottom: 100px so it sits cleanly above OmniDimension Voice Widget
+// Auto-position Store Assistant button — uses MutationObserver instead of setInterval
+// so it never burns CPU polling on an empty function call every second.
 (function positionAssistantWidgets() {
   function adjustPosition() {
     const aiBtn = document.querySelector('.ai-chat-btn');
@@ -761,7 +767,23 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     }
   }
 
-  setInterval(adjustPosition, 1000);
-  window.addEventListener('load', adjustPosition);
-  document.addEventListener('DOMContentLoaded', adjustPosition);
+  // Run once on ready events
+  window.addEventListener('load', adjustPosition, { once: true });
+  document.addEventListener('DOMContentLoaded', adjustPosition, { once: true });
+
+  // Watch for the button being dynamically inserted
+  const observer = new MutationObserver(() => {
+    if (document.querySelector('.ai-chat-btn')) {
+      adjustPosition();
+      observer.disconnect();
+    }
+  });
+  if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: false });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { childList: true, subtree: false });
+    }, { once: true });
+  }
 })();
+

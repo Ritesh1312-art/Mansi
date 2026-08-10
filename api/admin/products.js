@@ -35,6 +35,8 @@ module.exports = async function handler(req, res) {
   }
   try {
     const admin = await requireAdmin(req);
+    const body = await readJson(req);
+    const { db } = services();
     if (body && body.action === "generate_description") {
       const productName = String(body.name || "").trim();
       const category = String(body.category || "").trim();
