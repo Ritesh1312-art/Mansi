@@ -17,9 +17,10 @@ function safeImageUrl(value) {
   try {
     const raw = String(value || "").trim();
     if (!raw) return fallback;
-    if (/^data:image\/(?:png|jpe?g|webp);base64,/i.test(raw) || /^blob:/i.test(raw)) return raw;
-    const parsed = new URL(raw, document.baseURI);
-    if (["http:", "https:"].includes(parsed.protocol)) return parsed.href;
+    if (/^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);base64,/i.test(raw) || /^blob:/i.test(raw)) return raw;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const cleanPath = raw.startsWith("/") ? raw : "/" + raw.replace(/^(\.\.\/|\.\/)+/, "");
+    return window.location.origin + cleanPath;
   } catch (_) {}
   return fallback;
 }

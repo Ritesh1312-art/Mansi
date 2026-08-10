@@ -327,8 +327,8 @@
           img.src = objectUrl;
         });
 
-        // Crisp HD Canvas (1000x1000 square with high-quality bicubic smoothing)
-        const maxDim = 1000;
+        // Crisp HD Canvas (600x600 square with high-quality bicubic smoothing)
+        const maxDim = 600;
         let w = img.width;
         let h = img.height;
         const scale = Math.min(maxDim / w, maxDim / h, 1);
@@ -353,7 +353,7 @@
 
         URL.revokeObjectURL(objectUrl);
 
-        uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.92);
+        uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.82);
         preview.src = uploadedImageBase64;
         preview.style.display = "block";
         preview.style.background = "#ffffff";

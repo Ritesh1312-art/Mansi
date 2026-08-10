@@ -193,10 +193,6 @@ const DB = {
   saveLocalProductCache(products) {
     const lightweight = products.map(product => {
       const copy = { ...product };
-      // Strip ultra-heavy raw base64 data URLs > 100KB for local storage string quota safety
-      if (copy.image && copy.image.startsWith("data:") && copy.image.length > 100000) {
-        copy.hasBase64Image = true;
-      }
       return copy;
     });
 
@@ -205,18 +201,11 @@ const DB = {
       if (previous && previous !== "[]") localStorage.setItem("products_last_good", previous);
       localStorage.setItem("products", JSON.stringify(lightweight));
     } catch (e) {
-      console.warn("Storage quota limit reached. Preserving product catalog metadata without raw base64 images...", e);
-      const metadataOnly = lightweight.map(p => {
-        const copy = { ...p };
-        if (copy.image && copy.image.startsWith("data:")) {
-          delete copy.image; // preserve id, name, price, mrp, stock, category, description
-        }
-        return copy;
-      });
+      console.warn("Storage quota fallback active:", e);
       try {
-        localStorage.setItem("products", JSON.stringify(metadataOnly));
+        localStorage.setItem("products", JSON.stringify(lightweight));
       } catch (err2) {
-        console.error("Critical storage fallback error:", err2);
+        console.error("Storage save notice:", err2);
       }
     }
   },
