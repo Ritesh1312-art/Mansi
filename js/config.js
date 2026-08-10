@@ -26,7 +26,7 @@ const defaultStore = {
     appId: "1:399147392144:web:00166d6c57b146914f8c15"
   },
   telegramUsername: "MansiJewellery",
-  geminiApiKey: "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8",
+  geminiApiKey: "",
   omniDimensionApiKey: "gq2RDUCjxW3WWZ5pzNh9bpa17g6RN1Wwz",
   omniDimensionSecretKey: "144319ce2e024404faad481117ad3634",
   gpayUpi: "",
@@ -42,7 +42,6 @@ const defaultDelivery = {
 };
 
 window.defaultStore = defaultStore;
-window.DEFAULT_GEMINI_KEY = "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8";
 
 let storedSettings = {};
 try { storedSettings = JSON.parse(localStorage.getItem("storeSettings") || "{}"); } catch (_) {}

@@ -50,20 +50,19 @@
     loadTheme();
     const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-    function authorize() {
-      if (localStorage.getItem("adminAuth") === "true") {
+    async function authorize() {
+      const session = await AdminSession.requireAdminPage();
+      if (session) {
         const authModal = document.getElementById("admin-auth");
         if (authModal) authModal.style.display = "none";
         const content = document.getElementById("admin-content");
         if (content) content.style.display = "block";
         loadReports();
-      } else {
-        window.location.href = "index.html";
       }
     }
-    function logoutAdmin(e) {
+    async function logoutAdmin(e) {
       if (e) e.preventDefault();
-      localStorage.removeItem("adminAuth");
+      await AdminSession.logout();
       window.location.href = "index.html";
     }
     async function loadReports() {

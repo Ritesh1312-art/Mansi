@@ -120,6 +120,16 @@ module.exports = async function handler(req, res) {
     if (!customerName) throw new Error("Customer name is required");
 
     const { db } = services();
+    const idempotencyKey = String(body.idempotencyKey || "").trim().slice(0, 150);
+
+    if (idempotencyKey) {
+      const existingSnapshot = await db.collection("orders").where("idempotencyKey", "==", idempotencyKey).limit(1).get();
+      if (!existingSnapshot.empty) {
+        const existingOrder = { ...existingSnapshot.docs[0].data(), id: existingSnapshot.docs[0].id };
+        return send(res, 200, { ok: true, order: existingOrder, deduplicated: true });
+      }
+    }
+
     const orderId = `ORD${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
     const userRef = db.collection("users").doc(user.uid);
     const orderRef = db.collection("orders").doc(orderId);
@@ -171,6 +181,7 @@ module.exports = async function handler(req, res) {
         paymentMode,
         paymentStatus: paymentMode === "cod" ? "pay_on_delivery" : "verification_pending",
         status: "pending",
+        ...(idempotencyKey ? { idempotencyKey } : {}),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

@@ -22,8 +22,6 @@
   <meta property="twitter:description" content="Browse Jewellery, Cosmetics, Paintings & Gift Items. Fast Delivery with COD available." />
   <meta property="twitter:image" content="https://mansi-jewellery-store.vercel.app/assets/brand/og-banner.jpg?v=25" />
   <meta name="1921d0f1b72b1e655d86b0a0a39da449365d5246" content="1921d0f1b72b1e655d86b0a0a39da449365d5246" />
-  <!-- HilltopAds Ads Integration Script -->
-  <script type="text/javascript" src="//thubanoa.com/1?z=1921d0f1b72b1e655d86" async></script>
   <meta name="theme-color" content="#121218" />
   <link rel="stylesheet" href="css/style.css?v=3.0" />
   <style>
@@ -316,6 +314,9 @@
     let currentCategory = 'all';
     let currentSearch   = '';
 
+    // State initialized before any rendering or event listeners
+    let _renderedProducts = [];
+
     // ============================================================
     // INIT
     // ============================================================
@@ -431,9 +432,6 @@
       // newest: keep original order (most recently added first via DB)
       return arr;
     }
-
-    // All rendered products stored for click navigation
-    let _renderedProducts = [];
 
     // ============================================================
     // PRODUCT CARD HTML

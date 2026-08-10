@@ -153,44 +153,38 @@ const DB = {
     });
   },
 
-  setupRealtimeSync() {
-    // Sync Products
-    fbDb.collection("products").onSnapshot(snapshot => {
-      const products = [];
-      snapshot.forEach(doc => {
-        const data = doc.data() || {};
-        data.id = data.id || doc.id;
-        products.push(data);
-      });
+  async fetchCatalogFromApi() {
+    try {
+      const res = await fetch("/api/products");
+      if (!res.ok) throw new Error("API HTTP " + res.status);
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.products) && data.products.length > 0) {
+        const active = data.products.filter(p => p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id));
+        firebaseProductsCache = active;
+        
+        // Single versioned disposable cache
+        const versionedCache = {
+          schemaVersion: 1,
+          catalogRevision: "2026-08-11",
+          fetchedAt: new Date().toISOString(),
+          products: active
+        };
+        try { localStorage.setItem("mansi_catalog_cache_v1", JSON.stringify(versionedCache)); } catch(e){}
+        this.saveLocalProductCache(active);
 
-      products.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      const active = products.filter(product => !product.archived && !product.isDeleted);
-      if (active.length > 0) {
-        let localRaw = [];
-        try { localRaw = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
-        let customUser = [];
-        try { customUser = JSON.parse(localStorage.getItem("custom_user_products") || "[]"); } catch(e){}
-
-        const mergedMap = new Map();
-        (localRaw || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
-        active.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
-        (customUser || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
-
-        const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-        firebaseProductsCache = merged;
-        this.saveLocalProductCache(merged);
         window.dispatchEvent(new Event("productsSynced"));
-        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "firestore", count: merged.length } }));
-      } else {
-        console.warn("Firestore returned no active products; preserving the last known good catalog.");
-        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "last-known-good", warning: "empty-firestore" } }));
+        window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "api_authoritative", count: active.length } }));
+        return active;
       }
-    }, error => {
-      console.error("Firestore product sync failed; keeping fallback catalog:", error);
-      window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "last-known-good", error: true } }));
-    });
+    } catch (e) {
+      console.warn("[DB] API catalog fetch skipped or offline:", e.message);
+    }
+    return null;
+  },
+
+  setupRealtimeSync() {
+    // Authoritative catalog fetch via server API without throwing unauthenticated Firestore snapshot permission errors
+    this.fetchCatalogFromApi().catch(() => {});
   },
 
   getCustomUserProducts() {
@@ -242,56 +236,31 @@ const DB = {
 
   // ---- PRODUCTS ----
   getProducts() {
-    let base = [];
+    // 1. Primary Authoritative Cache (Server API / Firestore)
     if (Array.isArray(firebaseProductsCache) && firebaseProductsCache.length > 0) {
-      base = firebaseProductsCache;
+      return firebaseProductsCache.filter(p => p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id));
     }
 
+    // 2. Versioned Disposable Cache
+    try {
+      const vCacheRaw = localStorage.getItem("mansi_catalog_cache_v1");
+      if (vCacheRaw) {
+        const vCache = JSON.parse(vCacheRaw);
+        if (vCache && Array.isArray(vCache.products) && vCache.products.length > 0) {
+          const valid = vCache.products.filter(p => p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id));
+          if (valid.length > 0) return valid;
+        }
+      }
+    } catch (e) {}
+
+    // 3. Fallback Catalog
     let rawStr = localStorage.getItem("products");
-    if (!rawStr || rawStr === "[]") {
-      rawStr = localStorage.getItem("products_backup");
-    }
     let raw = [];
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
     if (!Array.isArray(raw)) raw = [];
 
-    const customUser = this.getCustomUserProducts();
-
-    const seedImageMap = new Map();
-    (base || []).forEach(p => {
-      if (p && p.id && p.image) {
-        seedImageMap.set(p.id, p.image);
-      }
-    });
-
-    const mergedMap = new Map();
-    (base || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id)) {
-        mergedMap.set(p.id, p);
-      }
-    });
-    (raw || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id) && !String(p.id).startsWith("p_seed_")) {
-        const copy = { ...p };
-        const existing = mergedMap.get(p.id);
-        if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
-          copy.image = seedImageMap.get(copy.id);
-        } else if (!copy.image && existing && existing.image) {
-          copy.image = existing.image;
-        }
-        mergedMap.set(p.id, copy);
-      }
-    });
-
-    // Merge protected custom user products ON TOP so new additions NEVER disappear
-    (customUser || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id)) {
-        mergedMap.set(p.id, p);
-      }
-    });
-
-    const products = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    return products;
+    const active = raw.filter(p => p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id));
+    return active.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   },
   saveLocalProductCache(products) {
     const lightweight = products.map(product => {

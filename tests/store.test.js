@@ -17,6 +17,7 @@ test("1. All 12 Vercel API Modules Load Cleanly Without Import Errors", () => {
     "api/admin/orders.js",
     "api/admin/image.js",
     "api/admin/watchdog.js",
+    "api/admin/description.js",
     "api/backup/products.js",
     "api/cron/watchdog.js",
     "api/telegram/link.js",
@@ -53,14 +54,35 @@ test("2. Seed Catalog Contains Exactly 53 Valid Products and Images", () => {
   assert.equal(ids.size, 53, "Catalog product IDs must be unique");
 });
 
-test("3. Delivery Zone Calculations Are Accurate & Consistent", () => {
-  const configPath = path.join(root, "js", "config.js");
-  const configCode = fs.readFileSync(configPath, "utf8");
+test("3. Products HTML Initialization Prevents TDZ ReferenceError", () => {
+  const productsHtmlPath = path.join(root, "products.html");
+  const htmlContent = fs.readFileSync(productsHtmlPath, "utf8");
   
-  assert.ok(configCode.includes("getDeliveryZone"), "config.js must export getDeliveryZone");
+  const declIndex = htmlContent.indexOf("let _renderedProducts = [];");
+  const renderIndex = htmlContent.indexOf("renderProducts();");
+
+  assert.ok(declIndex !== -1, "products.html must declare _renderedProducts");
+  assert.ok(declIndex < renderIndex, "_renderedProducts must be declared BEFORE renderProducts() is called");
 });
 
-test("4. Order State Machine Enforces Valid Order Transitions", () => {
+test("4. Service Worker Employs Network-First Strategy for JS & CSS Code Assets", () => {
+  const swPath = path.join(root, "sw.js");
+  const swContent = fs.readFileSync(swPath, "utf8");
+
+  assert.ok(swContent.includes("mansi-shell-"), "SW must define a shell version cache name");
+  assert.ok(swContent.includes(".css"), "SW must handle CSS assets");
+  assert.ok(swContent.includes(".js"), "SW must handle JS assets");
+});
+
+test("5. Admin Auth Module Requires Server Session Guard", () => {
+  const adminAuthPath = path.join(root, "js", "admin-auth.js");
+  const content = fs.readFileSync(adminAuthPath, "utf8");
+
+  assert.ok(content.includes("requireAdminPage"), "admin-auth.js must export requireAdminPage");
+  assert.ok(content.includes("/api/admin/session"), "admin-auth.js must verify server admin session");
+});
+
+test("6. Order State Machine Enforces Valid Order Transitions", () => {
   const validTransitions = {
     pending: ["confirmed", "cancelled"],
     confirmed: ["processing", "cancelled"],

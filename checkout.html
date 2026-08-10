@@ -500,6 +500,7 @@
 
     const deliveryMode = currentPayment === "upi" ? "prepaid" : currentPayment;
     const deliveryInfo = getDeliveryCharges(pin, deliveryMode);
+    const idempotencyKey = (session.id || "guest") + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
     const order = {
       userId: session.id,
       customerName: name,
@@ -514,6 +515,7 @@
       grandTotal: subtotal + deliveryInfo.charge,
       paymentMode: currentPayment,
       deliveryZone: deliveryInfo.zone,
+      idempotencyKey
     };
 
     if (currentPayment === "cod") {
