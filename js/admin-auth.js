@@ -40,14 +40,36 @@
   async function login(email, password) {
     await DB.waitForFirebase();
     if (!fbAuth) throw new Error("Firebase Auth is unavailable");
-    await fbAuth.signInWithEmailAndPassword(String(email || "").trim(), String(password || ""));
-    const session = await authorizedUser();
-    if (!session) {
-      if (fbAuth) await fbAuth.signOut();
-      throw new Error("This account is not authorized as an administrative user on the server");
+
+    // If password was passed as first arg (single-password login) or email was provided:
+    let inputEmail = email;
+    let inputPass = password;
+    if (!inputPass && inputEmail) {
+      inputPass = inputEmail;
+      inputEmail = "";
     }
-    return session.user;
+
+    const candidateEmails = Array.from(new Set([
+      String(inputEmail || "").trim(),
+      String(window.STORE?.email || "").trim(),
+      "mansialwani5@gmail.com",
+      "riteshart1312@gmail.com"
+    ])).filter(Boolean);
+
+    let lastError = null;
+    for (const candidate of candidateEmails) {
+      try {
+        await fbAuth.signInWithEmailAndPassword(candidate, String(inputPass || ""));
+        const session = await authorizedUser();
+        if (session) return session.user;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    if (fbAuth.currentUser) await fbAuth.signOut();
+    throw lastError || new Error("Incorrect Admin Password. Please check your password.");
   }
+
 
   async function logout() {
     if (fbAuth) await fbAuth.signOut();
