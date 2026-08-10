@@ -1468,24 +1468,17 @@ div[class*="temp-mail"], iframe[src*="tempmail"] {
 /* =============================================
    VERTICAL STACKING FOR CHAT ASSISTANTS
    ============================================= */
-/* Store Assistant Button stays at bottom: 24px */
+/* Store Assistant Button floats cleanly ABOVE third-party Voice Widget at bottom: 100px */
 .ai-chat-btn {
-  bottom: 24px !important;
+  position: fixed !important;
+  bottom: 100px !important;
   right: 24px !important;
   z-index: 99990 !important;
 }
 
-/* OmniDimension Voice Widget stacks neatly above Store Assistant at bottom: 90px */
-#omnidimension-web-widget,
-#omnidim-web-widget,
-div[id*="omnidim"],
-div[class*="omnidim"],
-iframe[src*="omnidim"],
-.omnidim-widget-container,
-.omnidim-chat-widget,
-.omnidim-trigger-button,
-#omnidim-widget-root {
-  bottom: 90px !important;
+.ai-chat-box {
+  position: fixed !important;
+  bottom: 160px !important;
   right: 24px !important;
-  z-index: 99989 !important;
+  z-index: 99991 !important;
 }

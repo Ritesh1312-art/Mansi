@@ -750,27 +750,15 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   });
 }
 
-// Auto-adjust OmniDimension Voice Widget positioning so it sits neatly above Store Assistant button
-(function positionOmniDimensionWidget() {
+// Auto-position Store Assistant button at bottom: 100px so it sits cleanly above OmniDimension Voice Widget
+(function positionAssistantWidgets() {
   function adjustPosition() {
-    const selectors = [
-      '#omnidimension-web-widget',
-      '#omnidim-web-widget',
-      'iframe[src*="omnidim"]',
-      'div[id*="omnidim"]',
-      'div[class*="omnidim"]',
-      '.omnidim-widget-container',
-      '.omnidim-chat-widget',
-      '.omnidim-trigger-button'
-    ];
-    selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        if (el && el.style) {
-          el.style.setProperty('bottom', '90px', 'important');
-          el.style.setProperty('right', '24px', 'important');
-        }
-      });
-    });
+    const aiBtn = document.querySelector('.ai-chat-btn');
+    if (aiBtn && aiBtn.style) {
+      aiBtn.style.setProperty('bottom', '100px', 'important');
+      aiBtn.style.setProperty('right', '24px', 'important');
+      aiBtn.style.setProperty('z-index', '99990', 'important');
+    }
   }
 
   setInterval(adjustPosition, 1000);
