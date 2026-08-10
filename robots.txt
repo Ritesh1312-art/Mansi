@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://ritesh1312-art.github.io/Mansi/sitemap.xml
+Sitemap: https://mansi-jewellery-store.vercel.app/sitemap.xml

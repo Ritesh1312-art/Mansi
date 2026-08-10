@@ -387,7 +387,7 @@
       document.getElementById("p-id").value = p.id;
       document.getElementById("p-name").value = p.name;
       document.getElementById("p-category").value = p.category;
-      document.getElementById("p-stock").value = p.stock || 10;
+      document.getElementById("p-stock").value = p.stock ?? 0;
       document.getElementById("p-price").value = p.price;
       document.getElementById("p-mrp").value = p.mrp || p.price;
       document.getElementById("p-image").value = p.image && !p.image.startsWith("data:") ? p.image : "";

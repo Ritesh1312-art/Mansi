@@ -202,7 +202,7 @@ const DB = {
     }
   },
   saveCustomUserProduct(product) {
-    if (!product || !product.id) return;
+    if (!product || !product.id || this.isTombstoned(product.id)) return;
     const custom = this.getCustomUserProducts();
     const idx = custom.findIndex(p => p.id === product.id);
     if (idx !== -1) custom[idx] = product;
@@ -211,6 +211,32 @@ const DB = {
       localStorage.setItem("custom_user_products", JSON.stringify(custom));
     } catch (e) {
       console.warn("Could not write to custom_user_products:", e);
+    }
+  },
+  removeCustomUserProduct(id) {
+    if (!id) return;
+    const custom = this.getCustomUserProducts().filter(p => p.id !== id);
+    try {
+      localStorage.setItem("custom_user_products", JSON.stringify(custom));
+    } catch (e) {}
+  },
+  recordDeletedTombstone(id) {
+    if (!id) return;
+    try {
+      const raw = localStorage.getItem("deleted_product_ids");
+      const list = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+      if (!list.includes(id)) list.push(id);
+      localStorage.setItem("deleted_product_ids", JSON.stringify(list));
+    } catch (e) {}
+  },
+  isTombstoned(id) {
+    if (!id) return false;
+    try {
+      const raw = localStorage.getItem("deleted_product_ids");
+      const list = Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+      return list.includes(id);
+    } catch (e) {
+      return false;
     }
   },
 
@@ -240,12 +266,12 @@ const DB = {
 
     const mergedMap = new Map();
     (base || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted) {
+      if (p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id)) {
         mergedMap.set(p.id, p);
       }
     });
     (raw || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted && !String(p.id).startsWith("p_seed_")) {
+      if (p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id) && !String(p.id).startsWith("p_seed_")) {
         const copy = { ...p };
         const existing = mergedMap.get(p.id);
         if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
@@ -259,7 +285,7 @@ const DB = {
 
     // Merge protected custom user products ON TOP so new additions NEVER disappear
     (customUser || []).forEach(p => {
-      if (p && p.id && !p.archived && !p.isDeleted) {
+      if (p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id)) {
         mergedMap.set(p.id, p);
       }
     });
@@ -334,14 +360,19 @@ const DB = {
   },
   deleteProduct(id) {
     const product = this.getProductById(id);
-    if (!product) return null;
-    const products = this.getProducts().filter(p => p.id !== id);
+    if (!id) return null;
+
+    // Record deletion tombstone and remove from custom user products
+    this.removeCustomUserProduct(id);
+    this.recordDeletedTombstone(id);
+
+    const products = this.getProducts().filter(p => p.id !== id && !this.isTombstoned(p.id));
     this.saveProducts(products);
 
     // Auto persist archive to remote database in background
     this.persistArchive(id).catch(err => console.warn("Background archive product warning:", err));
 
-    return { ...product, archived: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    return { ...(product || { id }), archived: true, isDeleted: true, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   },
   async persistProduct(product) {
     // Primary: Write directly to Firestore cloud database
