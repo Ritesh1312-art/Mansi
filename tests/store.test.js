@@ -251,3 +251,33 @@ test("17. Customer Pages Load HilltopAds S2S Script Exactly Once", () => {
     assert.equal((content.match(/src="\/3e0b85979f\.php"/g) || []).length, 1, `${page} must load the script once`);
   }
 });
+
+test("18. Catalog Store Module Persists & Merges Dynamic Products Correctly", () => {
+  const catalogStore = require(path.join(root, "api/_lib/catalog-store.js"));
+  assert.equal(typeof catalogStore.getAllProductsMerged, "function");
+  assert.equal(typeof catalogStore.saveDynamicProduct, "function");
+
+  const initialMerged = catalogStore.getAllProductsMerged();
+  assert.ok(initialMerged.length >= 53, "Merged products count must be at least 53");
+
+  const testProduct = {
+    id: "p_test_54th_item",
+    name: "54th Test Pearl Necklace",
+    category: "jewellery",
+    price: 999,
+    mrp: 1299,
+    image: "assets/products/p_1785004113486.jpg",
+    createdAt: new Date().toISOString()
+  };
+
+  catalogStore.saveDynamicProduct(testProduct);
+  const updatedMerged = catalogStore.getAllProductsMerged();
+  assert.ok(updatedMerged.some(p => p.id === "p_test_54th_item"), "Dynamic product must be present in merged output");
+  assert.ok(updatedMerged.length >= 54, "Merged products count must now be at least 54");
+
+  // Cleanup test product
+  catalogStore.archiveDynamicProduct("p_test_54th_item");
+  const cleanedMerged = catalogStore.getAllProductsMerged();
+  assert.ok(!cleanedMerged.some(p => p.id === "p_test_54th_item"), "Archived product must not be present in active output");
+});
+

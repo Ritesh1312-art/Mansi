@@ -1,9 +1,8 @@
-"use strict";
-
 const { requireAdmin } = require("../_lib/auth");
 const { services } = require("../_lib/firebase");
 const { backupProducts, normalizeProduct } = require("../_lib/google-sheet");
 const { send, readJson, methodNotAllowed } = require("../_lib/http");
+const { saveDynamicProduct, archiveDynamicProduct } = require("../_lib/catalog-store");
 
 function validateProduct(input) {
   const product = normalizeProduct(input || {});
@@ -19,6 +18,7 @@ function validateProduct(input) {
 }
 
 async function recordBackupFailure(db, product, error) {
+  if (!db) return;
   await db.collection("backupOutbox").doc(product.id).set({
     type: "product-upsert",
     product,
@@ -26,7 +26,7 @@ async function recordBackupFailure(db, product, error) {
     lastError: String(error.message || error).slice(0, 500),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  }, { merge: true });
+  }, { merge: true }).catch(() => {});
 }
 
 module.exports = async function handler(req, res) {
@@ -37,6 +37,7 @@ module.exports = async function handler(req, res) {
     const admin = await requireAdmin(req);
     const body = await readJson(req);
     const { db } = services();
+
     if (body && body.action === "generate_description") {
       const productName = String(body.name || "").trim();
       const category = String(body.category || "").trim();
@@ -66,48 +67,63 @@ module.exports = async function handler(req, res) {
     if (req.method === "DELETE") {
       const id = String(body.id || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 150);
       if (!id) return send(res, 400, { ok: false, error: "Product id is required" });
-      const ref = db.collection("products").doc(id);
-      const existing = await ref.get();
-      if (!existing.exists) return send(res, 404, { ok: false, error: "Product not found" });
-      const archived = {
-        ...existing.data(),
-        id,
-        archived: true,
-        archivedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        archivedBy: admin.email || admin.uid
-      };
-      await ref.set(archived, { merge: true });
-      try {
-        await backupProducts([{ ...archived, isDeleted: true, syncSource: "website-archive" }]);
-      } catch (backupError) {
-        await recordBackupFailure(db, archived, backupError);
+      
+      archiveDynamicProduct(id);
+
+      if (db) {
+        const ref = db.collection("products").doc(id);
+        const existing = await ref.get();
+        if (existing.exists) {
+          const archived = {
+            ...existing.data(),
+            id,
+            archived: true,
+            archivedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            archivedBy: admin.email || admin.uid
+          };
+          await ref.set(archived, { merge: true });
+          try {
+            await backupProducts([{ ...archived, isDeleted: true, syncSource: "website-archive" }]);
+          } catch (backupError) {
+            await recordBackupFailure(db, archived, backupError);
+          }
+        }
       }
       return send(res, 200, { ok: true, archived: true, id });
     }
 
     const product = validateProduct(body.product || body);
     product.updatedBy = admin.email || admin.uid;
-    const ref = db.collection("products").doc(product.id);
-    const existing = await ref.get();
-    if (existing.exists) {
-      const old = existing.data() || {};
-      product.createdAt = old.createdAt || product.createdAt;
-      product.sales = Number.isFinite(Number(product.sales)) ? product.sales : Number(old.sales) || 0;
+    
+    // Always persist to catalog store (in-memory & dynamic_products.json)
+    saveDynamicProduct(product);
+
+    let isExisting = false;
+    if (db) {
+      const ref = db.collection("products").doc(product.id);
+      const existing = await ref.get();
+      if (existing.exists) {
+        isExisting = true;
+        const old = existing.data() || {};
+        product.createdAt = old.createdAt || product.createdAt;
+        product.sales = Number.isFinite(Number(product.sales)) ? product.sales : Number(old.sales) || 0;
+      }
+      await ref.set(product, { merge: true });
     }
-    await ref.set(product, { merge: true });
 
     let backup = { pending: false };
     try {
       backup = { pending: false, ...(await backupProducts([{ ...product, syncSource: "website-admin" }])) };
-      await db.collection("backupOutbox").doc(product.id).delete().catch(() => {});
+      if (db) await db.collection("backupOutbox").doc(product.id).delete().catch(() => {});
     } catch (backupError) {
-      await recordBackupFailure(db, product, backupError);
+      if (db) await recordBackupFailure(db, product, backupError);
       backup = { pending: true };
     }
-    return send(res, existing.exists ? 200 : 201, { ok: true, product, backup });
+    return send(res, isExisting ? 200 : 201, { ok: true, product, backup });
   } catch (error) {
     console.error("admin.products", error.message);
     return send(res, error.statusCode || 400, { ok: false, error: error.message || "Product save failed" });
   }
 };
+
