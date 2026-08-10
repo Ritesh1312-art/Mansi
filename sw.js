@@ -66,7 +66,6 @@ self.addEventListener("fetch", function(event) {
     url.hostname.includes("googleapis") ||
     url.hostname.includes("telegram") ||
     url.hostname.includes("omnidimension") ||
-    url.hostname.includes("hilltopads") ||
     url.hostname.includes("resend")
   ) return;
 
