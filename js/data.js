@@ -85,15 +85,20 @@ const DB = {
       }));
       
       // Combine seed catalog with local items so local additions are NEVER wiped and images are auto-repaired
+      const seedImageMap = new Map();
       const mergedMap = new Map();
-      seedProducts.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+      seedProducts.forEach(p => {
+        if (p && p.id && !p.archived && !p.isDeleted) {
+          mergedMap.set(p.id, p);
+          if (p.image) seedImageMap.set(p.id, p.image);
+        }
+      });
       localActive.forEach(p => {
         if (p && p.id && !p.archived && !p.isDeleted) {
           const copy = { ...p };
-          const existing = mergedMap.get(p.id);
-          if (!copy.image || copy.image === "assets/brand/icon.svg") {
-            if (existing && existing.image) copy.image = existing.image;
-            else if (String(copy.id).startsWith("p_")) copy.image = "assets/products/" + copy.id + ".jpg";
+          // ONLY auto-repair images for official seed products, NEVER for user-added new products
+          if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
+            copy.image = seedImageMap.get(copy.id);
           }
           mergedMap.set(p.id, copy);
         }
@@ -156,11 +161,7 @@ const DB = {
         (localRaw || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
         active.forEach(p => {
           if (p && p.id) {
-            const copy = { ...p };
-            if (!copy.image || copy.image === "assets/brand/icon.svg") {
-              if (String(copy.id).startsWith("p_")) copy.image = "assets/products/" + copy.id + ".jpg";
-            }
-            mergedMap.set(p.id, copy);
+            mergedMap.set(p.id, p);
           }
         });
         const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -194,24 +195,29 @@ const DB = {
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
     if (!Array.isArray(raw)) raw = [];
 
-    // Merge base cache and local raw items, auto-repairing any missing image links
+    // Merge base cache and local raw items without corrupting user-added products
+    const seedImageMap = new Map();
+    (base || []).forEach(p => {
+      if (p && p.id && p.image) {
+        seedImageMap.set(p.id, p.image);
+      }
+    });
+
     const mergedMap = new Map();
     (base || []).forEach(p => {
       if (p && p.id && !p.archived && !p.isDeleted) {
-        const copy = { ...p };
-        if (!copy.image || copy.image === "assets/brand/icon.svg") {
-          if (String(copy.id).startsWith("p_")) copy.image = "assets/products/" + copy.id + ".jpg";
-        }
-        mergedMap.set(p.id, copy);
+        mergedMap.set(p.id, p);
       }
     });
     (raw || []).forEach(p => {
       if (p && p.id && !p.archived && !p.isDeleted && !String(p.id).startsWith("p_seed_")) {
-        const existing = mergedMap.get(p.id);
         const copy = { ...p };
-        if (!copy.image || copy.image === "assets/brand/icon.svg") {
-          if (existing && existing.image) copy.image = existing.image;
-          else if (String(copy.id).startsWith("p_")) copy.image = "assets/products/" + copy.id + ".jpg";
+        const existing = mergedMap.get(p.id);
+        // Only repair image if it's an official seed product whose image was lost
+        if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
+          copy.image = seedImageMap.get(copy.id);
+        } else if (!copy.image && existing && existing.image) {
+          copy.image = existing.image;
         }
         mergedMap.set(p.id, copy);
       }
