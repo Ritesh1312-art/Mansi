@@ -749,3 +749,31 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     });
   });
 }
+
+// Auto-adjust OmniDimension Voice Widget positioning so it sits neatly above Store Assistant button
+(function positionOmniDimensionWidget() {
+  function adjustPosition() {
+    const selectors = [
+      '#omnidimension-web-widget',
+      '#omnidim-web-widget',
+      'iframe[src*="omnidim"]',
+      'div[id*="omnidim"]',
+      'div[class*="omnidim"]',
+      '.omnidim-widget-container',
+      '.omnidim-chat-widget',
+      '.omnidim-trigger-button'
+    ];
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        if (el && el.style) {
+          el.style.setProperty('bottom', '90px', 'important');
+          el.style.setProperty('right', '24px', 'important');
+        }
+      });
+    });
+  }
+
+  setInterval(adjustPosition, 1000);
+  window.addEventListener('load', adjustPosition);
+  document.addEventListener('DOMContentLoaded', adjustPosition);
+})();
