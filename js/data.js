@@ -71,6 +71,9 @@ const DB = {
     try { existingLocal = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
     let localActive = Array.isArray(existingLocal) ? existingLocal.filter(p => p && !p.archived && !p.isDeleted) : [];
 
+    let customUser = [];
+    try { customUser = JSON.parse(localStorage.getItem("custom_user_products") || "[]"); } catch(e){}
+
     try {
       const dataScript = Array.from(document.scripts).find(script => /\/js\/data\.js(?:\?|$)/.test(script.src));
       const siteRoot = dataScript ? new URL("../", dataScript.src) : new URL("./", document.baseURI);
@@ -84,7 +87,7 @@ const DB = {
           : product.image
       }));
       
-      // Combine seed catalog with local items so local additions are NEVER wiped and images are auto-repaired
+      // Combine seed catalog, local items, and protected custom user products
       const seedImageMap = new Map();
       const mergedMap = new Map();
       seedProducts.forEach(p => {
@@ -96,11 +99,17 @@ const DB = {
       localActive.forEach(p => {
         if (p && p.id && !p.archived && !p.isDeleted) {
           const copy = { ...p };
-          // ONLY auto-repair images for official seed products, NEVER for user-added new products
           if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
             copy.image = seedImageMap.get(copy.id);
           }
           mergedMap.set(p.id, copy);
+        }
+      });
+
+      // Always merge custom user-added products with 100% HIGHEST PRIORITY
+      (customUser || []).forEach(p => {
+        if (p && p.id && !p.archived && !p.isDeleted) {
+          mergedMap.set(p.id, p);
         }
       });
 
@@ -111,8 +120,12 @@ const DB = {
       window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "versioned-backup", count: merged.length } }));
     } catch (error) {
       console.warn("Versioned catalog fallback could not load:", error.message);
-      if (localActive.length > 0) {
-        firebaseProductsCache = localActive;
+      if (localActive.length > 0 || customUser.length > 0) {
+        const mergedMap = new Map();
+        localActive.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+        customUser.forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+        const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        firebaseProductsCache = merged;
         window.dispatchEvent(new Event("productsSynced"));
       }
     }
@@ -154,16 +167,16 @@ const DB = {
 
       const active = products.filter(product => !product.archived && !product.isDeleted);
       if (active.length > 0) {
-        // Merge remote active products with locally created/updated products so nothing is wiped
         let localRaw = [];
         try { localRaw = JSON.parse(localStorage.getItem("products") || "[]"); } catch(e){}
+        let customUser = [];
+        try { customUser = JSON.parse(localStorage.getItem("custom_user_products") || "[]"); } catch(e){}
+
         const mergedMap = new Map();
         (localRaw || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
-        active.forEach(p => {
-          if (p && p.id) {
-            mergedMap.set(p.id, p);
-          }
-        });
+        active.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+        (customUser || []).forEach(p => { if (p && p.id && !p.archived && !p.isDeleted) mergedMap.set(p.id, p); });
+
         const merged = Array.from(mergedMap.values()).sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
         firebaseProductsCache = merged;
@@ -178,6 +191,27 @@ const DB = {
       console.error("Firestore product sync failed; keeping fallback catalog:", error);
       window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "last-known-good", error: true } }));
     });
+  },
+
+  getCustomUserProducts() {
+    try {
+      const raw = localStorage.getItem("custom_user_products");
+      return Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+    } catch (_) {
+      return [];
+    }
+  },
+  saveCustomUserProduct(product) {
+    if (!product || !product.id) return;
+    const custom = this.getCustomUserProducts();
+    const idx = custom.findIndex(p => p.id === product.id);
+    if (idx !== -1) custom[idx] = product;
+    else custom.unshift(product);
+    try {
+      localStorage.setItem("custom_user_products", JSON.stringify(custom));
+    } catch (e) {
+      console.warn("Could not write to custom_user_products:", e);
+    }
   },
 
   // ---- PRODUCTS ----
@@ -195,7 +229,8 @@ const DB = {
     try { raw = JSON.parse(rawStr || "[]"); } catch(e){}
     if (!Array.isArray(raw)) raw = [];
 
-    // Merge base cache and local raw items without corrupting user-added products
+    const customUser = this.getCustomUserProducts();
+
     const seedImageMap = new Map();
     (base || []).forEach(p => {
       if (p && p.id && p.image) {
@@ -213,13 +248,19 @@ const DB = {
       if (p && p.id && !p.archived && !p.isDeleted && !String(p.id).startsWith("p_seed_")) {
         const copy = { ...p };
         const existing = mergedMap.get(p.id);
-        // Only repair image if it's an official seed product whose image was lost
         if (seedImageMap.has(copy.id) && (!copy.image || copy.image === "assets/brand/icon.svg")) {
           copy.image = seedImageMap.get(copy.id);
         } else if (!copy.image && existing && existing.image) {
           copy.image = existing.image;
         }
         mergedMap.set(p.id, copy);
+      }
+    });
+
+    // Merge protected custom user products ON TOP so new additions NEVER disappear
+    (customUser || []).forEach(p => {
+      if (p && p.id && !p.archived && !p.isDeleted) {
+        mergedMap.set(p.id, p);
       }
     });
 
@@ -258,6 +299,9 @@ const DB = {
     product.rating = Math.max(0, Math.min(5, Number(product.rating) || 0));
     product.reviews = Math.max(0, Number(product.reviews) || 0);
     product.sales = product.sales || 0;
+
+    // Always preserve in protected custom_user_products key
+    this.saveCustomUserProduct(product);
 
     const products = this.getProducts();
     const filtered = products.filter(p => p.id !== product.id);
