@@ -10,6 +10,10 @@
     {
       "source": "/api/hilltop-verification",
       "destination": "/870ceb61d8a2f0d50a9c.txt"
+    },
+    {
+      "source": "/3e0b85979f.php",
+      "destination": "/api/settings?antiAdBlock=hilltop"
     }
   ],
 
@@ -25,7 +29,7 @@
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.omnidimension.ai https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firebaseinstallations.googleapis.com https://api.telegram.org https://*.omnidimension.ai https://generativelanguage.googleapis.com; frame-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdn.omnidimension.ai https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: https://*.googleusercontent.com https://firebasestorage.googleapis.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firebaseinstallations.googleapis.com https://api.telegram.org https://*.omnidimension.ai https://generativelanguage.googleapis.com; frame-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self';"
         }
       ]
     },

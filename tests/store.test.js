@@ -228,3 +228,26 @@ test("15. api/_lib/rate-limit.js Exports rateLimit and withRateLimit", () => {
   assert.equal(typeof mod.rateLimit, "function", "rateLimit must be a function");
   assert.equal(typeof mod.withRateLimit, "function", "withRateLimit must be a function");
 });
+
+test("16. HilltopAds S2S Anti-AdBlock Uses First-Party Route and Server Secret", () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+  const rewrite = (config.rewrites || []).find(item => item.source === "/3e0b85979f.php");
+  assert.equal(rewrite?.destination, "/api/settings?antiAdBlock=hilltop");
+
+  const settings = fs.readFileSync(path.join(root, "api/settings.js"), "utf8");
+  assert.ok(settings.includes("process.env.HILLTOPADS_ANTI_ADBLOCK_KEY"));
+  assert.ok(settings.includes("https://api.hilltopads.com/publisher/antiAdBlock"));
+  assert.ok(!settings.includes("private $key"), "PHP credential must never be copied into JavaScript source");
+});
+
+test("17. Customer Pages Load HilltopAds S2S Script Exactly Once", () => {
+  const pages = [
+    "index.html", "products.html", "product-detail.html", "cart.html", "checkout.html",
+    "login.html", "signup.html", "orders.html", "profile.html", "wishlist.html"
+  ];
+
+  for (const page of pages) {
+    const content = fs.readFileSync(path.join(root, page), "utf8");
+    assert.equal((content.match(/src="\/3e0b85979f\.php"/g) || []).length, 1, `${page} must load the script once`);
+  }
+});

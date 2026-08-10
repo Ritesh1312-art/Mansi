@@ -25,6 +25,11 @@ const DEFAULT_DELIVERY = {
 };
 
 const HILLTOP_OWNERSHIP_TOKEN = "870ceb61d8a2f0d50a9c";
+const HILLTOP_ANTI_ADBLOCK_ENDPOINT = "https://api.hilltopads.com/publisher/antiAdBlock";
+const HILLTOP_DESKTOP_ZONE_ID = "7308149";
+const HILLTOP_MOBILE_ZONE_ID = "7308153";
+const HILLTOP_CACHE_TTL_MS = 5 * 60 * 1000;
+const hilltopCodeCache = new Map();
 
 function isHilltopOwnershipRequest(req) {
   if (req.query?.ownershipVerification === "hilltop") return true;
@@ -33,6 +38,71 @@ function isHilltopOwnershipRequest(req) {
     return url.searchParams.get("ownershipVerification") === "hilltop";
   } catch (e) {
     return false;
+  }
+}
+
+function isHilltopAntiAdBlockRequest(req) {
+  if (req.query?.antiAdBlock === "hilltop") return true;
+  try {
+    const url = new URL(req.url || "", "https://mansi-jewellery-store.vercel.app");
+    return url.searchParams.get("antiAdBlock") === "hilltop";
+  } catch (e) {
+    return false;
+  }
+}
+
+function sendJavaScript(res, code, cacheControl, status) {
+  const body = String(code || "");
+  res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+  res.setHeader("Cache-Control", cacheControl);
+  res.setHeader("Vary", "User-Agent");
+  res.setHeader("X-HilltopAds-Status", status);
+  res.setHeader("Content-Length", String(Buffer.byteLength(body)));
+  res.statusCode = 200;
+  return res.end(body);
+}
+
+async function serveHilltopAntiAdBlock(req, res) {
+  const key = String(process.env.HILLTOPADS_ANTI_ADBLOCK_KEY || "").trim();
+  if (!key) {
+    return sendJavaScript(res, "/* HilltopAds Anti-AdBlock is not configured. */", "no-store", "not-configured");
+  }
+
+  const userAgent = String(req.headers?.["user-agent"] || "");
+  const mobile = /mobi|ipad|iphone|blackberry|android/i.test(userAgent);
+  const zoneId = mobile ? HILLTOP_MOBILE_ZONE_ID : HILLTOP_DESKTOP_ZONE_ID;
+  const cached = hilltopCodeCache.get(zoneId);
+  if (cached && Date.now() - cached.createdAt < HILLTOP_CACHE_TTL_MS) {
+    return sendJavaScript(res, cached.code, "private, max-age=300, stale-while-revalidate=60", "cache");
+  }
+
+  try {
+    const url = new URL(HILLTOP_ANTI_ADBLOCK_ENDPOINT);
+    url.search = new URLSearchParams({
+      zoneId,
+      key,
+      version: "1.0",
+      transport: "1"
+    }).toString();
+
+    const response = await fetch(url, {
+      headers: { "User-Agent": "HilltopAds Anti-AdBlock Client/1.0" },
+      redirect: "error",
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error(`upstream-status-${response.status}`);
+
+    const payload = await response.json();
+    const code = payload?.result?.code;
+    if (typeof code !== "string" || !code.trim() || Buffer.byteLength(code) > 500000) {
+      throw new Error("invalid-upstream-code");
+    }
+
+    hilltopCodeCache.set(zoneId, { code, createdAt: Date.now() });
+    return sendJavaScript(res, code, "private, max-age=300, stale-while-revalidate=60", "live");
+  } catch (error) {
+    console.warn("[api/settings] HilltopAds Anti-AdBlock fetch failed:", error.message);
+    return sendJavaScript(res, "/* HilltopAds Anti-AdBlock is temporarily unavailable. */", "no-store", "unavailable");
   }
 }
 
@@ -75,6 +145,10 @@ module.exports = withErrorHandler(async function handler(req, res) {
     res.setHeader("Content-Length", String(Buffer.byteLength(HILLTOP_OWNERSHIP_TOKEN)));
     res.statusCode = 200;
     return res.end(HILLTOP_OWNERSHIP_TOKEN);
+  }
+
+  if (req.method === "GET" && isHilltopAntiAdBlockRequest(req)) {
+    return serveHilltopAntiAdBlock(req, res);
   }
 
   const { db, isConfigured } = services();
