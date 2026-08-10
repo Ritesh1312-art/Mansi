@@ -104,7 +104,7 @@
   <!-- HERO SECTION -->
   <section class="hero">
     <div class="hero-inner">
-      <div class="hero-badge">🟢 53 products safely synced and backed up</div>
+      <div class="hero-badge" id="hero-badge">🟢 53 products safely synced and backed up</div>
       <h1>Shop <span>Jewellery, Cosmetics</span><br/>& Much More!</h1>
       <p>Browse the current catalogue with secure accounts, address-based delivery charges, COD and configured UPI options.</p>
       <div class="hero-actions">
@@ -112,7 +112,7 @@
         <a href="products.html?cat=jewellery" class="btn-outline">💍 View Jewellery</a>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="num">53</div><div class="label">Backed-up Products</div></div>
+        <div class="hero-stat"><div class="num" id="hero-products-count">53</div><div class="label">Backed-up Products</div></div>
         <div class="hero-stat"><div class="num">24×7</div><div class="label">Online Catalogue</div></div>
         <div class="hero-stat"><div class="num">India</div><div class="label">Delivery Zones</div></div>
         <div class="hero-stat"><div class="num">COD</div><div class="label">Available</div></div>
@@ -325,14 +325,24 @@
       menu.style.display = menu.style.display === "none" ? "flex" : "none";
     }
 
+    function updateHeroProductCounts() {
+      const count = DB.getProducts().length;
+      const badge = document.getElementById("hero-badge");
+      const numEl = document.getElementById("hero-products-count");
+      if (badge) badge.innerHTML = `🟢 ${count} products safely synced and backed up`;
+      if (numEl) numEl.textContent = count;
+    }
+
     // Run
     renderCategories();
     renderFeatured();
     renderNewArrivals();
+    updateHeroProductCounts();
 
-    // Auto-update home page grids when products are added/synced
-    window.addEventListener("productsSynced", () => { renderFeatured(); renderNewArrivals(); });
-    window.addEventListener("storage", (e) => { if (e.key === "products" || e.key === "products_backup") { renderFeatured(); renderNewArrivals(); } });
+    // Auto-update home page grids and realtime badge count when products are added/synced
+    window.addEventListener("productsSynced", () => { renderFeatured(); renderNewArrivals(); updateHeroProductCounts(); });
+    window.addEventListener("catalogStatus", () => { updateHeroProductCounts(); });
+    window.addEventListener("storage", (e) => { if (e.key === "products" || e.key === "products_backup") { renderFeatured(); renderNewArrivals(); updateHeroProductCounts(); } });
   </script>
   <!-- OmniDimension Voice & Web Bot Widget -->
   <script id="omnidimension-web-widget" async src="https://omnidim.io/web_widget.js?secret_key=144319ce2e024404faad481117ad3634"></script>
