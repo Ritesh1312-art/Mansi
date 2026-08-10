@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/6c2edcdea10476233e03.txt",
+      "destination": "/api/hilltop-verification"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
