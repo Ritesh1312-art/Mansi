@@ -6,8 +6,14 @@
     {
       "source": "/6c2edcdea10476233e03.txt",
       "destination": "/api/settings?ownershipVerification=hilltop"
+    },
+    {
+      "source": "/api/hilltop-verification",
+      "destination": "/870ceb61d8a2f0d50a9c.txt"
     }
   ],
+
+
   "headers": [
     {
       "source": "/(.*)",
