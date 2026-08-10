@@ -27,6 +27,8 @@ const defaultStore = {
   },
   telegramUsername: "MansiJewellery",
   geminiApiKey: "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8",
+  omniDimensionApiKey: "gq2RDUCjxW3WWZ5pzNh9bpa17g6RN1Wwz",
+  omniDimensionSecretKey: "144319ce2e024404faad481117ad3634",
   gpayUpi: "",
   phonepeUpi: "",
   paytmUpi: "",
