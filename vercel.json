@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/6c2edcdea10476233e03.txt",
-      "destination": "/api/hilltop-verification"
+      "destination": "/api/settings?ownershipVerification=hilltop"
     }
   ],
   "headers": [

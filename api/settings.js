@@ -24,6 +24,18 @@ const DEFAULT_DELIVERY = {
   restOfIndia:  { prepaid: 150, cod: 195 },
 };
 
+const HILLTOP_OWNERSHIP_TOKEN = "870ceb61d8a2f0d50a9c";
+
+function isHilltopOwnershipRequest(req) {
+  if (req.query?.ownershipVerification === "hilltop") return true;
+  try {
+    const url = new URL(req.url || "", "https://mansi-jewellery-store.vercel.app");
+    return url.searchParams.get("ownershipVerification") === "hilltop";
+  } catch (e) {
+    return false;
+  }
+}
+
 function pick(source, allowed) {
   return Object.fromEntries(Object.entries(source || {}).filter(([key]) => allowed.has(key)));
 }
@@ -56,6 +68,15 @@ function cleanDelivery(source) {
 
 module.exports = withErrorHandler(async function handler(req, res) {
   if (!["GET", "PATCH"].includes(req.method)) return methodNotAllowed(res, ["GET", "PATCH"]);
+
+  if (req.method === "GET" && isHilltopOwnershipRequest(req)) {
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    res.setHeader("Content-Length", String(Buffer.byteLength(HILLTOP_OWNERSHIP_TOKEN)));
+    res.statusCode = 200;
+    return res.end(HILLTOP_OWNERSHIP_TOKEN);
+  }
+
   const { db, isConfigured } = services();
 
   if (req.method === "GET") {
