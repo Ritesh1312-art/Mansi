@@ -36,25 +36,30 @@ function getDynamicProducts() {
 }
 
 function saveDynamicProduct(product) {
-  const current = getDynamicProducts();
-  const index = current.findIndex(p => p.id === product.id);
+  if (!product || !product.id) return product;
+  const item = { ...product, archived: false, isDeleted: false };
+  const current = [...getDynamicProducts()];
+  const index = current.findIndex(p => p.id === item.id);
   if (index >= 0) {
-    current[index] = { ...current[index], ...product };
+    current[index] = { ...current[index], ...item };
   } else {
-    current.unshift(product);
+    current.unshift(item);
   }
   inMemoryDynamic = current;
   try {
     fs.writeFileSync(dynamicPath, JSON.stringify(current, null, 2), "utf8");
   } catch (e) {}
-  return product;
+  return item;
 }
 
 function archiveDynamicProduct(id) {
-  const current = getDynamicProducts();
+  if (!id) return id;
+  const current = [...getDynamicProducts()];
   const index = current.findIndex(p => p.id === id);
   if (index >= 0) {
     current[index] = { ...current[index], archived: true, isDeleted: true };
+  } else {
+    current.unshift({ id, archived: true, isDeleted: true });
   }
   inMemoryDynamic = current;
   try {
@@ -62,6 +67,7 @@ function archiveDynamicProduct(id) {
   } catch (e) {}
   return id;
 }
+
 
 function getAllProductsMerged() {
   const staticProducts = getStaticCatalog();
