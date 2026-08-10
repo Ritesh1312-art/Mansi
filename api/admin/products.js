@@ -35,8 +35,31 @@ module.exports = async function handler(req, res) {
   }
   try {
     const admin = await requireAdmin(req);
-    const body = await readJson(req);
-    const { db } = services();
+    if (body && body.action === "generate_description") {
+      const productName = String(body.name || "").trim();
+      const category = String(body.category || "").trim();
+      const prompt = String(body.prompt || "").trim() || `Write a compelling 2-3 sentence e-commerce description for a product named "${productName}" in the category "${category}". Highlight quality, elegance, and customer appeal for an Indian online store.`;
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return send(res, 538, { ok: false, error: "GEMINI_API_KEY is not configured on the server" });
+      }
+
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+
+      if (!response.ok) {
+        return send(res, 502, { ok: false, error: "Gemini API request failed", status: response.status });
+      }
+
+      const data = await response.json();
+      const description = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      return send(res, 200, { ok: true, description });
+    }
 
     if (req.method === "DELETE") {
       const id = String(body.id || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 150);

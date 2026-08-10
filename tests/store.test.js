@@ -17,7 +17,6 @@ test("1. All 12 Vercel API Modules Load Cleanly Without Import Errors", () => {
     "api/admin/orders.js",
     "api/admin/image.js",
     "api/admin/watchdog.js",
-    "api/admin/description.js",
     "api/backup/products.js",
     "api/cron/watchdog.js",
     "api/telegram/link.js",
