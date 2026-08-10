@@ -319,6 +319,10 @@ const DB = {
     if (idx !== -1) {
       const updated = { ...products[idx], ...updates, updatedAt: new Date().toISOString() };
       products[idx] = updated;
+
+      // Always preserve updated item in custom_user_products
+      this.saveCustomUserProduct(updated);
+
       this.saveProducts(products);
 
       // Auto persist to remote database in background
