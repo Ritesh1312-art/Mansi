@@ -25,6 +25,25 @@
   --success: #2D7A4D;
   --error: #E03546;
 }
+
+/* Global anti-extension rules to block injected background icons (e.g. TempMail extension) */
+input, select, textarea, .form-input {
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Hide any injected tempmail overlays */
+[class*="tempmail"], [id*="tempmail"], [class*="temp-mail"], [data-tempmail], tempmail-button, iframe[src*="tempmail"], div[style*="tempmail"], span[style*="tempmail"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
 [data-theme="dark"] {
   --primary: #ECC880; /* Glowing Champagne Gold */
   --primary-dark: #C5A880;
