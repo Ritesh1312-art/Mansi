@@ -90,6 +90,12 @@ module.exports = async function handler(req, res) {
 
     const product = validateProduct(body.product || body);
     product.updatedBy = admin.email || admin.uid;
+    product.archived = false;
+    product.isDeleted = false;
+    product.archivedAt = null;
+    product.archivedBy = null;
+    product.deletedAt = null;
+
     const ref = db.collection("products").doc(product.id);
     const existing = await ref.get();
     if (existing.exists) {

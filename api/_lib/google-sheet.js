@@ -73,31 +73,76 @@ function rowToProduct(row) {
 
 const PUBLIC_CSV_URL = process.env.GOOGLE_SHEET_CSV_URL || "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxjU88A3UAAG-S9qK9AkGKybrh4VEUPxMzA7RSFfdyktaFcDJmMzkcTCnGGPgZuodDXC800tBn6wmR/pub?output=csv";
 
+function parseRFC4180CSV(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const c = text[i];
+    const next = text[i + 1];
+
+    if (inQuotes) {
+      if (c === '"') {
+        if (next === '"') {
+          field += '"';
+          i += 2;
+        } else {
+          inQuotes = false;
+          i++;
+        }
+      } else {
+        field += c;
+        i++;
+      }
+    } else {
+      if (c === '"') {
+        inQuotes = true;
+        i++;
+      } else if (c === ',') {
+        row.push(field);
+        field = "";
+        i++;
+      } else if (c === '\r' && next === '\n') {
+        row.push(field);
+        field = "";
+        if (row.some(f => f.trim())) rows.push(row);
+        row = [];
+        i += 2;
+      } else if (c === '\n' || c === '\r') {
+        row.push(field);
+        field = "";
+        if (row.some(f => f.trim())) rows.push(row);
+        row = [];
+        i++;
+      } else {
+        field += c;
+        i++;
+      }
+    }
+  }
+
+  if (field || row.length > 0) {
+    row.push(field);
+    if (row.some(f => f.trim())) rows.push(row);
+  }
+
+  return rows;
+}
+
 async function fetchPublicCSV() {
   const res = await fetch(PUBLIC_CSV_URL);
   if (!res.ok) throw new Error("HTTP " + res.status);
   const text = await res.text();
-  const lines = text.split(/\r?\n/).filter(line => line.trim());
-  if (lines.length < 2) return [];
+  const rows = parseRFC4180CSV(text);
+  if (rows.length < 2) return [];
 
-  function parseCSVLine(line) {
-    const result = [];
-    let cur = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQuotes = !inQuotes; }
-      else if (c === ',' && !inQuotes) { result.push(cur.replace(/^"|"$/g, '')); cur = ""; }
-      else { cur += c; }
-    }
-    result.push(cur.replace(/^"|"$/g, ''));
-    return result;
-  }
-
-  const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+  const headers = rows[0].map(h => String(h || "").trim().toLowerCase());
   const products = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
+  for (let i = 1; i < rows.length; i++) {
+    const values = rows[i];
     const obj = {};
     headers.forEach((h, idx) => { obj[h] = values[idx] || ""; });
     if (obj.name || obj.id) {
@@ -112,6 +157,7 @@ async function fetchPublicCSV() {
 }
 
 async function readProducts() {
+
   try {
     const { spreadsheetId, sheetName } = config();
     const sheets = sheetsClient();
@@ -165,4 +211,5 @@ async function backupProducts(products) {
   return { updated: updates.length, appended: appends.length, total: products.length };
 }
 
-module.exports = { HEADERS, readProducts, backupProducts, normalizeProduct };
+module.exports = { HEADERS, readProducts, backupProducts, normalizeProduct, parseRFC4180CSV };
+

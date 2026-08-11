@@ -244,15 +244,23 @@ test("16. HilltopAds S2S Anti-AdBlock Uses First-Party Route and Server Secret",
   assert.ok(!settings.includes("private $key"), "PHP credential must never be copied into JavaScript source");
 });
 
-test("17. Customer Pages Load HilltopAds S2S Script Exactly Once", () => {
-  const pages = [
-    "index.html", "products.html", "product-detail.html", "cart.html", "checkout.html",
-    "login.html", "signup.html", "orders.html", "profile.html", "wishlist.html"
+test("17. HilltopAds Script Is Sandboxed Only to Non-Sensitive Public Pages", () => {
+  const publicPages = ["index.html", "products.html", "product-detail.html"];
+  const sensitivePages = [
+    "cart.html", "checkout.html", "login.html", "signup.html",
+    "orders.html", "profile.html", "wishlist.html", "admin/index.html", "admin/products.html"
   ];
 
-  for (const page of pages) {
+  for (const page of publicPages) {
     const content = fs.readFileSync(path.join(root, page), "utf8");
-    assert.equal((content.match(/src="\/3e0b85979f\.php"/g) || []).length, 1, `${page} must load the script once`);
+    assert.equal((content.match(/src="\/3e0b85979f\.php"/g) || []).length, 1, `${page} must load HilltopAds script once`);
+  }
+
+  for (const page of sensitivePages) {
+    if (fs.existsSync(path.join(root, page))) {
+      const content = fs.readFileSync(path.join(root, page), "utf8");
+      assert.equal((content.match(/src="\/3e0b85979f\.php"/g) || []).length, 0, `${page} must NOT load ad scripts`);
+    }
   }
 });
 
@@ -317,3 +325,23 @@ test("24. Hidden Admin Login Page Does Not Refresh Protected Dashboard", () => {
   assert.ok(content.includes("const adminUnlocked"));
   assert.ok(content.includes("isAdminPage && adminUnlocked"));
 });
+
+test("25. RFC-4180 CSV Parser Handles Quoted Multiline Values Cleanly", () => {
+  const { parseRFC4180CSV } = require(path.join(root, "api/_lib/google-sheet.js"));
+  assert.equal(typeof parseRFC4180CSV, "function");
+
+  const sampleCSV = 'id,name,description\np1,"Gold Ring","Beautiful, handcrafted\n22k gold ring"\np2,"Silver Necklace","Sleek design"';
+  const rows = parseRFC4180CSV(sampleCSV);
+  assert.equal(rows.length, 3);
+  assert.equal(rows[1][0], "p1");
+  assert.equal(rows[1][1], "Gold Ring");
+  assert.ok(rows[1][2].includes("22k gold ring"), "Multiline field inside quotes must be preserved");
+});
+
+test("26. Admin Product Republish Clears Archived and Deleted Flags", () => {
+  const content = fs.readFileSync(path.join(root, "api/admin/products.js"), "utf8");
+  assert.ok(content.includes("product.archived = false"));
+  assert.ok(content.includes("product.isDeleted = false"));
+  assert.ok(content.includes("product.archivedAt = null"));
+});
+
