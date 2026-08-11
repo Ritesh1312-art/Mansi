@@ -2,6 +2,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const catalogData = require("../../data/catalog.json");
 
 const catalogPath = path.join(__dirname, "..", "..", "data", "catalog.json");
 const dynamicPath = path.join(__dirname, "..", "..", "data", "dynamic_products.json");
@@ -13,6 +14,10 @@ let inMemoryDynamic = null;
 
 function getStaticCatalog() {
   try {
+    // An explicit import is required so Vercel includes the recovery catalog
+    // in every serverless function bundle. Dynamic fs reads alone are not
+    // reliably traced during deployment.
+    if (Array.isArray(catalogData.products)) return catalogData.products;
     if (fs.existsSync(catalogPath)) {
       const data = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
       return Array.isArray(data.products) ? data.products : [];
