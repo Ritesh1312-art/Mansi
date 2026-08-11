@@ -83,8 +83,7 @@ function initFirebase() {
     const { cert, getApps, initializeApp } = require("firebase-admin/app");
     const { getFirestore } = require("firebase-admin/firestore");
     const app = getApps().length ? getApps()[0] : initializeApp({
-      credential: cert(serviceAccount),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "mansi-9e187.firebasestorage.app"
+      credential: cert(serviceAccount)
     });
     return getFirestore(app);
   } catch (e) {

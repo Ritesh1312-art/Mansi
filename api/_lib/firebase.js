@@ -3,7 +3,6 @@
 const { cert, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
-const { getStorage } = require("firebase-admin/storage");
 
 function parseServiceAccount(raw) {
   if (!raw || !raw.trim()) return null;
@@ -24,10 +23,7 @@ function getFirebaseApp() {
   const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
   if (!serviceAccount) return null;
   try {
-    return initializeApp({
-      credential: cert(serviceAccount),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "mansi-9e187.firebasestorage.app"
-    });
+    return initializeApp({ credential: cert(serviceAccount) });
   } catch (e) {
     console.error("[Firebase Admin] App initialization error:", e.message);
     return null;
@@ -51,7 +47,7 @@ function services() {
       app,
       auth: getAuth(app),
       db: getFirestore(app),
-      storage: getStorage(app),
+      storage: null,
       isConfigured: true,
       error: null
     };
