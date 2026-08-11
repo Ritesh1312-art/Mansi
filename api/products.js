@@ -50,7 +50,21 @@ module.exports = withErrorHandler(async function handler(req, res) {
 
   // Firestore is configured — fetch full collection with no arbitrary limit
   try {
-    const snapshot = await db.collection("products").get();
+    // Retry transient read failures (cold start / network blip) before ever
+    // falling back to the static snapshot, so live products never vanish.
+    let snapshot = null;
+    let readError = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        snapshot = await db.collection("products").get();
+        readError = null;
+        break;
+      } catch (err) {
+        readError = err;
+        await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
+      }
+    }
+    if (readError) throw readError;
     const firestoreProducts = [];
     const inactiveIds = new Set();
     snapshot.forEach(doc => {

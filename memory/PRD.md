@@ -22,7 +22,35 @@ Codebase is well-engineered and defensive. Core flows verified healthy:
 2. Build validation script ran unit tests via unexpanded glob `tests/*.test.js` (spawnSync, no shell) → failed on Node < 22, could break `npm run build`. Now enumerates test files explicitly.
 Result: all 31 tests pass; `node scripts/validate-build.js` passes (218 files, 71 products).
 
+## DEEP ANALYSIS — "products disappear" root cause (2026-08-11, session 2)
+Symptom: products sometimes don't save; sometimes save then suddenly vanish.
+Root cause: `/api/products` returns the STATIC snapshot `data/catalog.json` (71 products, point-in-time) with `source:"static_fallback"` whenever the Firestore read throws for ANY transient reason (cold start/network). The client (`data.js fetchCatalogFromApi`) cached that fallback as authoritative, so products added AFTER the snapshot vanished until the next healthy read.
+Fixes applied:
+- CLIENT (`js/data.js fetchCatalogFromApi`): a degraded `static_fallback` response now NEVER overwrites a healthy live cache; it only seeds an empty cache and is never persisted to localStorage.
+- SERVER (`api/products.js`): Firestore read now retries up to 3x (150/300/450ms) before ever using the static fallback.
+Verified: 31/31 tests pass, build green, storefront renders (71 products), no JS errors.
+
+## FUNCTION CONNECTIVITY MAP
+Backend /api (all wired to a page/cron, code correct):
+- products.js (GET) -> data.js catalog [FIXED retry]
+- settings.js (GET/PATCH) -> data.js + admin/settings.html
+- orders.js (GET/POST/PATCH) -> checkout.html + orders.html
+- admin/products.js -> admin/products.html
+- admin/image.js -> admin/products.html (needs BLOB_READ_WRITE_TOKEN)
+- admin/orders.js -> admin/orders.html
+- admin/session.js -> admin-auth.js
+- admin/watchdog.js -> admin/watchdog.html
+- backup/products.js -> admin/products.html (SheetSync)
+- telegram/link.js -> profile.html
+- webhooks/telegram.js -> Telegram bot (needs webhook + TELEGRAM_WEBHOOK_SECRET)
+- cron/watchdog.js -> vercel.json crons (needs CRON_SECRET); READ-ONLY, never auto-deletes
+Required Vercel env vars: FIREBASE_SERVICE_ACCOUNT_JSON (critical: products/orders/admin-auth), ADMIN_EMAILS, BLOB_READ_WRITE_TOKEN (images), GOOGLE_SERVICE_ACCOUNT_JSON or shared-sheet (Sheet backup), GEMINI_API_KEY (AI desc, has fallback), RESEND_API_KEY (email, optional), TELEGRAM_* (optional), CRON_SECRET.
+
+NOT connected / dead code:
+- js/watchdog-core.js: NOT included by any HTML <script>; references non-existent STORE.telegramBotToken/telegramChatId. Client Watchdog never runs. `Watchdog.updateBaseline` in admin/products.html is guarded by `window.Watchdog` (undefined) so it's skipped. Harmless. The SERVER cron watchdog is the working one.
+
 ## Backlog / next (needs user input)
-- P0: Get live Vercel deploy logs OR confirmation of env vars to diagnose the actual daily failures (product/checkout/login) on production.
-- P1: If Google Sheets backup isn't configured, product saves return HTTP 202 with a "Sheet backup pending ⚠️" warning even though Firestore save succeeded — this LOOKS like a failure to the owner. Consider clarifying the message or making Sheets optional.
-- P2: login.html global Enter-key listener can double-submit; minor.
+- P0: If products STILL fail to save/persist after this deploy, get Vercel Function logs for /api/admin/products & /api/products (confirms FIREBASE_SERVICE_ACCOUNT_JSON is set & valid).
+- P1: "Sheet backup pending" ⚠️ after save is only a Google-Sheets-mirror warning; the product IS saved in Firestore. Consider softening the message or making Sheets optional.
+- P2: keep data/catalog.json fresh (scripts/export-backups.js) so the emergency fallback isn't stale.
+- P3: js/watchdog-core.js is dead code — remove or wire up if a client watchdog is desired.

@@ -136,13 +136,31 @@ const DB = {
 
   async fetchCatalogFromApi() {
     try {
-      const res = await fetch("/api/products");
+      const res = await fetch("/api/products", { cache: "no-store" });
       if (!res.ok) throw new Error("API HTTP " + res.status);
       const data = await res.json();
       if (data && data.ok && Array.isArray(data.products) && data.products.length > 0) {
         const active = data.products.filter(p => p && p.id && !p.archived && !p.isDeleted);
+
+        // A degraded static fallback (server could not read live Firestore) must
+        // NEVER overwrite a healthy live cache. Otherwise a transient API/Firestore
+        // hiccup makes recently added products briefly "disappear" from the store.
+        const degraded = data.source === "static_fallback" || Boolean(data.warning);
+        if (degraded) {
+          const hasLiveCache = Array.isArray(firebaseProductsCache) && firebaseProductsCache.length > 0;
+          if (hasLiveCache) {
+            window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "static_fallback_ignored", count: active.length } }));
+            return firebaseProductsCache;
+          }
+          // Only seed an empty cache; do not persist static data to localStorage.
+          firebaseProductsCache = active;
+          window.dispatchEvent(new Event("productsSynced"));
+          window.dispatchEvent(new CustomEvent("catalogStatus", { detail: { source: "static_fallback_seed", count: active.length } }));
+          return active;
+        }
+
         firebaseProductsCache = active;
-        
+
         // Single versioned disposable cache
         const versionedCache = {
           schemaVersion: 1,
