@@ -35,7 +35,8 @@ function normalizeProduct(product) {
     price: Number(product.price) || 0,
     mrp: Number(product.mrp) || Number(product.price) || 0,
     description: String(product.description || ""),
-    image: String(product.imageBackupUrl || product.image || ""),
+    image: String(product.image || product.imageBackupUrl || ""),
+    imageBackupUrl: String(product.imageBackupUrl || ""),
     stock: Math.max(0, Number(product.stock) || 0),
     inStock: product.inStock !== false && Number(product.stock) > 0,
     rating: Math.max(0, Math.min(5, Number(product.rating) || 0)),
@@ -45,14 +46,16 @@ function normalizeProduct(product) {
     updatedAt: String(product.updatedAt || now),
     isDeleted: product.isDeleted === true || product.archived === true,
     deletedAt: String(product.deletedAt || product.archivedAt || ""),
-    lastSyncedAt: now,
+    lastSyncedAt: String(product.lastSyncedAt || now),
     syncSource: String(product.syncSource || "website")
   };
 }
 
 function toRow(product) {
   const normalized = normalizeProduct(product);
-  return HEADERS.map(header => normalized[header]);
+  return HEADERS.map(header => header === "image"
+    ? (normalized.imageBackupUrl || normalized.image)
+    : normalized[header]);
 }
 
 function rowToProduct(row) {
@@ -149,26 +152,30 @@ async function fetchPublicCSV() {
       products.push(rowToProduct([
         obj.id, obj.name, obj.category, obj.price, obj.mrp, obj.description,
         obj.image, obj.stock, obj.instock, obj.rating, obj.reviews, obj.sales,
-        obj.createdat, obj.updatedat, obj.isdeleted
+        obj.createdat, obj.updatedat, obj.isdeleted, obj.deletedat,
+        obj.lastsyncedat, obj.syncsource
       ]));
     }
   }
   return products;
 }
 
-async function readProducts() {
+async function readProductsPrivate() {
+  const { spreadsheetId, sheetName } = config();
+  const sheets = sheetsClient();
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${sheetName}!A1:R`,
+    valueRenderOption: "UNFORMATTED_VALUE"
+  });
+  const rows = response.data.values || [];
+  if (!rows.length) return [];
+  return rows.slice(1).filter(row => row[0]).map(rowToProduct);
+}
 
+async function readProducts() {
   try {
-    const { spreadsheetId, sheetName } = config();
-    const sheets = sheetsClient();
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `${sheetName}!A1:R`,
-      valueRenderOption: "UNFORMATTED_VALUE"
-    });
-    const rows = response.data.values || [];
-    if (!rows.length) return [];
-    return rows.slice(1).filter(row => row[0]).map(rowToProduct);
+    return await readProductsPrivate();
   } catch (error) {
     console.warn("Private Google Sheet API fallback to Public CSV:", error.message);
     return await fetchPublicCSV();
@@ -178,12 +185,16 @@ async function readProducts() {
 async function backupProducts(products) {
   const { spreadsheetId, sheetName } = config();
   const sheets = sheetsClient();
-  const current = await readProducts();
+  const current = await readProductsPrivate();
   const rowById = new Map(current.map((product, index) => [String(product.id), index + 2]));
   const updates = [];
   const appends = [];
+  const syncTime = new Date().toISOString();
+  const requested = products
+    .filter(product => product && product.id)
+    .map(product => normalizeProduct({ ...product, lastSyncedAt: syncTime }));
 
-  products.filter(product => product && product.id).forEach(product => {
+  requested.forEach(product => {
     const row = toRow(product);
     const rowNumber = rowById.get(String(product.id));
     if (rowNumber) {
@@ -208,8 +219,47 @@ async function backupProducts(products) {
       requestBody: { values: appends }
     });
   }
-  return { updated: updates.length, appended: appends.length, total: products.length };
+
+  // A Sheet API write acknowledgement is not enough: re-read and verify every
+  // requested ID so the admin UI never reports a false "synced" success.
+  const verifiedRows = await readProductsPrivate();
+  const rowsById = new Map();
+  verifiedRows.forEach(product => {
+    const id = String(product.id || "");
+    if (!rowsById.has(id)) rowsById.set(id, []);
+    rowsById.get(id).push(product);
+  });
+
+  for (const expected of requested) {
+    const matches = rowsById.get(String(expected.id)) || [];
+    if (matches.length !== 1) {
+      throw new Error(`Google Sheet verification failed for ${expected.id}: expected one row, found ${matches.length}`);
+    }
+    const actual = matches[0];
+    const same = String(actual.name) === String(expected.name)
+      && Number(actual.price) === Number(expected.price)
+      && Number(actual.stock) === Number(expected.stock)
+      && String(actual.updatedAt) === String(expected.updatedAt)
+      && Boolean(actual.isDeleted) === Boolean(expected.isDeleted);
+    if (!same) throw new Error(`Google Sheet verification mismatch for ${expected.id}`);
+  }
+
+  return {
+    updated: updates.length,
+    appended: appends.length,
+    total: requested.length,
+    verified: true,
+    verifiedIds: requested.map(product => product.id),
+    verifiedAt: syncTime
+  };
 }
 
-module.exports = { HEADERS, readProducts, backupProducts, normalizeProduct, parseRFC4180CSV };
+module.exports = {
+  HEADERS,
+  readProducts,
+  readProductsPrivate,
+  backupProducts,
+  normalizeProduct,
+  parseRFC4180CSV
+};
 

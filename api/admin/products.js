@@ -16,15 +16,38 @@ function validateProduct(input) {
   return product;
 }
 
-async function recordBackupFailure(db, product, error) {
-  await db.collection("backupOutbox").doc(product.id).set({
+async function queueBackup(db, product, operation, error) {
+  const ref = db.collection("backupOutbox").doc(product.id);
+  const existing = await ref.get();
+  const previous = existing.exists ? existing.data() || {} : {};
+  const now = new Date().toISOString();
+  await ref.set({
     type: "product-upsert",
+    operation: operation || "upsert",
     product,
-    attempts: 0,
-    lastError: String(error.message || error).slice(0, 500),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    attempts: Number(previous.attempts) || 0,
+    lastError: error ? String(error.message || error).slice(0, 500) : "",
+    createdAt: previous.createdAt || now,
+    updatedAt: now
   }, { merge: true });
+}
+
+function productVersionRef(db, productId) {
+  const versionId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  return db.collection("productBackups").doc(String(productId)).collection("versions").doc(versionId);
+}
+
+async function markBackupVerified(db, ref, product, backup) {
+  const now = backup.verifiedAt || new Date().toISOString();
+  const batch = db.batch();
+  batch.set(ref, {
+    backupStatus: "synced",
+    backupVerifiedAt: now,
+    backupLastError: null,
+    updatedAt: product.updatedAt
+  }, { merge: true });
+  batch.delete(db.collection("backupOutbox").doc(product.id));
+  await batch.commit();
 }
 
 module.exports = async function handler(req, res) {
@@ -77,18 +100,48 @@ module.exports = async function handler(req, res) {
         archived: true,
         archivedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        archivedBy: admin.email || admin.uid
+        archivedBy: admin.email || admin.uid,
+        backupStatus: "pending",
+        backupLastError: null
       };
-      await ref.set(archived, { merge: true });
+      const writeBatch = db.batch();
+      writeBatch.set(ref, archived, { merge: true });
+      writeBatch.set(productVersionRef(db, id), {
+        product: archived,
+        operation: "archive",
+        actor: admin.email || admin.uid,
+        createdAt: new Date().toISOString()
+      });
+      writeBatch.set(db.collection("backupOutbox").doc(id), {
+        type: "product-upsert",
+        operation: "archive",
+        product: { ...archived, isDeleted: true, syncSource: "website-archive" },
+        attempts: 0,
+        lastError: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      await writeBatch.commit();
       try {
-        await backupProducts([{ ...archived, isDeleted: true, syncSource: "website-archive" }]);
+        const backup = await backupProducts([{ ...archived, isDeleted: true, syncSource: "website-archive" }]);
+        await markBackupVerified(db, ref, archived, backup);
+        return send(res, 200, { ok: true, archived: true, id, durable: true, backup });
       } catch (backupError) {
-        await recordBackupFailure(db, archived, backupError);
+        await queueBackup(db, { ...archived, isDeleted: true, syncSource: "website-archive" }, "archive", backupError);
+        await ref.set({ backupStatus: "pending", backupLastError: String(backupError.message || backupError).slice(0, 500) }, { merge: true });
+        return send(res, 202, {
+          ok: true,
+          archived: true,
+          id,
+          durable: false,
+          backup: { pending: true, verified: false },
+          warning: "Product was archived in Firebase, but Google Sheet verification is pending and will retry automatically."
+        });
       }
-      return send(res, 200, { ok: true, archived: true, id });
     }
 
-    const product = validateProduct(body.product || body);
+    const rawProduct = body.product || body;
+    const product = validateProduct(rawProduct);
     product.updatedBy = admin.email || admin.uid;
     product.archived = false;
     product.isDeleted = false;
@@ -101,19 +154,62 @@ module.exports = async function handler(req, res) {
     if (existing.exists) {
       const old = existing.data() || {};
       product.createdAt = old.createdAt || product.createdAt;
-      product.sales = Number.isFinite(Number(product.sales)) ? product.sales : Number(old.sales) || 0;
+      if (!Object.prototype.hasOwnProperty.call(rawProduct, "sales")) {
+        product.sales = Math.max(0, Number(old.sales) || 0);
+      }
     }
-    await ref.set(product, { merge: true });
+    product.backupStatus = "pending";
+    product.backupLastError = null;
 
-    let backup = { pending: false };
+    // Product and its retry job are committed atomically in Firestore. A Google
+    // outage can delay the mirror, but can never make the product disappear.
+    const writeBatch = db.batch();
+    writeBatch.set(ref, product, { merge: true });
+    writeBatch.set(productVersionRef(db, product.id), {
+      product,
+      operation: existing.exists ? "update" : "create",
+      actor: admin.email || admin.uid,
+      createdAt: new Date().toISOString()
+    });
+    writeBatch.set(db.collection("backupOutbox").doc(product.id), {
+      type: "product-upsert",
+      operation: "upsert",
+      product: { ...product, syncSource: "website-admin" },
+      attempts: 0,
+      lastError: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    await writeBatch.commit();
+
     try {
-      backup = { pending: false, ...(await backupProducts([{ ...product, syncSource: "website-admin" }])) };
-      await db.collection("backupOutbox").doc(product.id).delete().catch(() => {});
+      const backup = {
+        pending: false,
+        ...(await backupProducts([{ ...product, syncSource: "website-admin" }]))
+      };
+      await markBackupVerified(db, ref, product, backup);
+      const saved = await ref.get();
+      return send(res, existing.exists ? 200 : 201, {
+        ok: true,
+        durable: true,
+        product: { ...(saved.data() || product), id: product.id },
+        backup
+      });
     } catch (backupError) {
-      await recordBackupFailure(db, product, backupError);
-      backup = { pending: true };
+      await queueBackup(db, { ...product, syncSource: "website-admin" }, "upsert", backupError);
+      await ref.set({
+        backupStatus: "pending",
+        backupLastError: String(backupError.message || backupError).slice(0, 500)
+      }, { merge: true });
+      return send(res, 202, {
+        ok: true,
+        durable: false,
+        productVisible: true,
+        product,
+        backup: { pending: true, verified: false },
+        warning: "Product is safely saved in Firebase and visible, but Google Sheet verification is pending and will retry automatically."
+      });
     }
-    return send(res, existing.exists ? 200 : 201, { ok: true, product, backup });
   } catch (error) {
     console.error("admin.products", error.message);
     return send(res, error.statusCode || 400, { ok: false, error: error.message || "Product save failed" });

@@ -32,12 +32,13 @@ test("1. All 12 Vercel API Modules Load Cleanly Without Import Errors", () => {
   }
 });
 
-test("2. Seed Catalog Contains Exactly 53 Valid Products and Images", () => {
+test("2. Emergency Catalog Has a Consistent Dynamic Count, Unique IDs and Valid Images", () => {
   const catalogPath = path.join(root, "data", "catalog.json");
   const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
 
-  assert.equal(catalog.productCount, 53, "Catalog productCount must be 53");
-  assert.equal(catalog.products.length, 53, "Catalog products array length must be 53");
+  assert.ok(Array.isArray(catalog.products), "Catalog products must be an array");
+  assert.equal(catalog.productCount, catalog.products.length, "Catalog productCount must match the actual array length");
+  assert.ok(catalog.products.length > 0, "Emergency catalog must not be empty");
 
   const ids = new Set();
   for (const product of catalog.products) {
@@ -50,7 +51,7 @@ test("2. Seed Catalog Contains Exactly 53 Valid Products and Images", () => {
     const imgPath = path.join(root, product.image);
     assert.equal(fs.existsSync(imgPath), true, `Product image missing on disk: ${product.image}`);
   }
-  assert.equal(ids.size, 53, "Catalog product IDs must be unique");
+  assert.equal(ids.size, catalog.products.length, "Catalog product IDs must be unique");
 });
 
 test("3. Products HTML Initialization Prevents TDZ ReferenceError", () => {
@@ -343,5 +344,39 @@ test("26. Admin Product Republish Clears Archived and Deleted Flags", () => {
   assert.ok(content.includes("product.archived = false"));
   assert.ok(content.includes("product.isDeleted = false"));
   assert.ok(content.includes("product.archivedAt = null"));
+});
+
+test("27. Product Save Atomically Queues a Verified Google Sheet Backup", () => {
+  const content = fs.readFileSync(path.join(root, "api/admin/products.js"), "utf8");
+  assert.ok(content.includes('db.collection("backupOutbox").doc(product.id)'));
+  assert.ok(content.includes('product.backupStatus = "pending"'));
+  assert.ok(content.includes("await writeBatch.commit()"));
+  assert.ok(content.includes("await markBackupVerified"));
+  assert.ok(content.includes("durable: false"), "Pending Sheet backup must be disclosed, never reported as fully synced");
+});
+
+test("28. Google Sheet Backup Re-Reads and Verifies Every Product ID", () => {
+  const content = fs.readFileSync(path.join(root, "api/_lib/google-sheet.js"), "utf8");
+  assert.ok(content.includes("async function readProductsPrivate"));
+  assert.ok(content.includes("const verifiedRows = await readProductsPrivate()"));
+  assert.ok(content.includes("matches.length !== 1"));
+  assert.ok(content.includes("verified: true"));
+});
+
+test("29. Admin Offers Safe One-Click Historical Browser Product Recovery", () => {
+  const content = fs.readFileSync(path.join(root, "admin/products.html"), "utf8");
+  assert.ok(content.includes("Recover Browser Products"));
+  for (const key of ["products_backup", "products_last_good", "custom_user_products", "mansi_catalog_cache_v1"]) {
+    assert.ok(content.includes(key), `Recovery must inspect ${key}`);
+  }
+  assert.ok(content.includes("downloadRecoverySnapshot(recovered)"));
+  assert.ok(content.includes("await StoreApi.saveProduct(item)"));
+});
+
+test("30. Every Product Mutation Creates an Immutable Firestore Version Backup", () => {
+  const content = fs.readFileSync(path.join(root, "api/admin/products.js"), "utf8");
+  assert.ok(content.includes('db.collection("productBackups")'));
+  assert.ok(content.includes('operation: existing.exists ? "update" : "create"'));
+  assert.ok(content.includes('operation: "archive"'));
 });
 

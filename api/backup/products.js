@@ -21,13 +21,16 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET") {
       const live = await firestoreProducts(db);
-      const liveIds = new Set(live.map(product => String(product.id)));
+      const activeLive = live.filter(product => !product.archived && !product.isDeleted);
+      const liveIds = new Set(activeLive.map(product => String(product.id)));
       const restorable = sheetProducts.filter(product => !product.isDeleted);
+      const pendingSnapshot = await db.collection("backupOutbox").get();
       return send(res, 200, {
         ok: true,
         sheetCount: restorable.length,
-        liveCount: live.filter(product => !product.archived && !product.isDeleted).length,
+        liveCount: activeLive.length,
         missingOnWebsite: restorable.filter(product => !liveIds.has(String(product.id))).length,
+        pendingBackups: pendingSnapshot.size || 0,
         sheetUpdatedAt: restorable.reduce((latest, product) =>
           String(product.lastSyncedAt || "") > latest ? String(product.lastSyncedAt) : latest, "")
       });
@@ -64,15 +67,31 @@ module.exports = async function handler(req, res) {
     }
 
     const writeList = [...creates, ...updates];
-    for (let index = 0; index < writeList.length; index += 400) {
+    for (let index = 0; index < writeList.length; index += 200) {
       const batch = db.batch();
-      writeList.slice(index, index + 400).forEach(product => {
-        batch.set(db.collection("products").doc(String(product.id)), {
+      writeList.slice(index, index + 200).forEach(product => {
+        const restored = {
           ...product,
+          archived: false,
+          isDeleted: false,
+          archivedAt: null,
+          archivedBy: null,
+          deletedAt: null,
+          backupStatus: "synced",
+          backupVerifiedAt: new Date().toISOString(),
+          backupLastError: null,
           restoredAt: new Date().toISOString(),
           restoredBy: admin.email || admin.uid,
           restoreSource: "google-sheet"
-        }, { merge: true });
+        };
+        batch.set(db.collection("products").doc(String(product.id)), restored, { merge: true });
+        const versionId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        batch.set(db.collection("productBackups").doc(String(product.id)).collection("versions").doc(versionId), {
+          product: restored,
+          operation: "sheet-restore",
+          actor: admin.email || admin.uid,
+          createdAt: new Date().toISOString()
+        });
       });
       await batch.commit();
     }

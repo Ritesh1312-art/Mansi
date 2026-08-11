@@ -62,6 +62,7 @@
             <button onclick="openAddModal()" class="btn-primary" style="padding: 10px 18px; font-size: 0.88rem;">➕ Add Product</button>
             <button onclick="backupProductsNow()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">☁️ Backup Now</button>
             <button onclick="previewAndRestore()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">♻️ Preview / Restore</button>
+            <button onclick="recoverBrowserProducts()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">🛟 Recover Browser Products</button>
             <button onclick="SheetSync.exportToCSV()" class="btn-outline" style="padding: 10px 18px; font-size: 0.88rem; border-width: 1.5px;">📤 Export CSV</button>
           </div>
         </div>
@@ -448,7 +449,12 @@
         const result = await StoreApi.saveProduct(data);
         DB.cachePersistedProduct(result.product);
         if (!existingId && window.Watchdog) Watchdog.updateBaseline(DB.getProducts().length);
-        Cart.showToast(existingId ? "✅ Product updated successfully!" : "✅ Product added & synced to Cloud!");
+        if (result.backup && result.backup.verified === true) {
+          Cart.showToast(existingId ? "✅ Product updated and Sheet backup verified!" : "✅ Product added and Sheet backup verified!");
+        } else {
+          document.getElementById("backup-status").textContent = "⚠️ Product is saved and visible in Firebase. Google Sheet verification is pending and will retry automatically.";
+          Cart.showToast("⚠️ Product saved; Sheet backup is pending.");
+        }
 
         uploadedImageBase64 = "";
         document.getElementById("p-id").value = "";
@@ -525,6 +531,115 @@
       } catch (error) {
         status.textContent = "⚠️ Backup failed; no product was removed. " + error.message;
       }
+    }
+
+    function browserRecoveryCandidates() {
+      const sources = [];
+      const addArray = (value, source) => {
+        if (Array.isArray(value)) value.forEach(product => sources.push({ product, source }));
+      };
+      const read = key => {
+        try { return JSON.parse(localStorage.getItem(key) || "null"); }
+        catch (_) { return null; }
+      };
+
+      addArray(read("products"), "products");
+      addArray(read("products_backup"), "products_backup");
+      addArray(read("products_last_good"), "products_last_good");
+      addArray(read("custom_user_products"), "custom_user_products");
+      const versioned = read("mansi_catalog_cache_v1");
+      addArray(versioned && versioned.products, "mansi_catalog_cache_v1");
+
+      const byId = new Map();
+      sources.forEach(({ product, source }) => {
+        if (!product || typeof product !== "object") return;
+        const id = String(product.id || "").trim();
+        if (!/^[A-Za-z0-9_-]{1,150}$/.test(id) || /^p_seed_[1-6]$/.test(id)) return;
+        if (!String(product.name || "").trim() || !(Number(product.price) > 0)) return;
+        if (product.archived === true || product.isDeleted === true) return;
+        const candidate = { ...product, id, recoverySource: source };
+        const previous = byId.get(id);
+        if (!previous || String(candidate.updatedAt || candidate.createdAt || "") > String(previous.updatedAt || previous.createdAt || "")) {
+          byId.set(id, candidate);
+        }
+      });
+      return Array.from(byId.values());
+    }
+
+    function downloadRecoverySnapshot(products) {
+      const payload = JSON.stringify({
+        exportedAt: new Date().toISOString(),
+        source: "mansi-admin-browser-recovery",
+        count: products.length,
+        products
+      }, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `mansi-browser-recovery-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function recoverBrowserProducts() {
+      const status = document.getElementById("backup-status");
+      const recovered = browserRecoveryCandidates();
+      if (!recovered.length) {
+        status.textContent = "No valid historical browser products were found in this browser profile.";
+        return;
+      }
+
+      let liveProducts = [];
+      try {
+        const catalog = await StoreApi.getCatalog();
+        liveProducts = Array.isArray(catalog.products) ? catalog.products : [];
+      } catch (_) {}
+      const liveById = new Map(liveProducts.map(product => [String(product.id), product]));
+      const toRestore = recovered.filter(product => {
+        const live = liveById.get(String(product.id));
+        if (!live) return true;
+        return String(product.updatedAt || product.createdAt || "") > String(live.updatedAt || live.createdAt || "");
+      });
+
+      downloadRecoverySnapshot(recovered);
+      if (!toRestore.length) {
+        status.textContent = `✅ Browser safety export created. All ${recovered.length} valid browser products already exist on the website.`;
+        return;
+      }
+      if (!confirm(`Found ${recovered.length} valid browser products. ${toRestore.length} are missing or newer. A safety JSON was downloaded. Restore them to Firebase and Google Sheet now?`)) {
+        status.textContent = `Safety export created; restore cancelled. ${toRestore.length} recoverable product(s) remain.`;
+        return;
+      }
+
+      let restored = 0;
+      let pending = 0;
+      const failures = [];
+      for (let index = 0; index < toRestore.length; index++) {
+        const item = { ...toRestore[index] };
+        delete item.recoverySource;
+        status.textContent = `Recovering ${index + 1}/${toRestore.length}: ${item.name || item.id}`;
+        try {
+          if (/^data:image\//i.test(String(item.image || ""))) {
+            const uploaded = await StoreApi.uploadProductImage(item.id, item.image);
+            item.image = uploaded.url;
+          }
+          const result = await StoreApi.saveProduct(item);
+          DB.cachePersistedProduct(result.product || item);
+          restored++;
+          if (!result.backup || result.backup.verified !== true) pending++;
+        } catch (error) {
+          failures.push({ id: item.id, name: item.name, error: error.message || String(error) });
+        }
+      }
+
+      window.dispatchEvent(new Event("productsSynced"));
+      renderProductsTable();
+      status.textContent = failures.length
+        ? `⚠️ Recovered ${restored}/${toRestore.length}; ${pending} Sheet backup(s) pending; ${failures.length} failed. Retry is safe because product IDs are idempotent.`
+        : `✅ Recovered ${restored}/${toRestore.length}; ${pending ? pending + " Sheet backup(s) queued for automatic retry." : "all Google Sheet backups verified."}`;
     }
 
     async function previewAndRestore() {

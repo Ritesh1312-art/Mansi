@@ -4,6 +4,22 @@ const { services } = require("./_lib/firebase");
 const { send, methodNotAllowed, withErrorHandler } = require("./_lib/http");
 const { getAllProductsMerged } = require("./_lib/catalog-store");
 
+const PUBLIC_PRODUCT_FIELDS = [
+  "id", "name", "category", "price", "mrp", "description", "image",
+  "imageBackupUrl", "stock", "inStock", "rating", "reviews", "sales",
+  "createdAt", "updatedAt"
+];
+
+function publicProduct(product, fallbackId) {
+  const source = product || {};
+  const clean = {};
+  PUBLIC_PRODUCT_FIELDS.forEach(field => {
+    if (source[field] !== undefined) clean[field] = source[field];
+  });
+  clean.id = String(clean.id || fallbackId || "");
+  return clean;
+}
+
 /**
  * GET /api/products
  *
@@ -21,8 +37,8 @@ module.exports = withErrorHandler(async function handler(req, res) {
 
   // Firestore not configured — serve static fallback honestly
   if (!isConfigured || !db) {
-    const products = getAllProductsMerged();
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=60");
+    const products = getAllProductsMerged().map(product => publicProduct(product));
+    res.setHeader("Cache-Control", "no-store");
     return send(res, 200, {
       ok: true,
       count: products.length,
@@ -40,7 +56,7 @@ module.exports = withErrorHandler(async function handler(req, res) {
       const data = doc.data() || {};
       // Exclude soft-deleted and archived products
       if (data.isDeleted === true || data.archived === true) return;
-      firestoreProducts.push({ ...data, id: data.id || doc.id });
+      firestoreProducts.push(publicProduct(data, doc.id));
     });
 
     // Sort newest first
@@ -48,7 +64,8 @@ module.exports = withErrorHandler(async function handler(req, res) {
       String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
     );
 
-    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=60");
+    // Product mutations must be visible immediately after the admin re-read.
+    res.setHeader("Cache-Control", "no-store");
     return send(res, 200, {
       ok: true,
       count: firestoreProducts.length,
@@ -59,7 +76,7 @@ module.exports = withErrorHandler(async function handler(req, res) {
   } catch (error) {
     // Genuine Firestore failure — use static catalog as honest fallback
     console.error("[api/products] Firestore read error:", error.message);
-    const products = getAllProductsMerged();
+    const products = getAllProductsMerged().map(product => publicProduct(product));
     res.setHeader("Cache-Control", "no-store");
     return send(res, 200, {
       ok: true,
