@@ -46,8 +46,9 @@ Backend /api (all wired to a page/cron, code correct):
 - cron/watchdog.js -> vercel.json crons (needs CRON_SECRET); READ-ONLY, never auto-deletes
 Required Vercel env vars: FIREBASE_SERVICE_ACCOUNT_JSON (critical: products/orders/admin-auth), ADMIN_EMAILS, BLOB_READ_WRITE_TOKEN (images), GOOGLE_SERVICE_ACCOUNT_JSON or shared-sheet (Sheet backup), GEMINI_API_KEY (AI desc, has fallback), RESEND_API_KEY (email, optional), TELEGRAM_* (optional), CRON_SECRET.
 
-NOT connected / dead code:
-- js/watchdog-core.js: NOT included by any HTML <script>; references non-existent STORE.telegramBotToken/telegramChatId. Client Watchdog never runs. `Watchdog.updateBaseline` in admin/products.html is guarded by `window.Watchdog` (undefined) so it's skipped. Harmless. The SERVER cron watchdog is the working one.
+NOT connected / dead code — NOW FIXED (2026-08-11 session 3):
+- js/watchdog-core.js: REWRITTEN as a clean read-only local catalog-health monitor (no browser Telegram token, no mutations). Now LOADED on all 5 admin pages and auto-runs on load + on every `productsSynced`. Verified running (console: "[Watchdog] ..."). Owner Telegram alerts remain handled securely by the server cron watchdog.
+- js/app.js: REMOVED the dead legacy in-app chatbot (initChatbotWidget no-op body, toggleChatbot, sendChatQuery, handleUserChatSubmit, getSmartBotResponse) and the dead positionAssistantWidgets observer that targeted the never-created .ai-chat-btn. Nothing referenced these (OmniDimension widget is the live assistant, loaded per page). app.js 810 -> 639 lines. All 31 tests + build still pass.
 
 ## Backlog / next (needs user input)
 - P0: If products STILL fail to save/persist after this deploy, get Vercel Function logs for /api/admin/products & /api/products (confirms FIREBASE_SERVICE_ACCOUNT_JSON is set & valid).
