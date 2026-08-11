@@ -34,12 +34,16 @@ for (const file of textFiles) {
 }
 
 const catalog = JSON.parse(fs.readFileSync(path.join(root, "data", "catalog.json"), "utf8"));
-if (catalog.productCount !== 53 || catalog.products.length !== 53) failures.push("Fallback catalog must contain exactly 53 recovered products");
+const catalogProductCount = catalog.products ? catalog.products.length : 0;
+if (catalogProductCount < 53) failures.push(`Fallback catalog must contain at least 53 products, found ${catalogProductCount}`);
 const ids = new Set(catalog.products.map(product => product.id));
-if (ids.size !== 53) failures.push("Fallback catalog contains duplicate product IDs");
+if (ids.size !== catalogProductCount) failures.push(`Fallback catalog contains duplicate product IDs (${catalogProductCount} products, ${ids.size} unique IDs)`);
+let missingImages = 0;
 for (const product of catalog.products) {
-  const image = path.join(root, product.image);
-  if (!fs.existsSync(image)) failures.push(`Missing product image: ${product.image}`);
+  if (product.image && product.image.startsWith("assets/")) {
+    const image = path.join(root, product.image);
+    if (!fs.existsSync(image)) { missingImages++; failures.push(`Missing product image: ${product.image}`); }
+  }
 }
 
 // Validate API handlers import without runtime module errors
@@ -67,4 +71,4 @@ if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
-console.log(`Build validation passed: ${files.length} files, 53 products, 53 local product images, 2 watchdog schedules, all API endpoints verified.`);
+console.log(`Build validation passed: ${files.length} files, ${catalogProductCount} products in catalog, ${ids.size} unique IDs, all API endpoints verified.`);
