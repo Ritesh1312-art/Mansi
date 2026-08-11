@@ -1,6 +1,6 @@
 // Service Worker v4.3.0 — Network-first for code, cache-first for images
 // Cache name includes version so it auto-invalidates on each release.
-const CACHE_VERSION = "4.3.2";
+const CACHE_VERSION = "4.3.3";
 const CACHE_NAME = "mansi-shell-v" + CACHE_VERSION;
 
 const SHELL = [

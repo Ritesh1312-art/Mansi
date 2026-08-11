@@ -18,7 +18,13 @@ function safeImageUrl(value) {
     const raw = String(value || "").trim();
     if (!raw) return fallback;
     if (/^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);base64,/i.test(raw) || /^blob:/i.test(raw)) return raw;
-    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^https?:\/\//i.test(raw)) {
+      const external = new URL(raw);
+      if (external.hostname === "1x3qwo6igpx8cntf.public.blob.vercel-storage.com") {
+        return window.location.origin + "/product-images" + external.pathname + external.search;
+      }
+      return raw;
+    }
     const cleanPath = raw.startsWith("/") ? raw : "/" + raw.replace(/^(\.\.\/|\.\/)+/, "");
     return window.location.origin + cleanPath;
   } catch (_) {}

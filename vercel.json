@@ -4,6 +4,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/product-images/:path*",
+      "destination": "https://1x3qwo6igpx8cntf.public.blob.vercel-storage.com/:path*"
+    },
+    {
       "source": "/6c2edcdea10476233e03.txt",
       "destination": "/api/settings?ownershipVerification=hilltop"
     },

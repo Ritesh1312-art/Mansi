@@ -363,6 +363,14 @@ test("21b. Product Images Use Durable Vercel Blob Storage", () => {
   assert.ok(content.includes('require("@vercel/blob")'));
   assert.ok(content.includes('access: "public"'));
   assert.ok(content.includes("await put("));
+
+  const appContent = fs.readFileSync(path.join(root, "js", "app.js"), "utf8");
+  const vercelConfig = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+  assert.ok(appContent.includes('window.location.origin + "/product-images"'));
+  assert.ok(vercelConfig.rewrites.some(rewrite =>
+    rewrite.source === "/product-images/:path*" &&
+    rewrite.destination.includes(".public.blob.vercel-storage.com/:path*")
+  ), "Blob images must be served through the same-origin product image route");
 });
 
 test("27. Product Save Atomically Queues a Verified Google Sheet Backup", () => {
