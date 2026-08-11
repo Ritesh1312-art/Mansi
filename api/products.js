@@ -52,15 +52,31 @@ module.exports = withErrorHandler(async function handler(req, res) {
   try {
     const snapshot = await db.collection("products").get();
     const firestoreProducts = [];
+    const inactiveIds = new Set();
     snapshot.forEach(doc => {
       const data = doc.data() || {};
       // Exclude soft-deleted and archived products
-      if (data.isDeleted === true || data.archived === true) return;
+      if (data.isDeleted === true || data.archived === true) {
+        inactiveIds.add(String(doc.id));
+        return;
+      }
       firestoreProducts.push(publicProduct(data, doc.id));
     });
 
+    // If a verified backup product is missing from Firestore, keep it visible.
+    // Firestore archive/delete records remain authoritative and block recovery.
+    const byId = new Map(firestoreProducts.map(product => [product.id, product]));
+    const recoveredIds = [];
+    getAllProductsMerged().forEach(product => {
+      const id = String(product && product.id || "");
+      if (!id || byId.has(id) || inactiveIds.has(id)) return;
+      byId.set(id, publicProduct(product, id));
+      recoveredIds.push(id);
+    });
+    const visibleProducts = Array.from(byId.values());
+
     // Sort newest first
-    firestoreProducts.sort((a, b) =>
+    visibleProducts.sort((a, b) =>
       String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
     );
 
@@ -68,9 +84,10 @@ module.exports = withErrorHandler(async function handler(req, res) {
     res.setHeader("Cache-Control", "no-store");
     return send(res, 200, {
       ok: true,
-      count: firestoreProducts.length,
-      products: firestoreProducts,
-      source: "firestore"
+      count: visibleProducts.length,
+      products: visibleProducts,
+      source: recoveredIds.length ? "firestore_with_verified_recovery" : "firestore",
+      recoveredCount: recoveredIds.length
     });
 
   } catch (error) {
