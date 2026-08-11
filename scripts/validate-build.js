@@ -62,9 +62,15 @@ if (fs.existsSync(apiDir)) {
 }
 
 // Run unit test suite
-const testResult = spawnSync(process.execPath, ["--test", "tests/*.test.js"], { cwd: root, encoding: "utf8" });
-if (testResult.status !== 0) {
-  failures.push(`Unit Test Suite Failed:\n${testResult.stderr || testResult.stdout}`);
+const testsDir = path.join(root, "tests");
+const testFiles = fs.existsSync(testsDir)
+  ? fs.readdirSync(testsDir).filter(name => name.endsWith(".test.js")).map(name => path.join("tests", name))
+  : [];
+if (testFiles.length) {
+  const testResult = spawnSync(process.execPath, ["--test", ...testFiles], { cwd: root, encoding: "utf8" });
+  if (testResult.status !== 0) {
+    failures.push(`Unit Test Suite Failed:\n${testResult.stderr || testResult.stdout}`);
+  }
 }
 
 if (failures.length) {

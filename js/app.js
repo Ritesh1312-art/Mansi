@@ -230,7 +230,7 @@ function renderFooter() {
   const prefix = inAdmin ? "../" : "";
   const adminPrefix = inAdmin ? "" : "admin/";
   const session = DB.getSession();
-  const isAdmin = localStorage.getItem("adminAuth") === "true";
+  const isAdmin = Boolean(localStorage.getItem("adminAuth"));
   const tgUser = String(STORE.telegramUsername || "").replace(/^@/, "").replace(/[^A-Za-z0-9_]/g, "");
   const storeName = escapeHTML(STORE.name || "Mansi Jewellery & Cosmetics");
   const tagline = escapeHTML(STORE.tagline || "");
@@ -352,7 +352,7 @@ async function logoutUser(e) {
 
 function initNavbar() {
   const session = DB.getSession();
-  const isAdmin = localStorage.getItem("adminAuth") === "true";
+  const isAdmin = Boolean(localStorage.getItem("adminAuth"));
   const userArea = document.getElementById("user-area");
   const mobileMenu = document.getElementById("mobile-menu");
 
