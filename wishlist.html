@@ -136,7 +136,7 @@
         return `
           <div class="product-card" onclick="location.href='product-detail.html?id=${productId}'">
             <div class="product-card-img">
-              <img src="${image}" alt="${name}" loading="lazy" onerror="this.src='assets/brand/icon.svg'" />
+              <img src="${image}" data-backup-image="${escapeHTML(safeImageUrl(p.imageBackupUrl))}" alt="${name}" loading="lazy" onerror="handleProductImageError(this)" />
               ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
               <button class="product-wishlist active" data-wishlist-id="${productId}" onclick="event.stopPropagation();Wishlist.toggle('${productId}');renderWishlist();">❤️</button>
             </div>

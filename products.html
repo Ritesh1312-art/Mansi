@@ -418,6 +418,7 @@
       const reviews = Math.max(0, Number(p.reviews) || 0);
       const disc = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
       const img = escapeHTML(safeImageUrl(p.image));
+      const backupImg = escapeHTML(safeImageUrl(p.imageBackupUrl));
       const safeName = escapeHTML(p.name || "Product");
       const safeId = safeProductId(p.id);
       const rating = Math.min(5, Math.max(0, parseFloat(p.rating) || 0));
@@ -426,7 +427,7 @@
       return `
         <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
           <div class="product-card-img">
-            <img src="${img}" alt="${safeName}" loading="lazy" style="object-fit:contain;background:#fff;" onerror="this.src='assets/brand/icon.svg'" />
+            <img src="${img}" data-backup-image="${backupImg}" alt="${safeName}" loading="lazy" style="object-fit:contain;background:#fff;" onerror="handleProductImageError(this)" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ''}
             <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? 'active' : ''}" data-wishlist-id="${safeId}" onclick="event.stopPropagation();Wishlist.toggle('${safeId}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? '❤️' : '🤍'}</button>
           </div>

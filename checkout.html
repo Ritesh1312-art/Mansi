@@ -353,7 +353,7 @@
       const price = Math.max(0, Number(i.price) || 0);
       return `
       <div class="mini-item">
-        <img src="${escapeHTML(safeImageUrl(i.image))}" onerror="this.src='assets/brand/icon.svg'" alt="${escapeHTML(i.name || "Product")}"/>
+        <img src="${escapeHTML(safeImageUrl(i.image))}" onerror="handleProductImageError(this)" alt="${escapeHTML(i.name || "Product")}"/>
         <div class="mini-item-name">${escapeHTML(i.name || "Product")} × ${qty}</div>
         <div class="mini-item-price">₹${(price * qty).toFixed(2)}</div>
       </div>`;

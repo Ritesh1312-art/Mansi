@@ -125,7 +125,7 @@
         return `
         <div class="cart-item" id="item-${productId}">
           <img class="cart-item-img" src="${escapeHTML(safeImageUrl(item.image))}"
-               alt="${escapeHTML(item.name || "Product")}" onerror="this.src='assets/brand/icon.svg'" />
+              alt="${escapeHTML(item.name || "Product")}" onerror="handleProductImageError(this)" />
           <div class="cart-item-info">
             <div class="cart-item-name">${escapeHTML(item.name || "Product")}</div>
             <div class="cart-item-price">${formatCurrency(price)}</div>

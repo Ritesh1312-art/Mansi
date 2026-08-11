@@ -25,6 +25,31 @@ function safeImageUrl(value) {
   return fallback;
 }
 
+function handleProductImageError(image) {
+  if (!image) return;
+  const backup = String(image.dataset.backupImage || "").trim();
+  const current = String(image.currentSrc || image.src || "");
+  if (
+    image.dataset.backupAttempted !== "true" &&
+    backup &&
+    !/assets\/brand\/icon\.svg(?:$|[?#])/i.test(backup) &&
+    backup !== current
+  ) {
+    image.dataset.backupAttempted = "true";
+    image.src = backup;
+    return;
+  }
+
+  image.onerror = null;
+  image.dataset.imageUnavailable = "true";
+  image.alt = `${image.alt || "Product"} image unavailable`;
+  image.src = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="#fff7f8"/><path d="M205 390l70-85 55 62 42-44 65 67H205z" fill="#ead5da"/><circle cx="240" cy="235" r="28" fill="#ead5da"/><rect x="155" y="150" width="290" height="290" rx="24" fill="none" stroke="#c998a5" stroke-width="12"/><text x="300" y="490" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" fill="#7a4050">Image unavailable</text></svg>'
+  );
+}
+
+window.handleProductImageError = handleProductImageError;
+
 const Cart = {
   get() {
     try {

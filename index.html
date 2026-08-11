@@ -231,7 +231,7 @@
       return `
         <div class="product-card" data-pindex="${index}" style="cursor:pointer;">
           <div class="product-card-img">
-            <img src="${safeImage}" alt="${safeName}" loading="lazy" style="object-fit:contain;background:#fff;" onerror="this.src='assets/brand/icon.svg'" />
+            <img src="${safeImage}" data-backup-image="${escapeHTML(safeImageUrl(p.imageBackupUrl))}" alt="${safeName}" loading="lazy" style="object-fit:contain;background:#fff;" onerror="handleProductImageError(this)" />
             ${disc > 0 ? `<div class="product-badge">${disc}% OFF</div>` : ""}
             <button class="product-wishlist ${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? 'active' : ''}" data-wishlist-id="${safeId}" onclick="event.stopPropagation();Wishlist.toggle('${safeId}');">${typeof Wishlist !== 'undefined' && Wishlist.contains(safeId) ? '❤️' : '🤍'}</button>
           </div>

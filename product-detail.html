@@ -177,7 +177,7 @@
 
       document.getElementById('product-detail').innerHTML = `
         <div class="detail-img-container">
-          <img src="${safeImage}" alt="${safeName}" style="background:#fff;object-fit:contain;" onerror="this.src='assets/brand/icon.svg'" />
+          <img src="${safeImage}" data-backup-image="${escapeHTML(safeImageUrl(p.imageBackupUrl))}" alt="${safeName}" style="background:#fff;object-fit:contain;" onerror="handleProductImageError(this)" />
         </div>
         <div class="detail-info">
           <div class="detail-category">${safeCategory}</div>
