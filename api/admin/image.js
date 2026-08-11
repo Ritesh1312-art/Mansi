@@ -2,8 +2,8 @@
 
 const { randomUUID } = require("node:crypto");
 const sharp = require("sharp");
+const { put } = require("@vercel/blob");
 const { requireAdmin } = require("../_lib/auth");
-const { services } = require("../_lib/firebase");
 const { send, readJson, methodNotAllowed } = require("../_lib/http");
 
 module.exports = async function handler(req, res) {
@@ -22,21 +22,14 @@ module.exports = async function handler(req, res) {
       .flatten({ background: "#ffffff" })
       .webp({ quality: 86, effort: 4 })
       .toBuffer();
-    const { storage } = services();
-    const bucket = storage.bucket();
-    const token = randomUUID();
-    const path = `products/${productId}/${Date.now()}.webp`;
-    const file = bucket.file(path);
-    await file.save(output, {
-      resumable: false,
+    const path = `products/${productId}/${Date.now()}-${randomUUID()}.webp`;
+    const blob = await put(path, output, {
+      access: "public",
+      addRandomSuffix: false,
+      cacheControlMaxAge: 31536000,
       contentType: "image/webp",
-      metadata: {
-        cacheControl: "public,max-age=31536000,immutable",
-        metadata: { firebaseStorageDownloadTokens: token }
-      }
     });
-    const url = `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket.name)}/o/${encodeURIComponent(path)}?alt=media&token=${token}`;
-    return send(res, 201, { ok: true, url, path, bytes: output.length });
+    return send(res, 201, { ok: true, url: blob.url, path: blob.pathname, bytes: output.length });
   } catch (error) {
     console.error("admin.image", error.message);
     return send(res, error.statusCode || 400, { ok: false, error: error.message || "Image upload failed" });

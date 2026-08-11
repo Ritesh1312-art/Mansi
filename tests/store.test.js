@@ -48,8 +48,16 @@ test("2. Emergency Catalog Has a Consistent Dynamic Count, Unique IDs and Valid 
     assert.ok(product.image, "Product must have an image");
 
     ids.add(product.id);
-    const imgPath = path.join(root, product.image);
-    assert.equal(fs.existsSync(imgPath), true, `Product image missing on disk: ${product.image}`);
+    if (/^https:\/\//i.test(product.image)) {
+      const imageUrl = new URL(product.image);
+      assert.ok(
+        imageUrl.hostname.endsWith(".public.blob.vercel-storage.com"),
+        `Remote product image must use the managed public Blob store: ${product.image}`
+      );
+    } else {
+      const imgPath = path.join(root, product.image);
+      assert.equal(fs.existsSync(imgPath), true, `Product image missing on disk: ${product.image}`);
+    }
   }
   assert.equal(ids.size, catalog.products.length, "Catalog product IDs must be unique");
 });
@@ -344,6 +352,13 @@ test("26. Admin Product Republish Clears Archived and Deleted Flags", () => {
   assert.ok(content.includes("product.archived = false"));
   assert.ok(content.includes("product.isDeleted = false"));
   assert.ok(content.includes("product.archivedAt = null"));
+});
+
+test("21b. Product Images Use Durable Vercel Blob Storage", () => {
+  const content = fs.readFileSync(path.join(root, "api", "admin", "image.js"), "utf8");
+  assert.ok(content.includes('require("@vercel/blob")'));
+  assert.ok(content.includes('access: "public"'));
+  assert.ok(content.includes("await put("));
 });
 
 test("27. Product Save Atomically Queues a Verified Google Sheet Backup", () => {
