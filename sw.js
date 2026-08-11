@@ -1,6 +1,6 @@
 // Service Worker v4.3.0 — Network-first for code, cache-first for images
 // Cache name includes version so it auto-invalidates on each release.
-const CACHE_VERSION = "4.3.1";
+const CACHE_VERSION = "4.3.2";
 const CACHE_NAME = "mansi-shell-v" + CACHE_VERSION;
 
 const SHELL = [
@@ -61,6 +61,11 @@ self.addEventListener("fetch", function(event) {
   var request = event.request;
   if (request.method !== "GET") return;
   var url = new URL(request.url);
+
+  // Cross-origin assets (including Vercel Blob product images) must be fetched
+  // directly by the browser. Intercepting opaque responses here can turn a
+  // healthy image response into net::ERR_FAILED in Chromium.
+  if (url.origin !== self.location.origin) return;
 
   // Never intercept API calls, Firebase, or external services
   if (

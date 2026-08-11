@@ -82,6 +82,10 @@ test("4. Service Worker Employs Network-First Strategy for JS & CSS Code Assets"
   assert.ok(swContent.includes(".js"), "SW must handle JS assets");
   assert.ok(swContent.includes("NEW_VERSION_AVAILABLE"), "SW must notify tabs of new version");
   assert.ok(swContent.includes("offline.html"), "SW must reference offline.html fallback");
+  assert.ok(
+    swContent.includes("url.origin !== self.location.origin"),
+    "SW must not intercept cross-origin product images"
+  );
 });
 
 test("5. Admin Auth Module Requires Server Session Guard", () => {
