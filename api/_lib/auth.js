@@ -14,9 +14,16 @@ async function requireUser(req) {
     error.statusCode = 401;
     throw error;
   }
+  const { auth, isConfigured } = services();
+  if (!isConfigured || !auth) {
+    const error = new Error("Authentication service is not configured");
+    error.statusCode = 503;
+    throw error;
+  }
   try {
-    return await services().auth.verifyIdToken(token, true);
-  } catch {
+    return await auth.verifyIdToken(token, true);
+  } catch (cause) {
+    console.warn("[Auth] Firebase ID token verification failed:", cause.code || cause.message);
     const error = new Error("Session expired or invalid");
     error.statusCode = 401;
     throw error;

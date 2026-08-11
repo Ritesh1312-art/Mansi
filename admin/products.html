@@ -417,9 +417,10 @@
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "⏳ Saving..."; }
 
       try {
-        const id = document.getElementById("p-id").value;
+        const existingId = document.getElementById("p-id").value;
+        const id = existingId || `p_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const urlImage = document.getElementById("p-image").value.trim();
-        const finalImage = uploadedImageBase64 || urlImage || "";
+        let finalImage = uploadedImageBase64 || urlImage || "";
 
         const name = document.getElementById("p-name").value.trim();
         const price = parseFloat(document.getElementById("p-price").value);
@@ -428,7 +429,13 @@
         if (!name) { alert("⚠️ Product name is required!"); return; }
         if (!price || price <= 0) { alert("⚠️ Selling price is required!"); return; }
 
+        if (uploadedImageBase64) {
+          const imageResult = await StoreApi.uploadProductImage(id, uploadedImageBase64);
+          finalImage = imageResult.url;
+        }
+
         const data = {
+          id,
           name,
           category: document.getElementById("p-category").value,
           stock: parseInt(document.getElementById("p-stock").value) || 0,
@@ -438,14 +445,10 @@
           description: document.getElementById("p-desc").value.trim()
         };
 
-        if (id) {
-          DB.updateProduct(id, data);
-          Cart.showToast("✅ Product updated successfully!");
-        } else {
-          const added = DB.addProduct(data);
-          if (window.Watchdog) Watchdog.updateBaseline(DB.getProducts().length);
-          Cart.showToast("✅ Product added & synced to Cloud!");
-        }
+        const result = await StoreApi.saveProduct(data);
+        DB.cachePersistedProduct(result.product);
+        if (!existingId && window.Watchdog) Watchdog.updateBaseline(DB.getProducts().length);
+        Cart.showToast(existingId ? "✅ Product updated successfully!" : "✅ Product added & synced to Cloud!");
 
         uploadedImageBase64 = "";
         document.getElementById("p-id").value = "";
@@ -476,19 +479,12 @@
         return;
       }
 
-      const apiKey = (STORE.geminiApiKey || "").trim() || window.DEFAULT_GEMINI_KEY;
-
       btn.disabled = true;
       btn.textContent = "✨ Generating AI Description...";
       try {
         const promptText = `Write a short, highly attractive, professional 2-3 sentence product description in friendly Hinglish for an e-commerce store called Mansi Jewellery & Cosmetics. Product Name: "${name}", Category: "${cat}". Highlight quality, elegance, and why customers will love buying it. Do not include markdown headers or quotes.`;
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-        });
-        const json = await res.json();
-        const generated = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        const json = await StoreApi.generateProductDescription(name, cat, promptText);
+        const generated = json.description;
         if (generated) {
           descField.value = generated.trim();
           Cart.showToast("✨ AI Description generated successfully!");
@@ -507,11 +503,16 @@
       }
     }
 
-    function deleteProduct(id) {
+    async function deleteProduct(id) {
       if (confirm("⚠️ Are you sure you want to delete this product?")) {
-        DB.deleteProduct(id);
-        Cart.showToast("Product deleted successfully.");
-        renderProductsTable();
+        try {
+          await StoreApi.archiveProduct(id);
+          DB.cacheArchivedProduct(id);
+          Cart.showToast("Product deleted successfully.");
+          renderProductsTable();
+        } catch (error) {
+          alert("Product was not deleted. " + (error.message || error));
+        }
       }
     }
 

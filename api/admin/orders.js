@@ -5,6 +5,14 @@ const { services } = require("../_lib/firebase");
 const { send, readJson, methodNotAllowed } = require("../_lib/http");
 
 const STATUSES = new Set(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]);
+const TRANSITIONS = {
+  pending: new Set(["confirmed", "cancelled"]),
+  confirmed: new Set(["processing", "shipped", "cancelled"]),
+  processing: new Set(["shipped", "cancelled"]),
+  shipped: new Set(["delivered"]),
+  delivered: new Set(),
+  cancelled: new Set()
+};
 
 module.exports = async function handler(req, res) {
   if (!["PATCH", "DELETE"].includes(req.method)) return methodNotAllowed(res, ["PATCH", "DELETE"]);
@@ -34,8 +42,9 @@ module.exports = async function handler(req, res) {
       const snapshot = await transaction.get(ref);
       if (!snapshot.exists) throw new Error("Order not found");
       const order = snapshot.data() || {};
-      if (order.status === "cancelled" && status !== "cancelled") {
-        throw new Error("Cancelled orders cannot be reopened automatically");
+      const currentStatus = String(order.status || "pending").toLowerCase();
+      if (status !== currentStatus && !(TRANSITIONS[currentStatus] || new Set()).has(status)) {
+        throw new Error(`Order cannot move from ${currentStatus} to ${status}`);
       }
       if (status === "cancelled" && order.status !== "cancelled" && !order.inventoryRestored) {
         const orderItems = order.items || [];

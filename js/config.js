@@ -27,8 +27,6 @@ const defaultStore = {
   },
   telegramUsername: "MansiJewellery",
   geminiApiKey: "",
-  omniDimensionApiKey: "gq2RDUCjxW3WWZ5pzNh9bpa17g6RN1Wwz",
-  omniDimensionSecretKey: "144319ce2e024404faad481117ad3634",
   gpayUpi: "",
   phonepeUpi: "",
   paytmUpi: "",
@@ -48,12 +46,14 @@ try { storedSettings = JSON.parse(localStorage.getItem("storeSettings") || "{}")
 const STORE = {
   ...defaultStore,
   ...storedSettings,
-  geminiApiKey: (storedSettings && storedSettings.geminiApiKey && storedSettings.geminiApiKey.trim()) || (typeof window !== "undefined" && window.ENV && window.ENV.GEMINI_API_KEY) || defaultStore.geminiApiKey || "AIzaSyB7UUPMmG1iNq3zKOIVi8bIbpGtX95Ywi8",
+  geminiApiKey: "",
   firebaseConfig: { ...defaultStore.firebaseConfig },
   googleSheet: { ...defaultStore.googleSheet }
 };
 window.STORE = STORE;
-const DELIVERY = { ...defaultDelivery, ...JSON.parse(localStorage.getItem("deliverySettings") || "{}") };
+let storedDelivery = {};
+try { storedDelivery = JSON.parse(localStorage.getItem("deliverySettings") || "{}"); } catch (_) {}
+const DELIVERY = { ...defaultDelivery, ...(storedDelivery && typeof storedDelivery === "object" ? storedDelivery : {}) };
 
 // =============================================
 // PINCODE ZONE DETECTION
@@ -120,7 +120,9 @@ function applyTheme(themeId, customColors = null) {
   localStorage.setItem("theme", themeId);
 
   if (themeId === "custom") {
-    const savedCustom = customColors || JSON.parse(localStorage.getItem("customTheme") || "{}");
+    let storedCustom = {};
+    try { storedCustom = JSON.parse(localStorage.getItem("customTheme") || "{}"); } catch (_) {}
+    const savedCustom = customColors || storedCustom;
     if (savedCustom.primary) {
       document.documentElement.style.setProperty("--primary", savedCustom.primary);
       document.documentElement.style.setProperty("--primary-dark", savedCustom.primaryDark || savedCustom.primary);

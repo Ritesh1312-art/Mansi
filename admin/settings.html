@@ -102,8 +102,8 @@
               <input type="text" id="s-banner" class="form-input" placeholder="e.g. 🎉 Free Shipping on orders above ₹499 | Use code MANSI10 for 10% OFF"/>
             </div>
             <div class="form-group">
-              <label class="form-label">✨ Google Gemini AI API Key <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(for AI Description Generator)</span></label>
-              <input type="text" id="s-gemini-key" class="form-input" placeholder="Paste your Google Gemini API key here..."/>
+              <label class="form-label">✨ Google Gemini AI <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;">(server-managed)</span></label>
+              <input type="text" id="s-gemini-key" class="form-input" value="Configured securely on Vercel" disabled/>
             </div>
             <button type="submit" class="btn-full" style="margin-top: 10px;">Save Store Information</button>
           </form>
@@ -250,7 +250,6 @@
       document.getElementById("s-email").value = STORE.email || "";
       document.getElementById("s-address").value = STORE.address || "";
       document.getElementById("s-banner").value = STORE.offerBanner || "";
-      document.getElementById("s-gemini-key").value = STORE.geminiApiKey || "";
 
       // 3. Pre-fill Delivery Charges
       document.getElementById("del-city-pre").value = DELIVERY.sameCity.prepaid;
@@ -302,10 +301,19 @@
       applyTheme("custom", { primary, primaryDark: primary, primaryLight: bg, bg, card, text, textMuted: text, border: "#2A2A38" });
     }
 
+    function readStoredSettings() {
+      try {
+        const value = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+        return value && typeof value === "object" ? value : {};
+      } catch (_) {
+        return {};
+      }
+    }
+
     async function saveTelegramConfig() {
       const username = document.getElementById("s-telegram-username").value.trim().replace('@', '');
       STORE.telegramUsername = username;
-      const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      const current = readStoredSettings();
       current.telegramUsername = username;
       localStorage.setItem("storeSettings", JSON.stringify(current));
 
@@ -328,7 +336,7 @@
       STORE.phonepeUpi = phonepeUpi;
       STORE.paytmUpi = paytmUpi;
 
-      const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
+      const current = readStoredSettings();
       current.gpayUpi = gpayUpi;
       current.phonepeUpi = phonepeUpi;
       current.paytmUpi = paytmUpi;
@@ -352,13 +360,12 @@
       const email = document.getElementById("s-email").value.trim();
       const address = document.getElementById("s-address").value.trim();
       const offerBanner = document.getElementById("s-banner").value.trim();
-      const geminiApiKey = document.getElementById("s-gemini-key").value.trim();
-
-      const updatedStore = { ...STORE, name, tagline, telegramUsername, email, address, offerBanner, geminiApiKey };
+      const updatedStore = { ...STORE, name, tagline, telegramUsername, email, address, offerBanner };
       Object.assign(STORE, updatedStore);
 
-      const current = JSON.parse(localStorage.getItem("storeSettings") || "{}");
-      Object.assign(current, { name, tagline, telegramUsername, email, address, offerBanner, geminiApiKey });
+      const current = readStoredSettings();
+      delete current.geminiApiKey;
+      Object.assign(current, { name, tagline, telegramUsername, email, address, offerBanner });
       localStorage.setItem("storeSettings", JSON.stringify(current));
 
       try {

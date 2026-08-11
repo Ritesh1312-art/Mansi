@@ -27,7 +27,12 @@ function safeImageUrl(value) {
 
 const Cart = {
   get() {
-    return JSON.parse(localStorage.getItem("cart") || "[]");
+    try {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      return Array.isArray(cart) ? cart : [];
+    } catch (_) {
+      return [];
+    }
   },
   save(cart) {
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -244,7 +249,12 @@ function renderFooter() {
 // =============================================
 const Wishlist = {
   get() {
-    return JSON.parse(localStorage.getItem("wishlist") || "[]");
+    try {
+      const list = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      return Array.isArray(list) ? list : [];
+    } catch (_) {
+      return [];
+    }
   },
   save(list) {
     localStorage.setItem("wishlist", JSON.stringify(list));

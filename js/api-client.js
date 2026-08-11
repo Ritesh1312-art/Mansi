@@ -45,6 +45,12 @@
     saveProduct(product) {
       return request("/api/admin/products", { method: "POST", body: { product } });
     },
+    generateProductDescription(name, category, prompt) {
+      return request("/api/admin/products", {
+        method: "POST",
+        body: { action: "generate_description", name, category, prompt }
+      });
+    },
     archiveProduct(id) {
       return request("/api/admin/products", { method: "DELETE", body: { id } });
     },

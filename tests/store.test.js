@@ -84,6 +84,10 @@ test("5. Admin Auth Module Requires Server Session Guard", () => {
 });
 
 test("6. Order State Machine Enforces Valid Order Transitions", () => {
+  const implementation = fs.readFileSync(path.join(root, "api/admin/orders.js"), "utf8");
+  assert.ok(implementation.includes("const TRANSITIONS"));
+  assert.ok(implementation.includes("TRANSITIONS[currentStatus]"));
+
   const validTransitions = {
     pending: ["confirmed", "cancelled"],
     confirmed: ["processing", "cancelled"],
@@ -252,32 +256,58 @@ test("17. Customer Pages Load HilltopAds S2S Script Exactly Once", () => {
   }
 });
 
-test("18. Catalog Store Module Persists & Merges Dynamic Products Correctly", () => {
+test("18. Catalog Store Merge Is Read-Only During Validation", () => {
   const catalogStore = require(path.join(root, "api/_lib/catalog-store.js"));
+  const implementation = fs.readFileSync(path.join(root, "api/_lib/catalog-store.js"), "utf8");
   assert.equal(typeof catalogStore.getAllProductsMerged, "function");
-  assert.equal(typeof catalogStore.saveDynamicProduct, "function");
-
-  const initialMerged = catalogStore.getAllProductsMerged();
-  assert.ok(initialMerged.length >= 53, "Merged products count must be at least 53");
-
-  const testProduct = {
-    id: "p_test_54th_item",
-    name: "54th Test Pearl Necklace",
-    category: "jewellery",
-    price: 999,
-    mrp: 1299,
-    image: "assets/products/p_1785004113486.jpg",
-    createdAt: new Date().toISOString()
-  };
-
-  catalogStore.saveDynamicProduct(testProduct);
-  const updatedMerged = catalogStore.getAllProductsMerged();
-  assert.ok(updatedMerged.some(p => p.id === "p_test_54th_item"), "Dynamic product must be present in merged output");
-  assert.ok(updatedMerged.length >= 54, "Merged products count must now be at least 54");
-
-  // Cleanup test product
-  catalogStore.archiveDynamicProduct("p_test_54th_item");
-  const cleanedMerged = catalogStore.getAllProductsMerged();
-  assert.ok(!cleanedMerged.some(p => p.id === "p_test_54th_item"), "Archived product must not be present in active output");
+  assert.ok(!implementation.includes("writeFileSync"), "Serverless fallback catalog must never pretend to persist to disk");
+  const dynamicPath = path.join(root, "data/dynamic_products.json");
+  const before = fs.readFileSync(dynamicPath, "utf8");
+  const merged = catalogStore.getAllProductsMerged();
+  assert.ok(merged.length >= 53, "Merged products count must be at least 53");
+  assert.equal(fs.readFileSync(dynamicPath, "utf8"), before, "Catalog validation must not mutate tracked data");
 });
 
+test("19. Admin Authentication Has No Browser Master-Password Bypass", () => {
+  const content = fs.readFileSync(path.join(root, "js/admin-auth.js"), "utf8");
+  assert.ok(!content.includes('localStorage.setItem("adminAuth", "master")'));
+  assert.ok(!content.includes('token: "master_token"'));
+  assert.ok(!content.includes("createUserWithEmailAndPassword"), "Admin login must never auto-create accounts");
+  assert.ok(!content.includes(["mansi", "@", "admin", "123"].join("")), "Admin credentials must not be committed to client code");
+});
+
+test("20. Firebase Browser SDK Is Local and Loaded in Dependency Order", () => {
+  const content = fs.readFileSync(path.join(root, "js/data.js"), "utf8");
+  for (const file of ["firebase-app-compat.js", "firebase-auth-compat.js", "firebase-firestore-compat.js"]) {
+    assert.equal(fs.existsSync(path.join(root, "js/vendor", file)), true, `${file} must be hosted locally`);
+    assert.ok(content.includes(file), `data.js must load ${file}`);
+  }
+  assert.ok(content.includes("for (const src of scripts)"), "Firebase SDK files must load sequentially");
+  assert.ok(!content.includes("www.gstatic.com/firebasejs"), "Firebase runtime must not depend on the external CDN");
+});
+
+test("21. Product Admin Waits for Cloud Save and Uses Image Upload API", () => {
+  const content = fs.readFileSync(path.join(root, "admin/products.html"), "utf8");
+  assert.ok(content.includes("await StoreApi.uploadProductImage"));
+  assert.ok(content.includes("await StoreApi.saveProduct"));
+  assert.ok(content.includes("await StoreApi.archiveProduct"));
+  assert.ok(!content.includes("DB.addProduct(data)"), "UI must not report success before remote persistence");
+  const apiContent = fs.readFileSync(path.join(root, "api/admin/products.js"), "utf8");
+  assert.ok(!apiContent.includes("saveDynamicProduct"), "Admin writes must use durable Firestore persistence");
+});
+
+test("22. Gemini Calls Stay Behind the Authenticated Server API", () => {
+  const config = fs.readFileSync(path.join(root, "js/config.js"), "utf8");
+  const adminProducts = fs.readFileSync(path.join(root, "admin/products.html"), "utf8");
+  const apiProducts = fs.readFileSync(path.join(root, "api/admin/products.js"), "utf8");
+  assert.ok(!/AIza[0-9A-Za-z_-]{30,}/.test(config.replace(/"AIzaSy"\s*\+\s*"[^"]+"/, "")), "Non-Firebase API keys must not be in config.js");
+  assert.ok(!adminProducts.includes("generativelanguage.googleapis.com"));
+  assert.ok(adminProducts.includes("StoreApi.generateProductDescription"));
+  assert.ok(apiProducts.includes("process.env.GEMINI_API_KEY"));
+});
+
+test("23. Local Product Cache Drops Base64 and Blob Images", () => {
+  const content = fs.readFileSync(path.join(root, "js/data.js"), "utf8");
+  assert.ok(content.includes('/^(?:data:|blob:)/i.test(String(copy.image || ""))'));
+  assert.ok(content.includes('copy.image = String(copy.imageBackupUrl || "")'));
+});

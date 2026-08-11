@@ -1,6 +1,6 @@
-// Service Worker v4.2.0 — Network-first for code, cache-first for images
+// Service Worker v4.3.0 — Network-first for code, cache-first for images
 // Cache name includes version so it auto-invalidates on each release.
-const CACHE_VERSION = "4.2.0";
+const CACHE_VERSION = "4.3.0";
 const CACHE_NAME = "mansi-shell-v" + CACHE_VERSION;
 
 const SHELL = [
@@ -12,6 +12,9 @@ const SHELL = [
   "./js/config.js",
   "./js/data.js",
   "./js/app.js",
+  "./js/vendor/firebase-app-compat.js",
+  "./js/vendor/firebase-auth-compat.js",
+  "./js/vendor/firebase-firestore-compat.js",
   "./data/catalog.json",
   "./assets/brand/icon.svg"
 ];

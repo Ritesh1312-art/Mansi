@@ -16,6 +16,9 @@
     "resend": "6.18.1",
     "sharp": "0.35.3"
   },
+  "devDependencies": {
+    "firebase": "12.17.1"
+  },
   "overrides": {
     "uuid": "11.1.1"
   }

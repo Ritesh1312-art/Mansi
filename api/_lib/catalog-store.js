@@ -6,6 +6,9 @@ const path = require("node:path");
 const catalogPath = path.join(__dirname, "..", "..", "data", "catalog.json");
 const dynamicPath = path.join(__dirname, "..", "..", "data", "dynamic_products.json");
 
+// This module is an immutable deployment fallback. Vercel Functions cannot
+// durably write repository files; all live admin mutations belong in Firestore.
+
 let inMemoryDynamic = null;
 
 function getStaticCatalog() {
@@ -35,40 +38,6 @@ function getDynamicProducts() {
   return inMemoryDynamic;
 }
 
-function saveDynamicProduct(product) {
-  if (!product || !product.id) return product;
-  const item = { ...product, archived: false, isDeleted: false };
-  const current = [...getDynamicProducts()];
-  const index = current.findIndex(p => p.id === item.id);
-  if (index >= 0) {
-    current[index] = { ...current[index], ...item };
-  } else {
-    current.unshift(item);
-  }
-  inMemoryDynamic = current;
-  try {
-    fs.writeFileSync(dynamicPath, JSON.stringify(current, null, 2), "utf8");
-  } catch (e) {}
-  return item;
-}
-
-function archiveDynamicProduct(id) {
-  if (!id) return id;
-  const current = [...getDynamicProducts()];
-  const index = current.findIndex(p => p.id === id);
-  if (index >= 0) {
-    current[index] = { ...current[index], archived: true, isDeleted: true };
-  } else {
-    current.unshift({ id, archived: true, isDeleted: true });
-  }
-  inMemoryDynamic = current;
-  try {
-    fs.writeFileSync(dynamicPath, JSON.stringify(current, null, 2), "utf8");
-  } catch (e) {}
-  return id;
-}
-
-
 function getAllProductsMerged() {
   const staticProducts = getStaticCatalog();
   const dynamicProducts = getDynamicProducts();
@@ -94,7 +63,5 @@ function getAllProductsMerged() {
 module.exports = {
   getStaticCatalog,
   getDynamicProducts,
-  saveDynamicProduct,
-  archiveDynamicProduct,
   getAllProductsMerged
 };

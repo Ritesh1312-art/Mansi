@@ -138,7 +138,11 @@
           p = await DB.fetchProductById(id);
           // If still not found, search raw localStorage by name
           if (!p) {
-            const rawProducts = JSON.parse(localStorage.getItem("products") || "[]");
+            let rawProducts = [];
+            try {
+              const parsed = JSON.parse(localStorage.getItem("products") || "[]");
+              rawProducts = Array.isArray(parsed) ? parsed : [];
+            } catch (_) {}
             const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
             const tid = norm(id);
             p = rawProducts.find(prod => prod && (norm(prod.id) === tid || norm(prod.name) === tid)) || null;

@@ -23,9 +23,9 @@
         }
       }
     }
-    if (localStorage.getItem("adminAuth") === "master" || localStorage.getItem("adminAuth") === "firebase") {
-      return { user: { email: "mansialwani5@gmail.com", uid: "admin_master" }, token: "master_token", adminData: { ok: true } };
-    }
+    // A browser flag is never proof of admin access. Only a Firebase ID token
+    // accepted by the server may unlock an admin page.
+    localStorage.removeItem("adminAuth");
     return null;
   }
 
@@ -54,44 +54,24 @@
     }
     const pwd = String(inputPass || "").trim();
 
-    const candidateEmails = Array.from(new Set([
-      String(inputEmail || "").trim(),
-      String(window.STORE?.email || "").trim(),
-      "mansialwani5@gmail.com",
-      "riteshart1312@gmail.com"
-    ])).filter(Boolean);
+    const candidateEmail = String(inputEmail || window.STORE?.email || "").trim();
+    if (!candidateEmail) throw new Error("Admin email is required.");
 
     let lastError = null;
 
-    if (fbAuth) {
-      for (const candidate of candidateEmails) {
-        // 1. Try normal signIn
-        try {
-          await fbAuth.signInWithEmailAndPassword(candidate, pwd);
-          const session = await authorizedUser();
-          if (session) return session.user;
-        } catch (err) {
-          lastError = err;
-          // 2. If user doesn't exist yet in Firebase Auth, auto-create admin account with this password!
-          if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential" || err.code === "auth/invalid-email") {
-            try {
-              await fbAuth.createUserWithEmailAndPassword(candidate, pwd);
-              const session = await authorizedUser();
-              if (session) return session.user;
-            } catch (_) {}
-          }
-        }
-      }
-    }
-
-    // Master password fallback check for "mansi@admin123" or legacy password
-    if (pwd === "mansi@admin123" || pwd === "admin123" || pwd === "mansiadmin") {
-      localStorage.setItem("adminAuth", "master");
-      return { email: "mansialwani5@gmail.com", uid: "admin_master" };
+    if (!fbAuth) throw new Error("Secure admin login is temporarily unavailable.");
+    try {
+      await fbAuth.signInWithEmailAndPassword(candidateEmail, pwd);
+      const session = await authorizedUser();
+      if (session) return session.user;
+      throw new Error("This account is not authorized for admin access.");
+    } catch (err) {
+      lastError = err;
     }
 
     if (fbAuth && fbAuth.currentUser) await fbAuth.signOut();
-    throw lastError || new Error("Incorrect Admin Password. Please enter valid password.");
+    localStorage.removeItem("adminAuth");
+    throw lastError || new Error("Incorrect admin credentials.");
   }
 
 

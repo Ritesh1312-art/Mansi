@@ -95,26 +95,43 @@ const DB = {
   },
 
 
-  loadSDKs() {
-    return new Promise((resolve, reject) => {
-      if (typeof firebase !== "undefined") return resolve();
-      const scripts = [
-        "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js",
-        "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js",
-        "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"
-      ];
-      let loaded = 0;
-      scripts.forEach(src => {
-        const s = document.createElement("script");
-        s.src = src;
-        s.onload = () => {
-          loaded++;
-          if (loaded === scripts.length) resolve();
+  async loadSDKs() {
+    if (typeof firebase !== "undefined" && firebase.auth && firebase.firestore) return;
+    const dataScript = Array.from(document.scripts).find(script => /\/js\/data\.js(?:\?|$)/.test(script.src));
+    const dataUrl = dataScript ? dataScript.src : new URL("js/data.js", document.baseURI).href;
+    const scripts = [
+      new URL("vendor/firebase-app-compat.js", dataUrl).href,
+      new URL("vendor/firebase-auth-compat.js", dataUrl).href,
+      new URL("vendor/firebase-firestore-compat.js", dataUrl).href
+    ];
+
+    // Compat Auth and Firestore depend on firebase-app. Load sequentially so a
+    // slow connection can never execute a dependent SDK before its base SDK.
+    for (const src of scripts) {
+      await new Promise((resolve, reject) => {
+        const existing = Array.from(document.scripts).find(script => script.src === src);
+        if (existing?.dataset.loaded === "true") return resolve();
+        const script = existing || document.createElement("script");
+        const timeout = setTimeout(() => reject(new Error("Timed out loading Firebase SDK: " + src)), 15000);
+        script.onload = () => {
+          clearTimeout(timeout);
+          script.dataset.loaded = "true";
+          resolve();
         };
-        s.onerror = (e) => reject(new Error("Failed to load Firebase SDK: " + src));
-        document.head.appendChild(s);
+        script.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error("Failed to load Firebase SDK: " + src));
+        };
+        if (!existing) {
+          script.src = src;
+          script.defer = true;
+          document.head.appendChild(script);
+        }
       });
-    });
+    }
+    if (typeof firebase === "undefined" || !firebase.auth || !firebase.firestore) {
+      throw new Error("Firebase SDK loaded without required Auth/Firestore modules");
+    }
   },
 
   async fetchCatalogFromApi() {
@@ -123,7 +140,7 @@ const DB = {
       if (!res.ok) throw new Error("API HTTP " + res.status);
       const data = await res.json();
       if (data && data.ok && Array.isArray(data.products) && data.products.length > 0) {
-        const active = data.products.filter(p => p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id));
+        const active = data.products.filter(p => p && p.id && !p.archived && !p.isDeleted);
         firebaseProductsCache = active;
         
         // Single versioned disposable cache
@@ -131,7 +148,7 @@ const DB = {
           schemaVersion: 1,
           catalogRevision: "2026-08-11",
           fetchedAt: new Date().toISOString(),
-          products: active
+          products: this.lightweightProducts(active)
         };
         try { localStorage.setItem("mansi_catalog_cache_v1", JSON.stringify(versionedCache)); } catch(e){}
         this.saveLocalProductCache(active);
@@ -202,7 +219,7 @@ const DB = {
   getProducts() {
     // 1. Primary Authoritative Cache (Server API / Firestore)
     if (Array.isArray(firebaseProductsCache) && firebaseProductsCache.length > 0) {
-      return firebaseProductsCache.filter(p => p && p.id && !p.archived && !p.isDeleted && !this.isTombstoned(p.id));
+      return firebaseProductsCache.filter(p => p && p.id && !p.archived && !p.isDeleted);
     }
 
     // 2. Versioned Disposable Cache
@@ -227,10 +244,7 @@ const DB = {
     return active.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   },
   saveLocalProductCache(products) {
-    const lightweight = products.map(product => {
-      const copy = { ...product };
-      return copy;
-    });
+    const lightweight = this.lightweightProducts(products);
 
     try {
       const previous = localStorage.getItem("products");
@@ -249,6 +263,31 @@ const DB = {
     firebaseProductsCache = products;
     this.saveLocalProductCache(products);
   },
+  lightweightProducts(products) {
+    return products.map(product => {
+      const copy = { ...product };
+      if (/^(?:data:|blob:)/i.test(String(copy.image || ""))) {
+        copy.image = String(copy.imageBackupUrl || "");
+      }
+      return copy;
+    });
+  },
+  cachePersistedProduct(product) {
+    if (!product || !product.id) return null;
+    this.saveCustomUserProduct(product);
+    const products = this.getProducts().filter(existing => existing.id !== product.id);
+    products.unshift(product);
+    this.saveProducts(products);
+    return product;
+  },
+  cacheArchivedProduct(id) {
+    if (!id) return null;
+    const product = this.getProductById(id);
+    this.removeCustomUserProduct(id);
+    this.recordDeletedTombstone(id);
+    this.saveProducts(this.getProducts().filter(existing => existing.id !== id));
+    return { ...(product || { id }), archived: true, isDeleted: true };
+  },
   addProduct(product) {
     // Always generate a fresh unique ID when adding
     if (!product.id) {
@@ -259,13 +298,7 @@ const DB = {
     product.reviews = Math.max(0, Number(product.reviews) || 0);
     product.sales = product.sales || 0;
 
-    // Always preserve in protected custom_user_products key
-    this.saveCustomUserProduct(product);
-
-    const products = this.getProducts();
-    const filtered = products.filter(p => p.id !== product.id);
-    filtered.unshift(product);
-    this.saveProducts(filtered);
+    this.cachePersistedProduct(product);
 
     // Auto persist to remote database in background
     this.persistProduct(product).catch(err => console.warn("Background persist product warning:", err));
@@ -279,10 +312,7 @@ const DB = {
       const updated = { ...products[idx], ...updates, updatedAt: new Date().toISOString() };
       products[idx] = updated;
 
-      // Always preserve updated item in custom_user_products
-      this.saveCustomUserProduct(updated);
-
-      this.saveProducts(products);
+      this.cachePersistedProduct(updated);
 
       // Auto persist to remote database in background
       this.persistProduct(updated).catch(err => console.warn("Background persist product warning:", err));
@@ -295,12 +325,7 @@ const DB = {
     const product = this.getProductById(id);
     if (!id) return null;
 
-    // Record deletion tombstone and remove from custom user products
-    this.removeCustomUserProduct(id);
-    this.recordDeletedTombstone(id);
-
-    const products = this.getProducts().filter(p => p.id !== id && !this.isTombstoned(p.id));
-    this.saveProducts(products);
+    this.cacheArchivedProduct(id);
 
     // Auto persist archive to remote database in background
     this.persistArchive(id).catch(err => console.warn("Background archive product warning:", err));
@@ -431,7 +456,12 @@ const DB = {
 
   // ---- USERS ----
   getUsers() {
-    return JSON.parse(localStorage.getItem("users") || "[]");
+    try {
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      return Array.isArray(users) ? users : [];
+    } catch (_) {
+      return [];
+    }
   },
   saveUsers(users) {
     localStorage.setItem("users", JSON.stringify(users));
@@ -577,7 +607,12 @@ const DB = {
     localStorage.setItem("session", JSON.stringify({ id: user.id, name: user.name, email: user.email, phone: user.phone || "" }));
   },
   getSession() {
-    return JSON.parse(localStorage.getItem("session") || "null");
+    try {
+      const session = JSON.parse(localStorage.getItem("session") || "null");
+      return session && typeof session === "object" ? session : null;
+    } catch (_) {
+      return null;
+    }
   },
   clearSession() {
     localStorage.removeItem("session");
@@ -585,7 +620,12 @@ const DB = {
 
   // ---- ORDERS ----
   getOrders() {
-    return JSON.parse(localStorage.getItem("orders") || "[]");
+    try {
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      return Array.isArray(orders) ? orders : [];
+    } catch (_) {
+      return [];
+    }
   },
   saveOrders(orders) {
     localStorage.setItem("orders", JSON.stringify(orders));

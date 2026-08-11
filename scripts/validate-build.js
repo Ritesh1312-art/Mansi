@@ -22,10 +22,12 @@ for (const file of files.filter(file => file.endsWith(".js"))) {
 }
 
 const textFiles = files.filter(file => /\.(?:js|html|json|rules|webmanifest)$/i.test(file));
+const knownAdminPasswords = ["mansi" + "@" + "admin" + "123", "admin" + "123", "mansi" + "admin"];
 for (const file of textFiles) {
   const text = fs.readFileSync(file, "utf8");
   if (/telegramBotToken\s*:\s*["'][^"']+["']/.test(text)) failures.push(`Client Telegram token found: ${path.relative(root, file)}`);
   if (/adminPassword\s*:\s*["'][^"']+["']/.test(text)) failures.push(`Client admin password found: ${path.relative(root, file)}`);
+  if (knownAdminPasswords.some(password => text.includes(password))) failures.push(`Known admin password found: ${path.relative(root, file)}`);
   if (/AIza[0-9A-Za-z_-]{30,}/.test(text) && !file.endsWith(path.join("js", "config.js"))) {
     failures.push(`Unexpected Firebase web key location: ${path.relative(root, file)}`);
   }

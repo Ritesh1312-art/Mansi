@@ -139,11 +139,12 @@
         return;
       }
 
-      const allowedStatuses = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
+      const allowedStatuses = new Set(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]);
       list.innerHTML = filtered.map(o => {
         const status = allowedStatuses.has(o.status) ? o.status : "pending";
         let badgeClass = "badge-warning";
         if (status === "confirmed") badgeClass = "badge-info";
+        if (status === "processing") badgeClass = "badge-info";
         if (status === "shipped") badgeClass = "badge-warning";
         if (status === "delivered") badgeClass = "badge-success";
         if (status === "cancelled") badgeClass = "badge-error";

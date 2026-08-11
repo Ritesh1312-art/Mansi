@@ -1,7 +1,5 @@
 "use strict";
 
-const fs = require("node:fs");
-const path = require("node:path");
 const { services } = require("./_lib/firebase");
 const { send, sendError, methodNotAllowed, withErrorHandler } = require("./_lib/http");
 const { getAllProductsMerged } = require("./_lib/catalog-store");
