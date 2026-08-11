@@ -654,10 +654,10 @@ initTempMailBlocker();
 
 
 
-// =============================================
-// RULE-BASED STORE ASSISTANT
-// =============================================
+// The legacy rule-based Store Assistant was retired in favour of the
+// OmniDimension sales-call widget loaded independently by the page templates.
 function initChatbotWidget() {
+  return;
   if (document.getElementById("ai-chat-btn")) return;
 
   const btn = document.createElement("button");

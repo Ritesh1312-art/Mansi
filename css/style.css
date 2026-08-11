@@ -1484,10 +1484,7 @@ div[class*="temp-mail"], iframe[src*="tempmail"] {
   font-size: 1rem;
 }
 
-/* =============================================
-   VERTICAL STACKING FOR CHAT ASSISTANTS
-   ============================================= */
-/* Store Assistant Button floats cleanly ABOVE third-party Voice Widget at bottom: 100px */
+/* Legacy Store Assistant styles retained only for backward-compatible cached pages. */
 .ai-chat-btn {
   position: fixed !important;
   bottom: 100px !important;
