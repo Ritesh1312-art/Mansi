@@ -155,7 +155,9 @@ window.addEventListener("productsSynced", () => {
     }
   });
   // Only call initDashboard if on admin pages to prevent spurious admin metric renders on public pages
-  if (isAdminPage && typeof window["initDashboard"] === "function") {
+  const adminContent = document.getElementById("admin-content");
+  const adminUnlocked = adminContent && window.getComputedStyle(adminContent).display !== "none";
+  if (isAdminPage && adminUnlocked && typeof window["initDashboard"] === "function") {
     try { window["initDashboard"](); } catch (e) {
       console.warn("Could not refresh initDashboard", e);
     }

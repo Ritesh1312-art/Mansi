@@ -311,3 +311,9 @@ test("23. Local Product Cache Drops Base64 and Blob Images", () => {
   assert.ok(content.includes('/^(?:data:|blob:)/i.test(String(copy.image || ""))'));
   assert.ok(content.includes('copy.image = String(copy.imageBackupUrl || "")'));
 });
+
+test("24. Hidden Admin Login Page Does Not Refresh Protected Dashboard", () => {
+  const content = fs.readFileSync(path.join(root, "js/app.js"), "utf8");
+  assert.ok(content.includes("const adminUnlocked"));
+  assert.ok(content.includes("isAdminPage && adminUnlocked"));
+});
