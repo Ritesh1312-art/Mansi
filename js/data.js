@@ -494,12 +494,23 @@ const DB = {
     if (isFirebaseActive) {
       try {
         const cred = await fbAuth.signInWithEmailAndPassword(email, password);
-        const doc = await fbDb.collection("users").doc(cred.user.uid).get();
-        if (doc.exists) {
-          return { user: doc.data() };
-        } else {
-          return { error: "User profile details not found in Firestore!" };
+        const authenticatedUser = {
+          id: cred.user.uid,
+          email: cred.user.email || email,
+          name: cred.user.displayName || ""
+        };
+        try {
+          const doc = await fbDb.collection("users").doc(cred.user.uid).get();
+          if (doc.exists) {
+            return { user: { ...authenticatedUser, ...doc.data() } };
+          }
+        } catch (profileError) {
+          // Authentication has already succeeded. A stale or temporarily
+          // restrictive Firestore rule must never prevent the customer from
+          // entering the store.
+          console.warn("Profile read skipped after successful sign-in:", profileError.message);
         }
+        return { user: authenticatedUser };
       } catch (e) {
         return { error: e.message };
       }

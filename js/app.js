@@ -624,36 +624,6 @@ function initAdminMobileNav() {
 
 
 
-// Global TempMail & Extension Overlay Blocker
-function initTempMailBlocker() {
-  function cleanInputs() {
-    document.querySelectorAll("input, select, textarea").forEach(el => {
-      el.style.setProperty("background-image", "none", "important");
-      el.style.setProperty("background-repeat", "no-repeat", "important");
-    });
-    document.querySelectorAll("[class*='tempmail'], [id*='tempmail'], [class*='temp-mail'], [data-tempmail], tempmail-button, iframe[src*='tempmail'], div[style*='tempmail']").forEach(el => el.remove());
-  }
-
-  cleanInputs();
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", cleanInputs, { once: true });
-  }
-  window.addEventListener("load", cleanInputs, { once: true });
-
-  // Use MutationObserver so any extension dynamic DOM insertion is instantly stripped
-  const observer = new MutationObserver(() => cleanInputs());
-  if (document.body) {
-    observer.observe(document.body, { childList: true, subtree: true });
-  } else {
-    document.addEventListener("DOMContentLoaded", () => {
-      observer.observe(document.body, { childList: true, subtree: true });
-    }, { once: true });
-  }
-}
-initTempMailBlocker();
-
-
-
 // The legacy rule-based Store Assistant was retired in favour of the
 // OmniDimension sales-call widget loaded independently by the page templates.
 function initChatbotWidget() {
