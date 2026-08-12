@@ -2,7 +2,7 @@ const { requireAdmin } = require("./_lib/auth");
 const { services } = require("./_lib/firebase");
 const { send, sendError, readJson, methodNotAllowed, withErrorHandler } = require("./_lib/http");
 
-const STORE_FIELDS = new Set(["name","tagline","address","city","pincode","email","phone","offerBanner","telegramUsername","gpayUpi","phonepeUpi","paytmUpi"]);
+const STORE_FIELDS = new Set(["name","tagline","address","city","pincode","email","phone","offerBanner","telegramUsername","telegramBotToken","telegramChatId","gpayUpi","phonepeUpi","paytmUpi"]);
 const DELIVERY_FIELDS = new Set(["sameCity","sameState","nearbyStates","restOfIndia"]);
 
 const DEFAULT_STORE = {

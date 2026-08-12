@@ -28,8 +28,8 @@ function orderText(order) {
   ].join("\n");
 }
 
-async function sendTelegram(chatId, text) {
-  const token = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
+async function sendTelegram(chatId, text, botTokenOverride = null) {
+  const token = String(botTokenOverride || process.env.TELEGRAM_BOT_TOKEN || "").trim();
   if (!token || !chatId) return { sent: false, reason: "not-configured-or-not-linked" };
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
@@ -64,10 +64,27 @@ async function sendOrderEmail(order) {
 
 async function notifyOrder(order, customerTelegramChatId) {
   const text = orderText(order);
-  const ownerChatId = String(process.env.TELEGRAM_OWNER_CHAT_ID || "").trim();
+  let ownerChatId = String(process.env.TELEGRAM_OWNER_CHAT_ID || "").trim();
+  let botToken = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
+
+  if (!botToken || !ownerChatId) {
+    try {
+      const { services } = require("./firebase");
+      const { db } = services();
+      if (db) {
+        const snap = await db.collection("settings").doc("public").get();
+        if (snap.exists) {
+          const store = snap.data()?.store || {};
+          if (!botToken && store.telegramBotToken) botToken = String(store.telegramBotToken).trim();
+          if (!ownerChatId && store.telegramChatId) ownerChatId = String(store.telegramChatId).trim();
+        }
+      }
+    } catch (e) {}
+  }
+
   const results = await Promise.allSettled([
-    sendTelegram(ownerChatId, text),
-    sendTelegram(customerTelegramChatId, `Your Mansi Store order is confirmed in our system.\n\n${text}`),
+    sendTelegram(ownerChatId, text, botToken),
+    sendTelegram(customerTelegramChatId, `Your Mansi Store order is confirmed in our system.\n\n${text}`, botToken),
     sendOrderEmail(order)
   ]);
   return {

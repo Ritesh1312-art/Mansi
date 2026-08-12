@@ -169,7 +169,7 @@
         <div class="settings-section">
           <h2>✈️ Telegram Support & Instant Order Alerts</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-            Set the public Telegram support username. Bot credentials are stored only as encrypted Vercel server environment variables.
+            Configure your Telegram Support Username and automated order notification bot details.
           </p>
           <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label">Telegram Support Username (without @, e.g. MansiJewellery)</label>
@@ -178,7 +178,15 @@
               ✨ Updating this automatically updates Telegram support buttons across Footer, Checkout, Customer Orders, and Admin panel!
             </div>
           </div>
-          <button onclick="saveTelegramConfig()" class="btn-full" style="padding:12px 24px;">Save Public Telegram Username</button>
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">Telegram Bot Token (HTTP API Token from @BotFather)</label>
+            <input type="password" id="s-telegram-bot-token" class="form-input" placeholder="e.g. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"/>
+          </div>
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">Owner Telegram Chat ID (Your Chat ID from @userinfobot)</label>
+            <input type="text" id="s-telegram-chat-id" class="form-input" placeholder="e.g. 987654321"/>
+          </div>
+          <button onclick="saveTelegramConfig()" class="btn-full" style="padding:12px 24px;">Save Telegram Configuration</button>
         </div>
 
         <!-- SECTION 7: UPI PAYMENTS -->
@@ -264,6 +272,8 @@
 
       // 6. Pre-fill Telegram Config
       document.getElementById("s-telegram-username").value = STORE.telegramUsername || "";
+      document.getElementById("s-telegram-bot-token").value = STORE.telegramBotToken || "";
+      document.getElementById("s-telegram-chat-id").value = STORE.telegramChatId || "";
 
       // 7. Pre-fill UPI Configurations
       document.getElementById("s-upi-gpay").value = STORE.gpayUpi || "";
@@ -313,18 +323,26 @@
 
     async function saveTelegramConfig() {
       const username = document.getElementById("s-telegram-username").value.trim().replace('@', '');
+      const botToken = document.getElementById("s-telegram-bot-token").value.trim();
+      const chatId = document.getElementById("s-telegram-chat-id").value.trim();
+
       STORE.telegramUsername = username;
+      STORE.telegramBotToken = botToken;
+      STORE.telegramChatId = chatId;
+
       const current = readStoredSettings();
       current.telegramUsername = username;
+      current.telegramBotToken = botToken;
+      current.telegramChatId = chatId;
       localStorage.setItem("storeSettings", JSON.stringify(current));
 
       try {
         if (window.StoreApi && window.fbAuth && fbAuth.currentUser) {
-          await StoreApi.saveSettings({ telegramUsername: username }, {});
+          await StoreApi.saveSettings({ telegramUsername: username, telegramBotToken: botToken, telegramChatId: chatId }, {});
         }
       } catch (e) { console.warn("Server settings sync skipped:", e); }
 
-      Cart.showToast("✈️ Public Telegram support username updated.");
+      Cart.showToast("✈️ Telegram configuration saved successfully!");
       setTimeout(() => location.reload(), 800);
     }
 
