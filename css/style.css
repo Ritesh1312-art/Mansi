@@ -1,8 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500&f[]=satoshi@400,500,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+/* =============================================
+   NEXORA-INSPIRED HIGH-CONTRAST DESIGN TOKENS
+   ============================================= */
+.font-display, h1, h2, h3, .heading-display {
+  font-family: 'Cabinet Grotesk', 'Outfit', sans-serif;
+}
+
+body {
+  font-family: 'Satoshi', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
 /* =============================================
    THEME VARIABLES — 15 Vibrant Themes + Custom
    ============================================= */
+
 :root, [data-theme="default"] {
   --primary: #FF4F7E; /* Sweet Rose Pink */
   --primary-dark: #E03562;
@@ -1491,6 +1504,93 @@ div[class*="temp-mail"], iframe[src*="tempmail"] {
   right: 24px !important;
   z-index: 99990 !important;
 }
+
+/* =============================================
+   NEXORA-INSPIRED BENTO GRID & GLASSMORPHISM
+   ============================================= */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 170px;
+  }
+  .bento-item-lg {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .bento-item-tall {
+    grid-row: span 2;
+  }
+}
+
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.bento-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-hover);
+}
+.bento-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.bento-card:hover img {
+  transform: scale(1.06);
+}
+.bento-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  color: #ffffff;
+}
+
+.glass-nav {
+  background: var(--bg-nav) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.tracing-glow {
+  box-shadow: 0 0 0 1px var(--primary-glow), 0 8px 30px -8px var(--primary-glow) !important;
+}
+
+.product-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+}
+.product-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--shadow-hover) !important;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 
 .ai-chat-box {
   position: fixed !important;

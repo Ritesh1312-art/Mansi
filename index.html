@@ -94,63 +94,50 @@
 
 
   <!-- HERO SECTION -->
-  <section class="hero">
+  <section class="hero glass-nav" style="border-radius:28px;margin:16px auto;max-width:1200px;border:1px solid var(--border);">
     <div class="hero-inner">
-      <div class="hero-badge" id="hero-badge">🟢 53 products safely synced and backed up</div>
-      <h1>Shop <span>Jewellery, Cosmetics</span><br/>& Much More!</h1>
-      <p>Browse the current catalogue with secure accounts, address-based delivery charges, COD and configured UPI options.</p>
+      <div class="hero-badge badge-pill tracing-glow" id="hero-badge">🟢 53 products safely synced & backed up</div>
+      <h1 class="font-display" style="font-size:clamp(2rem, 4vw, 3.2rem);font-weight:800;line-height:1.1;letter-spacing:-0.02em;">Shop <span style="color:var(--primary);">Jewellery, Cosmetics</span><br/>& Premium Collections</h1>
+      <p style="font-size:1.05rem;color:var(--text-muted);max-width:560px;margin:12px auto 24px;">Discover curated jewellery, beauty products & gifts with COD across India, fast delivery, and instant Telegram order tracking.</p>
       <div class="hero-actions">
-        <a href="products.html" class="btn-primary">🛍️ Shop Now</a>
-        <a href="products.html?cat=jewellery" class="btn-outline">💍 View Jewellery</a>
+        <a href="products.html" class="btn-primary" style="padding:14px 28px;border-radius:9999px;font-weight:700;">🛍️ Shop Collection</a>
+        <a href="products.html?cat=jewellery" class="btn-outline" style="padding:14px 28px;border-radius:9999px;font-weight:700;">💍 View Jewellery</a>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="num" id="hero-products-count">53</div><div class="label">Backed-up Products</div></div>
-        <div class="hero-stat"><div class="num">24×7</div><div class="label">Online Catalogue</div></div>
+        <div class="hero-stat"><div class="num" id="hero-products-count">53</div><div class="label">Synced Products</div></div>
+        <div class="hero-stat"><div class="num">24×7</div><div class="label">Live Storefront</div></div>
         <div class="hero-stat"><div class="num">India</div><div class="label">Delivery Zones</div></div>
         <div class="hero-stat"><div class="num">COD</div><div class="label">Available</div></div>
       </div>
     </div>
   </section>
 
-  <!-- CATEGORIES -->
+  <!-- CATEGORIES (Bento Grid) -->
   <div class="section">
-    <div class="section-title">🗂️ Browse Categories</div>
-    <div class="categories-grid" id="cat-grid"></div>
+    <div class="section-title font-display" style="font-size:1.5rem;font-weight:800;margin-bottom:16px;">🗂️ Browse Categories</div>
+    <div id="cat-grid"></div>
   </div>
 
   <!-- FEATURED PRODUCTS -->
   <div class="section" style="padding-top:0;">
-    <div class="section-title">🔥 Featured Products</div>
+    <div class="section-title font-display" style="font-size:1.5rem;font-weight:800;margin-bottom:16px;">🔥 Featured Products</div>
     <div class="products-grid" id="featured-grid"></div>
     <div style="text-align:center;margin-top:28px;">
-      <a href="products.html" class="btn-primary">View All Products →</a>
+      <a href="products.html" class="btn-primary" style="border-radius:9999px;padding:12px 28px;font-weight:700;">View All Products →</a>
     </div>
   </div>
 
 
   <!-- NEW ARRIVALS -->
   <div class="section">
-    <div class="section-title">✨ New Arrivals</div>
+    <div class="section-title font-display" style="font-size:1.5rem;font-weight:800;margin-bottom:16px;">✨ New Arrivals</div>
     <div class="products-grid" id="new-arrivals-grid"></div>
   </div>
 
   <!-- WHY CHOOSE US -->
   <div class="section">
-    <div class="section-title">💎 Why Choose Us?</div>
+    <div class="section-title font-display" style="font-size:1.5rem;font-weight:800;margin-bottom:16px;">💎 Why Choose Us?</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px;">🚀</div>
-        <div style="font-weight:700;margin-bottom:6px;">Fast Delivery</div>
-        <div style="color:var(--text-muted);font-size:0.85rem;">1-2 days in Raipur, 5-7 days all India</div>
-      </div>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px;">💰</div>
-        <div style="font-weight:700;margin-bottom:6px;">Best Prices</div>
-        <div style="color:var(--text-muted);font-size:0.85rem;">Clear catalogue and checkout pricing</div>
-      </div>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px;">🏅</div>
-        <div style="font-weight:700;margin-bottom:6px;">Quality Products</div>
         <div style="color:var(--text-muted);font-size:0.85rem;">Premium certified products only</div>
       </div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;">
